@@ -12,6 +12,8 @@ export interface NetflixCode {
   deviceInfo: string;
   /** @nullable */
   code: string | null;
+  /** @nullable */
+  netflixLink: string | null;
   receivedAt: string;
   /** @nullable */
   expiresIn: string | null;

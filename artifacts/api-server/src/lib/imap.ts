@@ -14,6 +14,146 @@ export interface SiteImapConfig {
   password: string;
 }
 
+function decodeQuotedPrintable(str: string): string {
+  return str
+    .replace(/=\r?\n/g, "")
+    .replace(/=([0-9A-Fa-f]{2})/g, (_, hex) =>
+      String.fromCharCode(parseInt(hex, 16))
+    );
+}
+
+function decodeBase64Mime(str: string): string {
+  try {
+    return Buffer.from(str.replace(/\s+/g, ""), "base64").toString("utf-8");
+  } catch {
+    return str;
+  }
+}
+
+interface EmailParts {
+  plain: string;
+  html: string;
+}
+
+export function extractEmailParts(source: string): EmailParts {
+  const result: EmailParts = { plain: "", html: "" };
+
+  // Split on MIME boundaries
+  const boundaryMatch = source.match(/boundary=["']?([^"'\r\n;]+)["']?/i);
+  const boundary = boundaryMatch?.[1]?.trim();
+  const parts = boundary
+    ? source.split(new RegExp(`--${boundary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:--|\\s)`, "g"))
+    : [source];
+
+  for (const part of parts) {
+    const ctMatch = part.match(/Content-Type:\s*(text\/(?:plain|html))/i);
+    if (!ctMatch) continue;
+    const contentType = ctMatch[1].toLowerCase();
+    const encMatch = part.match(/Content-Transfer-Encoding:\s*(base64|quoted-printable)/i);
+    const encoding = encMatch?.[1]?.toLowerCase();
+    const bodyMatch = part.match(/(?:\r?\n){2}([\s\S]+)/);
+    if (!bodyMatch) continue;
+
+    let body = bodyMatch[1].trim();
+    if (encoding === "base64") {
+      body = decodeBase64Mime(body);
+    } else if (encoding === "quoted-printable") {
+      body = decodeQuotedPrintable(body);
+    }
+
+    if (contentType === "text/plain" && !result.plain) result.plain = body;
+    if (contentType === "text/html" && !result.html) result.html = body;
+  }
+
+  // Fallback: try the whole source
+  if (!result.plain && !result.html) {
+    result.plain = source;
+  }
+
+  return result;
+}
+
+export function decodeEmailBody(source: string): string {
+  const { plain, html } = extractEmailParts(source);
+  if (plain && plain.length > 50) return plain;
+  if (html) {
+    return html
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  return source.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+}
+
+export function extractNetflixLink(source: string): string | null {
+  const { html } = extractEmailParts(source);
+  const searchIn = [html, source];
+
+  const urlPatterns = [
+    /https?:\/\/(?:www\.)?netflix\.com\/account\/travel\/verify[^\s"'<>\r\n)]+/gi,
+    /https?:\/\/(?:www\.)?netflix\.com\/[^\s"'<>\r\n)]*temporaryAccess[^\s"'<>\r\n)]*/gi,
+    /https?:\/\/click\.netflix\.com[^\s"'<>\r\n)]+/gi,
+    /https?:\/\/[^\s"'<>\r\n)]*netflix[^\s"'<>\r\n)]*(?:verify|acceso|codigo|code)[^\s"'<>\r\n)]*/gi,
+  ];
+
+  for (const content of searchIn) {
+    if (!content) continue;
+    // Also try with quoted-printable unescaped
+    const decoded = content.includes("=\r\n") || content.includes("=\n")
+      ? decodeQuotedPrintable(content)
+      : content;
+
+    for (const p of urlPatterns) {
+      p.lastIndex = 0;
+      const m = decoded.match(p);
+      if (m?.[0]) {
+        return m[0]
+          .replace(/&amp;/g, "&")
+          .replace(/['">\s]+$/, "");
+      }
+    }
+  }
+  return null;
+}
+
+export async function fetchCodeFromNetflixLink(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-419,es;q=0.9",
+      },
+      signal: AbortSignal.timeout(10000),
+      redirect: "follow",
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // Netflix shows a 4-digit code on the verification page
+    const patterns = [
+      /"code"\s*:\s*"([A-Z0-9]{4,8})"/i,
+      /class="[^"]*code[^"]*"[^>]*>\s*([A-Z0-9]{4,8})\s*</i,
+      /(?:c[oó]digo|access.?code)[^>]*>\s*([A-Z0-9]{4,8})\s*</i,
+      />\s*([0-9]{4})\s*</,
+    ];
+    for (const p of patterns) {
+      const m = html.match(p);
+      if (m) return m[1].trim();
+    }
+    return null;
+  } catch (err) {
+    logger.warn({ err, url }, "Error fetching Netflix code from link");
+    return null;
+  }
+}
+
 export async function fetchNetflixEmailsForSite(
   config: SiteImapConfig,
   limit = 10
@@ -36,15 +176,15 @@ export async function fetchNetflixEmailsForSite(
     const lock = await client.getMailboxLock("INBOX");
 
     try {
-      const [r1, r2] = await Promise.all([
+      const searches = await Promise.all([
         client.search({ subject: "código de acceso temporal" }).catch(() => []),
         client.search({ subject: "temporary access code" }).catch(() => []),
+        client.search({ subject: "acceso temporal" }).catch(() => []),
+        client.search({ from: "netflix.com" }).catch(() => []),
       ]);
 
-      const r1Arr = Array.isArray(r1) ? r1 : [];
-      const r2Arr = Array.isArray(r2) ? r2 : [];
-      const allIds = [...new Set([...r1Arr, ...r2Arr])];
-      const ids = allIds.slice(-limit).reverse();
+      const allIds = [...new Set(searches.flat().filter((x): x is number => typeof x === "number"))];
+      const ids = allIds.sort((a, b) => b - a).slice(0, limit);
 
       for (const seq of ids) {
         try {
@@ -104,28 +244,41 @@ export async function testImapConnection(config: SiteImapConfig): Promise<{ succ
 }
 
 export function extractProfileName(body: string): string {
-  const m = body.match(/Hola[,\s]+([^\n<,\r]+)/i);
-  if (m) return m[1].trim().replace(/\s+/g, " ");
-  const m2 = body.match(/Hello[,\s]+([^\n<,\r]+)/i);
-  if (m2) return m2[1].trim();
+  const patterns = [
+    /Hola[,\s]+([^\n<,\r:]+)/i,
+    /Hello[,\s]+([^\n<,\r:]+)/i,
+  ];
+  for (const p of patterns) {
+    const m = body.match(p);
+    if (m) return m[1].trim().replace(/\s+/g, " ");
+  }
   return "Usuario";
 }
 
 export function extractDeviceInfo(body: string): string {
-  const full = body.match(/Solicitud de \d+ desde[:\s]+(.+?)\s+a las\s+([^\n<\r]+)/i);
-  if (full) return `Solicitud desde: ${full[1].trim()} — ${full[2].trim()}`;
-  const dev = body.match(/Solicitud de \d+ desde[:\s]+([^\n<\r]+)/i);
-  if (dev) return `Solicitud desde: ${dev[1].trim()}`;
+  // "Solicitud de Sebastian desde: Hyundai - Smart TV a las 31 de mayo, 10:15 p. m. GMT-5"
+  // Pattern: "Solicitud de <name/anything> desde[:]" then device, "a las" then time
+  const full = body.match(
+    /Solicitud de [^.]+?desde[:\s]+(.+?)\s+a las\s+([^\n<\r.]+)/i
+  );
+  if (full) return `${full[1].trim()} — ${full[2].trim()}`;
+
+  const dev = body.match(/Solicitud de [^.]+?desde[:\s]+([^\n<\r.]+)/i);
+  if (dev) return dev[1].trim();
+
   const eng = body.match(/request (?:is )?from[:\s]+([^\n<\r]+)/i);
   if (eng) return `Request from: ${eng[1].trim()}`;
+
   return "Información del dispositivo no disponible";
 }
 
 export function extractCode(body: string): string | null {
   const patterns = [
     /tu\s+c[oó]digo\s+(?:de\s+acceso\s+(?:temporal\s+)?)?(?:es[:\s]+)?([A-Z0-9]{4,8})/i,
+    /c[oó]digo[:\s]+([A-Z0-9]{4,8})\b/i,
+    /\bcode[:\s]+([A-Z0-9]{4,8})\b/i,
     /\b([A-Z]{1,2}[0-9]{4,6})\b/,
-    /\b([0-9]{6,8})\b/,
+    /\b([0-9]{4,8})\b/,
   ];
   for (const p of patterns) {
     const m = body.match(p);
@@ -134,26 +287,10 @@ export function extractCode(body: string): string | null {
   return null;
 }
 
-export function extractExpiry(body: string): string | null {
-  const m = body.match(/(?:vence|expires?|v[aá]lido)[^\d]*(\d+)\s*(minutos?|minutes?|hours?|horas?)/i);
+export function extractExpiry(body: string): string {
+  const m = body.match(
+    /(?:vence|expires?|v[aá]lido)[^\d]*(\d+)\s*(minutos?|minutes?|hours?|horas?)/i
+  );
   if (m) return `${m[1]} ${m[2]}`;
   return "15 minutos";
-}
-
-export function decodeEmailBody(source: string): string {
-  const plain = source.match(
-    /Content-Type: text\/plain[^\r\n]*\r?\n(?:[^\r\n]+\r?\n)*\r?\n([\s\S]+?)(?=\r?\n--|\r?\n\r?\n--)/i
-  );
-  if (plain) return plain[1];
-  const html = source.match(
-    /Content-Type: text\/html[^\r\n]*\r?\n(?:[^\r\n]+\r?\n)*\r?\n([\s\S]+?)(?=\r?\n--)/i
-  );
-  if (html) {
-    return html[1]
-      .replace(/<[^>]+>/g, " ")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/\s+/g, " ");
-  }
-  return source.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
 }

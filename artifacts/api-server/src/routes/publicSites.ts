@@ -9,6 +9,8 @@ import {
   extractCode,
   extractExpiry,
   decodeEmailBody,
+  extractNetflixLink,
+  fetchCodeFromNetflixLink,
 } from "../lib/imap";
 import {
   GetSiteInfoParams,
@@ -62,17 +64,28 @@ router.get("/sites/:slug/codes", async (req, res): Promise<void> => {
       10
     );
 
-    const codes = rawEmails.map((email) => {
-      const body = decodeEmailBody(email.source);
-      return {
-        id: email.uid,
-        profileName: extractProfileName(body),
-        deviceInfo: extractDeviceInfo(body),
-        code: extractCode(body),
-        receivedAt: email.receivedAt.toISOString(),
-        expiresIn: extractExpiry(body),
-      };
-    });
+    const codes = await Promise.all(
+      rawEmails.map(async (email) => {
+        const body = decodeEmailBody(email.source);
+        let code = extractCode(body);
+        const netflixLink = extractNetflixLink(email.source);
+
+        // If no code found in the email body, try following the Netflix link
+        if (!code && netflixLink) {
+          code = await fetchCodeFromNetflixLink(netflixLink);
+        }
+
+        return {
+          id: email.uid,
+          profileName: extractProfileName(body),
+          deviceInfo: extractDeviceInfo(body),
+          code,
+          netflixLink: netflixLink ?? null,
+          receivedAt: email.receivedAt.toISOString(),
+          expiresIn: extractExpiry(body),
+        };
+      })
+    );
 
     req.log.info({ slug: site.slug, count: codes.length }, "Fetched codes for site");
     res.json(ListSiteCodesResponse.parse(codes));
