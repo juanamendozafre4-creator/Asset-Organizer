@@ -126,27 +126,59 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
     const res = await fetch(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "es-419,es;q=0.9",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "es-419,es;q=0.9,en;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Upgrade-Insecure-Requests": "1",
       },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(12000),
       redirect: "follow",
     });
-    if (!res.ok) return null;
+
+    if (!res.ok) {
+      logger.warn({ status: res.status, url }, "Netflix link returned non-OK status");
+      return null;
+    }
+
     const html = await res.text();
 
-    // Netflix shows a 4-digit code on the verification page
-    const patterns = [
+    // 1. Look in embedded JSON state (Netflix uses server-side rendered JSON blobs)
+    const jsonPatterns = [
+      /"accessCode"\s*:\s*"?([0-9]{4})"?/i,
       /"code"\s*:\s*"([0-9]{4})"/i,
-      /class="[^"]*code[^"]*"[^>]*>\s*([0-9]{4})\s*</i,
-      /(?:c[oó]digo|access.?code)[^>]*>\s*([0-9]{4})\s*</i,
-      />\s*([0-9]{4})\s*</,
+      /"verificationCode"\s*:\s*"?([0-9]{4})"?/i,
+      /"pin"\s*:\s*"?([0-9]{4})"?/i,
+      /accessCode['":\s]+([0-9]{4})\b/i,
     ];
-    for (const p of patterns) {
+    for (const p of jsonPatterns) {
       const m = html.match(p);
-      if (m) return m[1].trim();
+      if (m) {
+        logger.info({ code: m[1] }, "Extracted Netflix code from JSON blob");
+        return m[1];
+      }
     }
+
+    // 2. Look in HTML elements — Netflix renders the code inside a <div> or <span>
+    const htmlPatterns = [
+      /class="[^"]*(?:code|pin|access)[^"]*"[^>]*>\s*([0-9]{4})\s*</i,
+      /data-testid="[^"]*code[^"]*"[^>]*>\s*([0-9]{4})\s*</i,
+      />\s{0,5}([0-9]{4})\s{0,5}</,
+    ];
+    for (const p of htmlPatterns) {
+      const m = html.match(p);
+      if (m) {
+        logger.info({ code: m[1] }, "Extracted Netflix code from HTML element");
+        return m[1];
+      }
+    }
+
+    logger.warn({ url, htmlLength: html.length }, "Could not extract 4-digit code from Netflix page");
     return null;
   } catch (err) {
     logger.warn({ err, url }, "Error fetching Netflix code from link");
