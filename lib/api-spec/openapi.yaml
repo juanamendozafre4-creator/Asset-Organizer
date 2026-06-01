@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: netflix
+    description: Netflix access code email operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /netflix/codes:
+    get:
+      operationId: getNetflixCodes
+      tags: [netflix]
+      summary: Get Netflix access codes from Gmail
+      description: Fetches emails containing Netflix temporary access codes and extracts the code, profile name, and device info
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: List of Netflix access code emails
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NetflixCode"
+        "401":
+          description: Not authenticated with Gmail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /netflix/auth-status:
+    get:
+      operationId: getAuthStatus
+      tags: [netflix]
+      summary: Check Gmail authentication status
+      description: Returns whether the Gmail integration is connected
+      responses:
+        "200":
+          description: Auth status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthStatus"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +82,48 @@ components:
           type: string
       required:
         - status
-
+    NetflixCode:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Email message ID
+        profileName:
+          type: string
+          description: The name or number from the greeting (e.g. "Hola 1" → "1")
+        deviceInfo:
+          type: string
+          description: Device and date info from the email
+        code:
+          type: ["string", "null"]
+          description: The numeric or alphanumeric access code extracted from the email
+        receivedAt:
+          type: string
+          description: ISO date string when the email was received
+        expiresIn:
+          type: ["string", "null"]
+          description: Expiry note (e.g. "15 minutos")
+      required:
+        - id
+        - profileName
+        - deviceInfo
+        - code
+        - receivedAt
+        - expiresIn
+    AuthStatus:
+      type: object
+      properties:
+        connected:
+          type: boolean
+        email:
+          type: ["string", "null"]
+      required:
+        - connected
+        - email
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

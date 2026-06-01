@@ -1,0 +1,42 @@
+Instrucciones para desarrollar una página web con las siguientes funciones exactas:
+
+1. CONEXIÓN AL CORREO ELECTRÓNICO
+La página debe tener la capacidad de conectarse y vincularse directamente a mi cuenta de correo electrónico (ya sea Gmail, Outlook o el que yo configure), mediante acceso seguro y autorización.
+
+2. FILTRADO DE CORREOS ESPECÍFICOS
+El sistema debe buscar, extraer y traer ÚNICAMENTE los correos que contengan en el asunto o en el cuerpo del mensaje exactamente este texto clave:
+👉 "tu código de acceso temporal de Netflix"
+
+Debe ignorar y no mostrar ningún otro correo que no tenga esa frase exacta.
+
+3. DATOS QUE DEBE EXTRAER Y MOSTRAR
+De cada correo que encuentre, la página debe extraer automáticamente la información interna y mostrarla en pantalla así:
+
+✅ Primer dato: El nombre que aparece después del saludo. Ejemplo:
+
+* Si el correo dice: "Hola 1" → mostrar: 1
+
+* Si dice: "Hola Andrés" → mostrar: Andrés
+
+* Si dice: "Hola [Nombre del perfil del usuario]" → mostrar: [Nombre del perfil]
+(Esta es la parte del nombre o número de perfil que aparece al inicio del correo)
+
+✅ Segundo dato: El dispositivo y fecha. Extraer lo que está en la frase:
+
+* "Tu solicitud es del [tipo de dispositivo]..."
+→ Mostrar claramente: Tu solicitud es del [lo que diga ahí]
+
+✅ Tercer dato: EL CÓDIGO (LO MÁS IMPORTANTE)
+En el diseño va a haber un botón o espacio que originalmente diría "Obtener código".
+🚫 IMPORTANTE: La gente NO debe tener que hacer clic ni hundirle a nada.
+✅ CAMBIO: En ese mismo lugar donde dice "Obtener código", en lugar del texto del botón, debe aparecer YA DIRECTAMENTE EL CÓDIGO NUMÉRICO O ALFANUMÉRICO que viene dentro del correo, visible al instante, tal cual llega.
+
+4. DISEÑO Y PRESENTACIÓN
+
+* Mostrar toda esta información organizada y limpia, tal como tengo diseñada la parte visual que te mostré.
+
+* Que se vea claro: el nombre/perfil, la información del dispositivo, y el código visible de una vez.
+
+* Que la página se actualice automáticamente o tenga un botón de "Actualizar" para traer los correos nuevos que lleguen.
+
+Resumen: Conectar correo → Filtrar solo correos de "código de acceso temporal Netflix" → Sacar nombre, dispositivo y código → Mostrar el código en el espacio donde decía "Obtener código", sin que el usuario tenga que presionar nada.

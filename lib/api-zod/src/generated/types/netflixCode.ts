@@ -5,9 +5,6 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
-}
 
 export interface NetflixCode {
   /** Email message ID */
@@ -29,18 +26,3 @@ export interface NetflixCode {
      */
   expiresIn: string | null;
 }
-
-export interface AuthStatus {
-  connected: boolean;
-  /** @nullable */
-  email: string | null;
-}
-
-export interface ApiError {
-  error: string;
-}
-
-export type GetNetflixCodesParams = {
-limit?: number;
-};
-
