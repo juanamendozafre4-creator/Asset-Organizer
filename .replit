@@ -45,8 +45,8 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "PORT=8081 BASE_PATH=/ pnpm run --filter @workspace/netflix-codes dev"
-waitForPort = 8081
+args = "PORT=25540 BASE_PATH=/ pnpm run --filter @workspace/netflix-codes dev"
+waitForPort = 25540
 
 [agent]
 stack = "PNPM_WORKSPACE"
