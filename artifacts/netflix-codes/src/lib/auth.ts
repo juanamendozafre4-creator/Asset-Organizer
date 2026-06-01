@@ -1,5 +1,3 @@
-import { useState, useEffect } from "react";
-
 export function getAdminToken() {
   return localStorage.getItem("admin_token");
 }
@@ -12,7 +10,7 @@ export function removeAdminToken() {
   localStorage.removeItem("admin_token");
 }
 
-export function getAdminHeaders() {
+export function getAdminHeaders(): Record<string, string> {
   const token = getAdminToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return token ? { Authorization: `Bearer ${token}` } : { Authorization: "" };
 }

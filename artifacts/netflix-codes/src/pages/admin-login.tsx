@@ -54,8 +54,8 @@ export default function AdminLogin() {
               toast({ title: "Setup successful", description: "Admin account created." });
               setLocation("/admin/dashboard");
             },
-            onError: (err) => {
-              toast({ title: "Setup failed", description: err.error || "An error occurred", variant: "destructive" });
+            onError: () => {
+              toast({ title: "Error al crear admin", description: "Verifica los datos e inténtalo de nuevo", variant: "destructive" });
             },
           }
         );
@@ -68,8 +68,8 @@ export default function AdminLogin() {
               toast({ title: "Login successful" });
               setLocation("/admin/dashboard");
             },
-            onError: (err) => {
-              toast({ title: "Login failed", description: err.error || "Invalid credentials", variant: "destructive" });
+            onError: () => {
+              toast({ title: "Error al iniciar sesión", description: "Credenciales incorrectas", variant: "destructive" });
             },
           }
         );
