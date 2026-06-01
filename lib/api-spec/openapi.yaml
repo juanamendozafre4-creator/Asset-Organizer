@@ -1,6 +1,5 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
   description: API specification
@@ -9,16 +8,15 @@ servers:
     description: Base API path
 tags:
   - name: health
-    description: Health operations
-  - name: netflix
-    description: Netflix access code email operations
+  - name: auth
+  - name: admin
+  - name: public
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -26,104 +24,376 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
-  /netflix/codes:
-    get:
-      operationId: getNetflixCodes
-      tags: [netflix]
-      summary: Get Netflix access codes from Gmail
-      description: Fetches emails containing Netflix temporary access codes and extracts the code, profile name, and device info
-      parameters:
-        - name: limit
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 10
+
+  /auth/login:
+    post:
+      operationId: adminLogin
+      tags: [auth]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
       responses:
         "200":
-          description: List of Netflix access code emails
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/setup:
+    post:
+      operationId: adminSetup
+      tags: [auth]
+      summary: Create first admin account (only works if no admins exist)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "201":
+          description: Admin created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+        "409":
+          description: Admin already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/status:
+    get:
+      operationId: getSetupStatus
+      tags: [auth]
+      summary: Check if any admin exists
+      responses:
+        "200":
+          description: Setup status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupStatus"
+
+  /admin/sites:
+    get:
+      operationId: listSites
+      tags: [admin]
+      summary: List all sites (requires auth)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of sites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Site"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    post:
+      operationId: createSite
+      tags: [admin]
+      summary: Create a new site
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiteInput"
+      responses:
+        "201":
+          description: Site created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Site"
+        "409":
+          description: Slug already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /admin/sites/{id}:
+    put:
+      operationId: updateSite
+      tags: [admin]
+      summary: Update a site
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiteUpdate"
+      responses:
+        "200":
+          description: Site updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Site"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      operationId: deleteSite
+      tags: [admin]
+      summary: Delete a site
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/sites/{id}/test:
+    post:
+      operationId: testSiteConnection
+      tags: [admin]
+      summary: Test IMAP connection for a site
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Connection test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionTestResult"
+
+  /sites/{slug}:
+    get:
+      operationId: getSiteInfo
+      tags: [public]
+      summary: Get public info for a site by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Site public info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SitePublicInfo"
+        "404":
+          description: Site not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /sites/{slug}/codes:
+    get:
+      operationId: listSiteCodes
+      tags: [public]
+      summary: Get Netflix codes for a site
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of Netflix codes
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/NetflixCode"
-        "401":
-          description: Not authenticated with Gmail
+        "404":
+          description: Site not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
-        "500":
-          description: Server error
+        "503":
+          description: IMAP connection failed
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
-  /netflix/auth-status:
-    get:
-      operationId: getAuthStatus
-      tags: [netflix]
-      summary: Check Gmail authentication status
-      description: Returns whether the Gmail integration is connected
-      responses:
-        "200":
-          description: Auth status
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthStatus"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     HealthStatus:
       type: object
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
+
+    LoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+
+    LoginResult:
+      type: object
+      properties:
+        token:
+          type: string
+        email:
+          type: string
+      required: [token, email]
+
+    SetupStatus:
+      type: object
+      properties:
+        needsSetup:
+          type: boolean
+      required: [needsSetup]
+
+    Site:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        name:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        imapHost:
+          type: string
+        imapEmail:
+          type: string
+        createdAt:
+          type: string
+      required: [id, slug, name, logoUrl, imapHost, imapEmail, createdAt]
+
+    SiteInput:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        imapHost:
+          type: string
+        imapEmail:
+          type: string
+        imapPassword:
+          type: string
+      required: [slug, name, imapHost, imapEmail, imapPassword]
+
+    SiteUpdate:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        imapHost:
+          type: string
+        imapEmail:
+          type: string
+        imapPassword:
+          type: ["string", "null"]
+
+    SitePublicInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        slug:
+          type: string
+      required: [name, logoUrl, slug]
+
     NetflixCode:
       type: object
       properties:
         id:
           type: string
-          description: Email message ID
         profileName:
           type: string
-          description: The name or number from the greeting (e.g. "Hola 1" → "1")
         deviceInfo:
           type: string
-          description: Device and date info from the email
         code:
           type: ["string", "null"]
-          description: The numeric or alphanumeric access code extracted from the email
         receivedAt:
           type: string
-          description: ISO date string when the email was received
         expiresIn:
           type: ["string", "null"]
-          description: Expiry note (e.g. "15 minutos")
-      required:
-        - id
-        - profileName
-        - deviceInfo
-        - code
-        - receivedAt
-        - expiresIn
-    AuthStatus:
+      required: [id, profileName, deviceInfo, code, receivedAt, expiresIn]
+
+    ConnectionTestResult:
       type: object
       properties:
-        connected:
+        success:
           type: boolean
-        email:
-          type: ["string", "null"]
-      required:
-        - connected
-        - email
+        message:
+          type: string
+      required: [success, message]
+
     ApiError:
       type: object
       properties:
         error:
           type: string
-      required:
-        - error
+      required: [error]

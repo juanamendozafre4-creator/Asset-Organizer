@@ -7,7 +7,13 @@
  */
 
 export * from './apiError';
-export * from './authStatus';
-export * from './getNetflixCodesParams';
+export * from './connectionTestResult';
 export * from './healthStatus';
+export * from './loginInput';
+export * from './loginResult';
 export * from './netflixCode';
+export * from './setupStatus';
+export * from './site';
+export * from './siteInput';
+export * from './sitePublicInfo';
+export * from './siteUpdate';

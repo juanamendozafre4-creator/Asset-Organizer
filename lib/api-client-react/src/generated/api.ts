@@ -6,25 +6,35 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   ApiError,
-  AuthStatus,
-  GetNetflixCodesParams,
+  ConnectionTestResult,
   HealthStatus,
-  NetflixCode
+  LoginInput,
+  LoginResult,
+  NetflixCode,
+  SetupStatus,
+  Site,
+  SiteInput,
+  SitePublicInfo,
+  SiteUpdate
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
-import type { ErrorType } from '../custom-fetch';
+import type { ErrorType , BodyType } from '../custom-fetch';
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -44,7 +54,6 @@ export const getHealthCheckUrl = () => {
 }
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const healthCheck = async ( options?: RequestInit): Promise<HealthStatus> => {
@@ -113,28 +122,162 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
-export const getGetNetflixCodesUrl = (params?: GetNetflixCodesParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getAdminLoginUrl = () => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/netflix/codes?${stringifiedParams}` : `/api/netflix/codes`
+  return `/api/auth/login`
 }
 
 /**
- * Fetches emails containing Netflix temporary access codes and extracts the code, profile name, and device info
- * @summary Get Netflix access codes from Gmail
+ * @summary Admin login
  */
-export const getNetflixCodes = async (params?: GetNetflixCodesParams, options?: RequestInit): Promise<NetflixCode[]> => {
+export const adminLogin = async (loginInput: LoginInput, options?: RequestInit): Promise<LoginResult> => {
 
-  return customFetch<NetflixCode[]>(getGetNetflixCodesUrl(params),
+  return customFetch<LoginResult>(getAdminLoginUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      loginInput,)
+  }
+);}
+
+
+
+
+export const getAdminLoginMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,{data: BodyType<LoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,{data: BodyType<LoginInput>}, TContext> => {
+
+const mutationKey = ['adminLogin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminLogin>>, {data: BodyType<LoginInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminLogin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminLoginMutationResult = NonNullable<Awaited<ReturnType<typeof adminLogin>>>
+    export type AdminLoginMutationBody = BodyType<LoginInput>
+    export type AdminLoginMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Admin login
+ */
+export const useAdminLogin = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,{data: BodyType<LoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminLogin>>,
+        TError,
+        {data: BodyType<LoginInput>},
+        TContext
+      > => {
+      return useMutation(getAdminLoginMutationOptions(options));
+    }
+
+export const getAdminSetupUrl = () => {
+
+
+
+
+  return `/api/auth/setup`
+}
+
+/**
+ * @summary Create first admin account (only works if no admins exist)
+ */
+export const adminSetup = async (loginInput: LoginInput, options?: RequestInit): Promise<LoginResult> => {
+
+  return customFetch<LoginResult>(getAdminSetupUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      loginInput,)
+  }
+);}
+
+
+
+
+export const getAdminSetupMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminSetup>>, TError,{data: BodyType<LoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminSetup>>, TError,{data: BodyType<LoginInput>}, TContext> => {
+
+const mutationKey = ['adminSetup'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminSetup>>, {data: BodyType<LoginInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminSetup(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminSetupMutationResult = NonNullable<Awaited<ReturnType<typeof adminSetup>>>
+    export type AdminSetupMutationBody = BodyType<LoginInput>
+    export type AdminSetupMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Create first admin account (only works if no admins exist)
+ */
+export const useAdminSetup = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminSetup>>, TError,{data: BodyType<LoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminSetup>>,
+        TError,
+        {data: BodyType<LoginInput>},
+        TContext
+      > => {
+      return useMutation(getAdminSetupMutationOptions(options));
+    }
+
+export const getGetSetupStatusUrl = () => {
+
+
+
+
+  return `/api/auth/status`
+}
+
+/**
+ * @summary Check if any admin exists
+ */
+export const getSetupStatus = async ( options?: RequestInit): Promise<SetupStatus> => {
+
+  return customFetch<SetupStatus>(getGetSetupStatusUrl(),
   {
     ...options,
     method: 'GET'
@@ -147,45 +290,45 @@ export const getNetflixCodes = async (params?: GetNetflixCodesParams, options?: 
 
 
 
-export const getGetNetflixCodesQueryKey = (params?: GetNetflixCodesParams,) => {
+export const getGetSetupStatusQueryKey = () => {
     return [
-    `/api/netflix/codes`, ...(params ? [params] : [])
+    `/api/auth/status`
     ] as const;
     }
 
 
-export const getGetNetflixCodesQueryOptions = <TData = Awaited<ReturnType<typeof getNetflixCodes>>, TError = ErrorType<ApiError>>(params?: GetNetflixCodesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNetflixCodes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSetupStatusQueryOptions = <TData = Awaited<ReturnType<typeof getSetupStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetNetflixCodesQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetSetupStatusQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNetflixCodes>>> = ({ signal }) => getNetflixCodes(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSetupStatus>>> = ({ signal }) => getSetupStatus({ signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNetflixCodes>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetNetflixCodesQueryResult = NonNullable<Awaited<ReturnType<typeof getNetflixCodes>>>
-export type GetNetflixCodesQueryError = ErrorType<ApiError>
+export type GetSetupStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getSetupStatus>>>
+export type GetSetupStatusQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Get Netflix access codes from Gmail
+ * @summary Check if any admin exists
  */
 
-export function useGetNetflixCodes<TData = Awaited<ReturnType<typeof getNetflixCodes>>, TError = ErrorType<ApiError>>(
- params?: GetNetflixCodesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNetflixCodes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export function useGetSetupStatus<TData = Awaited<ReturnType<typeof getSetupStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetNetflixCodesQueryOptions(params,options)
+  const queryOptions = getGetSetupStatusQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -198,21 +341,20 @@ export function useGetNetflixCodes<TData = Awaited<ReturnType<typeof getNetflixC
 
 
 
-export const getGetAuthStatusUrl = () => {
+export const getListSitesUrl = () => {
 
 
 
 
-  return `/api/netflix/auth-status`
+  return `/api/admin/sites`
 }
 
 /**
- * Returns whether the Gmail integration is connected
- * @summary Check Gmail authentication status
+ * @summary List all sites (requires auth)
  */
-export const getAuthStatus = async ( options?: RequestInit): Promise<AuthStatus> => {
+export const listSites = async ( options?: RequestInit): Promise<Site[]> => {
 
-  return customFetch<AuthStatus>(getGetAuthStatusUrl(),
+  return customFetch<Site[]>(getListSitesUrl(),
   {
     ...options,
     method: 'GET'
@@ -225,45 +367,482 @@ export const getAuthStatus = async ( options?: RequestInit): Promise<AuthStatus>
 
 
 
-export const getGetAuthStatusQueryKey = () => {
+export const getListSitesQueryKey = () => {
     return [
-    `/api/netflix/auth-status`
+    `/api/admin/sites`
     ] as const;
     }
 
 
-export const getGetAuthStatusQueryOptions = <TData = Awaited<ReturnType<typeof getAuthStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuthStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListSitesQueryOptions = <TData = Awaited<ReturnType<typeof listSites>>, TError = ErrorType<ApiError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSites>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAuthStatusQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListSitesQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthStatus>>> = ({ signal }) => getAuthStatus({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSites>>> = ({ signal }) => listSites({ signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuthStatus>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSites>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetAuthStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getAuthStatus>>>
-export type GetAuthStatusQueryError = ErrorType<unknown>
+export type ListSitesQueryResult = NonNullable<Awaited<ReturnType<typeof listSites>>>
+export type ListSitesQueryError = ErrorType<ApiError>
 
 
 /**
- * @summary Check Gmail authentication status
+ * @summary List all sites (requires auth)
  */
 
-export function useGetAuthStatus<TData = Awaited<ReturnType<typeof getAuthStatus>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuthStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export function useListSites<TData = Awaited<ReturnType<typeof listSites>>, TError = ErrorType<ApiError>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSites>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetAuthStatusQueryOptions(options)
+  const queryOptions = getListSitesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateSiteUrl = () => {
+
+
+
+
+  return `/api/admin/sites`
+}
+
+/**
+ * @summary Create a new site
+ */
+export const createSite = async (siteInput: SiteInput, options?: RequestInit): Promise<Site> => {
+
+  return customFetch<Site>(getCreateSiteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      siteInput,)
+  }
+);}
+
+
+
+
+export const getCreateSiteMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSite>>, TError,{data: BodyType<SiteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSite>>, TError,{data: BodyType<SiteInput>}, TContext> => {
+
+const mutationKey = ['createSite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSite>>, {data: BodyType<SiteInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSite(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSiteMutationResult = NonNullable<Awaited<ReturnType<typeof createSite>>>
+    export type CreateSiteMutationBody = BodyType<SiteInput>
+    export type CreateSiteMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Create a new site
+ */
+export const useCreateSite = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSite>>, TError,{data: BodyType<SiteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSite>>,
+        TError,
+        {data: BodyType<SiteInput>},
+        TContext
+      > => {
+      return useMutation(getCreateSiteMutationOptions(options));
+    }
+
+export const getUpdateSiteUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/sites/${id}`
+}
+
+/**
+ * @summary Update a site
+ */
+export const updateSite = async (id: number,
+    siteUpdate: SiteUpdate, options?: RequestInit): Promise<Site> => {
+
+  return customFetch<Site>(getUpdateSiteUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      siteUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateSiteMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSite>>, TError,{id: number;data: BodyType<SiteUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSite>>, TError,{id: number;data: BodyType<SiteUpdate>}, TContext> => {
+
+const mutationKey = ['updateSite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSite>>, {id: number;data: BodyType<SiteUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateSite(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSiteMutationResult = NonNullable<Awaited<ReturnType<typeof updateSite>>>
+    export type UpdateSiteMutationBody = BodyType<SiteUpdate>
+    export type UpdateSiteMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Update a site
+ */
+export const useUpdateSite = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSite>>, TError,{id: number;data: BodyType<SiteUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSite>>,
+        TError,
+        {id: number;data: BodyType<SiteUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateSiteMutationOptions(options));
+    }
+
+export const getDeleteSiteUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/sites/${id}`
+}
+
+/**
+ * @summary Delete a site
+ */
+export const deleteSite = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteSiteUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteSiteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSite>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSite>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteSite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSite>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteSite(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSiteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSite>>>
+
+    export type DeleteSiteMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a site
+ */
+export const useDeleteSite = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSite>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSite>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteSiteMutationOptions(options));
+    }
+
+export const getTestSiteConnectionUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/sites/${id}/test`
+}
+
+/**
+ * @summary Test IMAP connection for a site
+ */
+export const testSiteConnection = async (id: number, options?: RequestInit): Promise<ConnectionTestResult> => {
+
+  return customFetch<ConnectionTestResult>(getTestSiteConnectionUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getTestSiteConnectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testSiteConnection>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof testSiteConnection>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['testSiteConnection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testSiteConnection>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  testSiteConnection(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestSiteConnectionMutationResult = NonNullable<Awaited<ReturnType<typeof testSiteConnection>>>
+
+    export type TestSiteConnectionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Test IMAP connection for a site
+ */
+export const useTestSiteConnection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testSiteConnection>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof testSiteConnection>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getTestSiteConnectionMutationOptions(options));
+    }
+
+export const getGetSiteInfoUrl = (slug: string,) => {
+
+
+
+
+  return `/api/sites/${slug}`
+}
+
+/**
+ * @summary Get public info for a site by slug
+ */
+export const getSiteInfo = async (slug: string, options?: RequestInit): Promise<SitePublicInfo> => {
+
+  return customFetch<SitePublicInfo>(getGetSiteInfoUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSiteInfoQueryKey = (slug: string,) => {
+    return [
+    `/api/sites/${slug}`
+    ] as const;
+    }
+
+
+export const getGetSiteInfoQueryOptions = <TData = Awaited<ReturnType<typeof getSiteInfo>>, TError = ErrorType<ApiError>>(slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSiteInfo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSiteInfoQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSiteInfo>>> = ({ signal }) => getSiteInfo(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSiteInfo>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSiteInfoQueryResult = NonNullable<Awaited<ReturnType<typeof getSiteInfo>>>
+export type GetSiteInfoQueryError = ErrorType<ApiError>
+
+
+/**
+ * @summary Get public info for a site by slug
+ */
+
+export function useGetSiteInfo<TData = Awaited<ReturnType<typeof getSiteInfo>>, TError = ErrorType<ApiError>>(
+ slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSiteInfo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSiteInfoQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListSiteCodesUrl = (slug: string,) => {
+
+
+
+
+  return `/api/sites/${slug}/codes`
+}
+
+/**
+ * @summary Get Netflix codes for a site
+ */
+export const listSiteCodes = async (slug: string, options?: RequestInit): Promise<NetflixCode[]> => {
+
+  return customFetch<NetflixCode[]>(getListSiteCodesUrl(slug),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSiteCodesQueryKey = (slug: string,) => {
+    return [
+    `/api/sites/${slug}/codes`
+    ] as const;
+    }
+
+
+export const getListSiteCodesQueryOptions = <TData = Awaited<ReturnType<typeof listSiteCodes>>, TError = ErrorType<ApiError>>(slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSiteCodes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSiteCodesQueryKey(slug);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSiteCodes>>> = ({ signal }) => listSiteCodes(slug, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSiteCodes>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSiteCodesQueryResult = NonNullable<Awaited<ReturnType<typeof listSiteCodes>>>
+export type ListSiteCodesQueryError = ErrorType<ApiError>
+
+
+/**
+ * @summary Get Netflix codes for a site
+ */
+
+export function useListSiteCodes<TData = Awaited<ReturnType<typeof listSiteCodes>>, TError = ErrorType<ApiError>>(
+ slug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSiteCodes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSiteCodesQueryOptions(slug,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

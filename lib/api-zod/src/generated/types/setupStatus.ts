@@ -6,6 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GetNetflixCodesParams = {
-limit?: number;
-};
+export interface SetupStatus {
+  needsSetup: boolean;
+}

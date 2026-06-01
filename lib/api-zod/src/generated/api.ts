@@ -9,7 +9,6 @@ import * as zod from 'zod';
 
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
@@ -18,33 +17,141 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * Fetches emails containing Netflix temporary access codes and extracts the code, profile name, and device info
- * @summary Get Netflix access codes from Gmail
+ * @summary Admin login
  */
-export const getNetflixCodesQueryLimitDefault = 10;
-
-export const GetNetflixCodesQueryParams = zod.object({
-  "limit": zod.coerce.number().default(getNetflixCodesQueryLimitDefault)
+export const AdminLoginBody = zod.object({
+  "email": zod.string(),
+  "password": zod.string()
 })
 
-export const GetNetflixCodesResponseItem = zod.object({
-  "id": zod.string().describe('Email message ID'),
-  "profileName": zod.string().describe('The name or number from the greeting (e.g. \"Hola 1\" → \"1\")'),
-  "deviceInfo": zod.string().describe('Device and date info from the email'),
-  "code": zod.string().nullable().describe('The numeric or alphanumeric access code extracted from the email'),
-  "receivedAt": zod.string().describe('ISO date string when the email was received'),
-  "expiresIn": zod.string().nullable().describe('Expiry note (e.g. \"15 minutos\")')
+export const AdminLoginResponse = zod.object({
+  "token": zod.string(),
+  "email": zod.string()
 })
-export const GetNetflixCodesResponse = zod.array(GetNetflixCodesResponseItem)
 
 
 /**
- * Returns whether the Gmail integration is connected
- * @summary Check Gmail authentication status
+ * @summary Create first admin account (only works if no admins exist)
  */
-export const GetAuthStatusResponse = zod.object({
-  "connected": zod.boolean(),
-  "email": zod.string().nullable()
+export const AdminSetupBody = zod.object({
+  "email": zod.string(),
+  "password": zod.string()
 })
+
+
+/**
+ * @summary Check if any admin exists
+ */
+export const GetSetupStatusResponse = zod.object({
+  "needsSetup": zod.boolean()
+})
+
+
+/**
+ * @summary List all sites (requires auth)
+ */
+export const ListSitesResponseItem = zod.object({
+  "id": zod.number(),
+  "slug": zod.string(),
+  "name": zod.string(),
+  "logoUrl": zod.string().nullable(),
+  "imapHost": zod.string(),
+  "imapEmail": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListSitesResponse = zod.array(ListSitesResponseItem)
+
+
+/**
+ * @summary Create a new site
+ */
+export const CreateSiteBody = zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "logoUrl": zod.string().nullish(),
+  "imapHost": zod.string(),
+  "imapEmail": zod.string(),
+  "imapPassword": zod.string()
+})
+
+
+/**
+ * @summary Update a site
+ */
+export const UpdateSiteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateSiteBody = zod.object({
+  "slug": zod.string().optional(),
+  "name": zod.string().optional(),
+  "logoUrl": zod.string().nullish(),
+  "imapHost": zod.string().optional(),
+  "imapEmail": zod.string().optional(),
+  "imapPassword": zod.string().nullish()
+})
+
+export const UpdateSiteResponse = zod.object({
+  "id": zod.number(),
+  "slug": zod.string(),
+  "name": zod.string(),
+  "logoUrl": zod.string().nullable(),
+  "imapHost": zod.string(),
+  "imapEmail": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a site
+ */
+export const DeleteSiteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Test IMAP connection for a site
+ */
+export const TestSiteConnectionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const TestSiteConnectionResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Get public info for a site by slug
+ */
+export const GetSiteInfoParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const GetSiteInfoResponse = zod.object({
+  "name": zod.string(),
+  "logoUrl": zod.string().nullable(),
+  "slug": zod.string()
+})
+
+
+/**
+ * @summary Get Netflix codes for a site
+ */
+export const ListSiteCodesParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const ListSiteCodesResponseItem = zod.object({
+  "id": zod.string(),
+  "profileName": zod.string(),
+  "deviceInfo": zod.string(),
+  "code": zod.string().nullable(),
+  "receivedAt": zod.string(),
+  "expiresIn": zod.string().nullable()
+})
+export const ListSiteCodesResponse = zod.array(ListSiteCodesResponseItem)
 
 

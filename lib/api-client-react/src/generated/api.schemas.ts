@@ -9,38 +9,76 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface LoginResult {
+  token: string;
+  email: string;
+}
+
+export interface SetupStatus {
+  needsSetup: boolean;
+}
+
+export interface Site {
+  id: number;
+  slug: string;
+  name: string;
+  /** @nullable */
+  logoUrl: string | null;
+  imapHost: string;
+  imapEmail: string;
+  createdAt: string;
+}
+
+export interface SiteInput {
+  slug: string;
+  name: string;
+  /** @nullable */
+  logoUrl?: string | null;
+  imapHost: string;
+  imapEmail: string;
+  imapPassword: string;
+}
+
+export interface SiteUpdate {
+  slug?: string;
+  name?: string;
+  /** @nullable */
+  logoUrl?: string | null;
+  imapHost?: string;
+  imapEmail?: string;
+  /** @nullable */
+  imapPassword?: string | null;
+}
+
+export interface SitePublicInfo {
+  name: string;
+  /** @nullable */
+  logoUrl: string | null;
+  slug: string;
+}
+
 export interface NetflixCode {
-  /** Email message ID */
   id: string;
-  /** The name or number from the greeting (e.g. "Hola 1" → "1") */
   profileName: string;
-  /** Device and date info from the email */
   deviceInfo: string;
-  /**
-     * The numeric or alphanumeric access code extracted from the email
-     * @nullable
-     */
+  /** @nullable */
   code: string | null;
-  /** ISO date string when the email was received */
   receivedAt: string;
-  /**
-     * Expiry note (e.g. "15 minutos")
-     * @nullable
-     */
+  /** @nullable */
   expiresIn: string | null;
 }
 
-export interface AuthStatus {
-  connected: boolean;
-  /** @nullable */
-  email: string | null;
+export interface ConnectionTestResult {
+  success: boolean;
+  message: string;
 }
 
 export interface ApiError {
   error: string;
 }
-
-export type GetNetflixCodesParams = {
-limit?: number;
-};
 

@@ -6,8 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface AuthStatus {
-  connected: boolean;
-  /** @nullable */
-  email: string | null;
+export interface LoginInput {
+  email: string;
+  password: string;
 }

@@ -6,13 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface NetflixCode {
-  id: string;
-  profileName: string;
-  deviceInfo: string;
+export interface SiteUpdate {
+  slug?: string;
+  name?: string;
   /** @nullable */
-  code: string | null;
-  receivedAt: string;
+  logoUrl?: string | null;
+  imapHost?: string;
+  imapEmail?: string;
   /** @nullable */
-  expiresIn: string | null;
+  imapPassword?: string | null;
 }
