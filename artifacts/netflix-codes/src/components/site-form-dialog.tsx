@@ -225,7 +225,7 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
 
             {/* Logo upload */}
             <div className="space-y-2">
-              <FormLabel>Logo (Opcional)</FormLabel>
+              <label className="text-sm font-medium leading-none">Logo (Opcional)</label>
               <input
                 ref={fileInputRef}
                 type="file"
