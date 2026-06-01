@@ -13,8 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().min(1, "El email es requerido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -120,7 +120,7 @@ export default function AdminLogin() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="admin@example.com" data-testid="input-email" {...field} />
+                        <Input type="text" placeholder="admin@codigosnetflix" data-testid="input-email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
