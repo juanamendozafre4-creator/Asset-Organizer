@@ -138,9 +138,9 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
 
     // Netflix shows a 4-digit code on the verification page
     const patterns = [
-      /"code"\s*:\s*"([A-Z0-9]{4,8})"/i,
-      /class="[^"]*code[^"]*"[^>]*>\s*([A-Z0-9]{4,8})\s*</i,
-      /(?:c[oó]digo|access.?code)[^>]*>\s*([A-Z0-9]{4,8})\s*</i,
+      /"code"\s*:\s*"([0-9]{4})"/i,
+      /class="[^"]*code[^"]*"[^>]*>\s*([0-9]{4})\s*</i,
+      /(?:c[oó]digo|access.?code)[^>]*>\s*([0-9]{4})\s*</i,
       />\s*([0-9]{4})\s*</,
     ];
     for (const p of patterns) {
@@ -274,11 +274,10 @@ export function extractDeviceInfo(body: string): string {
 
 export function extractCode(body: string): string | null {
   const patterns = [
-    /tu\s+c[oó]digo\s+(?:de\s+acceso\s+(?:temporal\s+)?)?(?:es[:\s]+)?([A-Z0-9]{4,8})/i,
-    /c[oó]digo[:\s]+([A-Z0-9]{4,8})\b/i,
-    /\bcode[:\s]+([A-Z0-9]{4,8})\b/i,
-    /\b([A-Z]{1,2}[0-9]{4,6})\b/,
-    /\b([0-9]{4,8})\b/,
+    /tu\s+c[oó]digo\s+(?:de\s+acceso\s+(?:temporal\s+)?)?(?:es[:\s]+)?([0-9]{4})\b/i,
+    /c[oó]digo[:\s]+([0-9]{4})\b/i,
+    /\bcode[:\s]+([0-9]{4})\b/i,
+    /\b([0-9]{4})\b/,
   ];
   for (const p of patterns) {
     const m = body.match(p);
