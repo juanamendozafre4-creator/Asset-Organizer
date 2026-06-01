@@ -150,6 +150,7 @@ export const ListSiteCodesResponseItem = zod.object({
   "deviceInfo": zod.string(),
   "code": zod.string().nullable(),
   "netflixLink": zod.string().nullable(),
+  "accountEmail": zod.string().nullable(),
   "receivedAt": zod.string(),
   "expiresIn": zod.string().nullable()
 })

@@ -11,6 +11,7 @@ import {
   decodeEmailBody,
   extractNetflixLink,
   fetchCodeFromNetflixLink,
+  extractAccountEmail,
 } from "../lib/imap";
 import {
   GetSiteInfoParams,
@@ -81,6 +82,7 @@ router.get("/sites/:slug/codes", async (req, res): Promise<void> => {
           deviceInfo: extractDeviceInfo(body),
           code,
           netflixLink: netflixLink ?? null,
+          accountEmail: extractAccountEmail(body),
           receivedAt: email.receivedAt.toISOString(),
           expiresIn: extractExpiry(body),
         };

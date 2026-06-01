@@ -14,6 +14,8 @@ export interface NetflixCode {
   code: string | null;
   /** @nullable */
   netflixLink: string | null;
+  /** @nullable */
+  accountEmail: string | null;
   receivedAt: string;
   /** @nullable */
   expiresIn: string | null;

@@ -275,6 +275,21 @@ export async function testImapConnection(config: SiteImapConfig): Promise<{ succ
   }
 }
 
+export function extractAccountEmail(body: string): string | null {
+  const patterns = [
+    /Netflix\s+te\s+envi[oó]\s+este\s+mensaje\s+a\s+\[?([^\]\s<>\r\n,]+@[^\]\s<>\r\n,]+)\]?/i,
+    /enviamos\s+este\s+correo\s+a\s+\[?([^\]\s<>\r\n,]+@[^\]\s<>\r\n,]+)\]?/i,
+    /Netflix\s+sent\s+this\s+(?:email|message)\s+to\s+\[?([^\]\s<>\r\n,]+@[^\]\s<>\r\n,]+)\]?/i,
+    /\[([^\]]+@[^\]]+)\]\s+como\s+parte/i,
+    /mensaje\s+a\s+([^\s<>\r\n,]+@[^\s<>\r\n,]+)/i,
+  ];
+  for (const p of patterns) {
+    const m = body.match(p);
+    if (m) return m[1].trim();
+  }
+  return null;
+}
+
 export function extractProfileName(body: string): string {
   const patterns = [
     /Hola[,\s]+([^\n<,\r:]+)/i,
