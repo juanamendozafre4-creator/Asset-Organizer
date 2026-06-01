@@ -50,12 +50,12 @@ export default function AdminDashboard() {
       { id },
       {
         onSuccess: () => {
-          toast({ title: "Site deleted" });
+          toast({ title: "Sitio eliminado" });
           queryClient.invalidateQueries({ queryKey: getListSitesQueryKey() });
           setSiteToDelete(null);
         },
         onError: () => {
-          toast({ title: "Failed to delete site", variant: "destructive" });
+          toast({ title: "Error al eliminar el sitio", variant: "destructive" });
         },
       }
     );
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
     <div className="min-h-[100dvh] bg-background text-foreground">
       <header className="border-b border-border bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 sticky top-0 z-10">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-6xl">
-          <h1 className="font-bold text-xl tracking-tight">Nexus Admin</h1>
+          <h1 className="font-bold text-xl tracking-tight">Panel de Administración</h1>
           <div className="flex items-center gap-4">
             <Button
               onClick={() => {
@@ -98,11 +98,11 @@ export default function AdminDashboard() {
               size="sm"
             >
               <Plus className="w-4 h-4 mr-2" />
-              New Site
+              Nuevo Sitio
             </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              Cerrar Sesión
             </Button>
           </div>
         </div>
@@ -110,8 +110,8 @@ export default function AdminDashboard() {
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold tracking-tight">Managed Sites</h2>
-          <p className="text-muted-foreground">Configure client sites and IMAP connections.</p>
+          <h2 className="text-2xl font-bold tracking-tight">Sitios Administrados</h2>
+          <p className="text-muted-foreground">Configura los sitios de clientes y las conexiones IMAP.</p>
         </div>
 
         {isLoading ? (
@@ -120,9 +120,9 @@ export default function AdminDashboard() {
           </div>
         ) : sites?.length === 0 ? (
           <div className="text-center py-12 border border-dashed border-border rounded-lg">
-            <h3 className="text-lg font-medium">No sites created</h3>
-            <p className="text-muted-foreground mb-4">Get started by creating your first site.</p>
-            <Button onClick={() => setIsFormOpen(true)}>Create Site</Button>
+            <h3 className="text-lg font-medium">No hay sitios creados</h3>
+            <p className="text-muted-foreground mb-4">Comienza creando tu primer sitio.</p>
+            <Button onClick={() => setIsFormOpen(true)}>Crear Sitio</Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
                       <span className="truncate ml-2">{site.imapHost}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Email:</span>
+                      <span>Correo:</span>
                       <span className="truncate ml-2">{site.imapEmail}</span>
                     </div>
                   </div>
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
                         disabled={testConnection.isPending}
                       >
                         <Play className="h-3 w-3 mr-1.5" />
-                        Test
+                        Probar
                       </Button>
                       <Button
                         variant="default"
@@ -194,7 +194,7 @@ export default function AdminDashboard() {
                         onClick={() => window.open(`/${site.slug}`, '_blank')}
                       >
                         <ExternalLink className="h-3 w-3 mr-1.5" />
-                        Visit
+                        Ver
                       </Button>
                     </div>
                   </div>
@@ -214,20 +214,20 @@ export default function AdminDashboard() {
       <AlertDialog open={!!siteToDelete} onOpenChange={(open) => !open && setSiteToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the site and all its configuration. This action cannot be undone.
+              Esto eliminará permanentemente el sitio y toda su configuración. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => siteToDelete && handleDelete(siteToDelete)}
               disabled={deleteSite.isPending}
             >
               {deleteSite.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

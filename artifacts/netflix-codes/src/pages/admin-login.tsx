@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 const loginSchema = z.object({
-  email: z.string().min(1, "El email es requerido"),
+  email: z.string().min(1, "El usuario es requerido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
 
@@ -51,7 +51,7 @@ export default function AdminLogin() {
           {
             onSuccess: (data) => {
               setAdminToken(data.token);
-              toast({ title: "Setup successful", description: "Admin account created." });
+              toast({ title: "Configuración exitosa", description: "Cuenta de administrador creada." });
               setLocation("/admin/dashboard");
             },
             onError: () => {
@@ -65,7 +65,7 @@ export default function AdminLogin() {
           {
             onSuccess: (data) => {
               setAdminToken(data.token);
-              toast({ title: "Login successful" });
+              toast({ title: "Sesión iniciada correctamente" });
               setLocation("/admin/dashboard");
             },
             onError: () => {
@@ -94,20 +94,20 @@ export default function AdminLogin() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Nexus Admin
+            Códigos Netflix
           </h1>
           <p className="text-muted-foreground mt-2">
-            Professional access management
+            Panel de administración
           </p>
         </div>
 
         <Card className="border-border shadow-xl">
           <CardHeader>
-            <CardTitle>{isSetup ? "Initial Setup" : "Admin Login"}</CardTitle>
+            <CardTitle>{isSetup ? "Configuración Inicial" : "Iniciar Sesión"}</CardTitle>
             <CardDescription>
               {isSetup
-                ? "Create the first administrator account to get started."
-                : "Enter your credentials to access the dashboard."}
+                ? "Crea la primera cuenta de administrador para comenzar."
+                : "Ingresa tus credenciales para acceder al panel."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -118,7 +118,7 @@ export default function AdminLogin() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Usuario</FormLabel>
                       <FormControl>
                         <Input type="text" placeholder="admin@codigosnetflix" data-testid="input-email" {...field} />
                       </FormControl>
@@ -131,7 +131,7 @@ export default function AdminLogin() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Contraseña</FormLabel>
                       <FormControl>
                         <Input type="password" placeholder="••••••••" data-testid="input-password" {...field} />
                       </FormControl>
@@ -141,7 +141,7 @@ export default function AdminLogin() {
                 />
                 <Button type="submit" className="w-full" disabled={isPending} data-testid="button-submit">
                   {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {isSetup ? "Create Admin" : "Sign In"}
+                  {isSetup ? "Crear Administrador" : "Ingresar"}
                 </Button>
               </form>
             </Form>

@@ -6,8 +6,8 @@ import {
   getGetSiteInfoQueryKey
 } from "@workspace/api-client-react";
 import { Loader2, RefreshCw, AlertCircle } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { NetflixCodeCard } from "@/components/netflix-code-card";
 
 export default function PublicSite() {
   const { slug } = useParams<{ slug: string }>();
@@ -45,10 +45,10 @@ export default function PublicSite() {
       <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background p-4 text-center">
         <AlertCircle className="w-16 h-16 text-muted-foreground mb-4" />
         <h1 className="text-2xl font-bold tracking-tight text-foreground mb-2">
-          Site Not Found
+          Sitio no encontrado
         </h1>
         <p className="text-muted-foreground">
-          The requested access portal does not exist or has been removed.
+          El portal de acceso solicitado no existe o ha sido eliminado.
         </p>
       </div>
     );
@@ -64,13 +64,13 @@ export default function PublicSite() {
             </div>
           )}
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{site.name}</h1>
-          <p className="text-muted-foreground mt-2 font-mono text-sm">Access Codes</p>
+          <p className="text-muted-foreground mt-2 font-mono text-sm">Códigos de Acceso</p>
         </div>
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-3xl flex flex-col">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-medium text-muted-foreground">Recent Access Requests</h2>
+          <h2 className="text-lg font-medium text-muted-foreground">Solicitudes Recientes</h2>
           <Button 
             variant="outline" 
             size="sm" 
@@ -79,7 +79,7 @@ export default function PublicSite() {
             className="h-8"
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isRefetching ? 'animate-spin' : ''}`} />
-            Refresh
+            Actualizar
           </Button>
         </div>
 
@@ -90,53 +90,7 @@ export default function PublicSite() {
         ) : codes && codes.length > 0 ? (
           <div className="space-y-6">
             {codes.map((code) => (
-              <Card 
-                key={code.id} 
-                className="overflow-hidden border-border bg-card shadow-md relative"
-                data-testid={`card-netflix-${code.id}`}
-              >
-                <div className="p-5 md:p-6 flex flex-col md:flex-row gap-6 md:items-center">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Requested by</p>
-                    <p className="text-xl font-bold">Hello, {code.profileName}</p>
-                    <p className="text-sm text-muted-foreground mt-2 bg-muted/50 inline-block px-2 py-1 rounded">
-                      {code.deviceInfo}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-4">
-                      Received: {new Date(code.receivedAt).toLocaleString()}
-                    </p>
-                  </div>
-                  
-                  <div className="md:w-64 shrink-0 flex flex-col items-center justify-center p-6 bg-secondary/50 rounded-xl border border-border/50">
-                    <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-2">Access Code</p>
-                    
-                    {code.code ? (
-                      <div className="w-full text-center">
-                        <div 
-                          className="text-4xl md:text-5xl font-black text-primary tracking-widest leading-none drop-shadow-md"
-                          data-testid={`text-code-${code.id}`}
-                          style={{ fontFamily: "monospace" }}
-                        >
-                          {code.code}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="w-full text-center h-[50px] flex items-center justify-center">
-                        <p className="text-primary font-medium flex items-center animate-pulse">
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Extracting...
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {code.expiresIn && (
-                  <div className="bg-muted/30 px-6 py-3 border-t border-border/50 text-xs text-muted-foreground text-center md:text-left">
-                    * This link expires in {code.expiresIn}
-                  </div>
-                )}
-              </Card>
+              <NetflixCodeCard key={code.id} code={code} />
             ))}
           </div>
         ) : (
@@ -144,9 +98,9 @@ export default function PublicSite() {
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
               <AlertCircle className="w-6 h-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-1">No requests found</h3>
+            <h3 className="text-lg font-medium text-foreground mb-1">No hay solicitudes</h3>
             <p className="text-sm text-muted-foreground max-w-sm">
-              We haven't detected any recent Netflix access code requests for this account. They will appear here automatically.
+              No se han detectado solicitudes de código de acceso temporal de Netflix. Aparecerán aquí automáticamente.
             </p>
           </div>
         )}

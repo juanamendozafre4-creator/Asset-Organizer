@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,11 +26,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 
 const siteSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  slug: z.string().min(1, "Slug is required").regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and dashes"),
-  logoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  imapHost: z.string().min(1, "IMAP Host is required"),
-  imapEmail: z.string().email("Invalid email address"),
+  name: z.string().min(1, "El nombre es requerido"),
+  slug: z.string().min(1, "El slug es requerido").regex(/^[a-z0-9-]+$/, "Solo letras minúsculas, números y guiones"),
+  logoUrl: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
+  imapHost: z.string().min(1, "El host IMAP es requerido"),
+  imapEmail: z.string().min(1, "El correo es requerido"),
   imapPassword: z.string().optional(),
 });
 
@@ -72,7 +72,7 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
           logoUrl: siteToEdit.logoUrl || "",
           imapHost: siteToEdit.imapHost,
           imapEmail: siteToEdit.imapEmail,
-          imapPassword: "", // Don't prefill password for security
+          imapPassword: "",
         });
       } else {
         form.reset({
@@ -102,18 +102,18 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
         { id: siteToEdit.id, data },
         {
           onSuccess: () => {
-            toast({ title: "Site updated successfully" });
+            toast({ title: "Sitio actualizado correctamente" });
             queryClient.invalidateQueries({ queryKey: getListSitesQueryKey() });
             onOpenChange(false);
           },
           onError: (err: any) => {
-            toast({ title: "Update failed", description: err.error || "An error occurred", variant: "destructive" });
+            toast({ title: "Error al actualizar", description: err.error || "Ocurrió un error", variant: "destructive" });
           },
         }
       );
     } else {
       if (!values.imapPassword) {
-        form.setError("imapPassword", { message: "Password is required for new sites" });
+        form.setError("imapPassword", { message: "La contraseña es requerida para nuevos sitios" });
         return;
       }
 
@@ -121,12 +121,12 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
         { data: data as any },
         {
           onSuccess: () => {
-            toast({ title: "Site created successfully" });
+            toast({ title: "Sitio creado correctamente" });
             queryClient.invalidateQueries({ queryKey: getListSitesQueryKey() });
             onOpenChange(false);
           },
           onError: (err: any) => {
-            toast({ title: "Creation failed", description: err.error || "An error occurred", variant: "destructive" });
+            toast({ title: "Error al crear", description: err.error || "Ocurrió un error", variant: "destructive" });
           },
         }
       );
@@ -139,11 +139,11 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Site" : "Create New Site"}</DialogTitle>
+          <DialogTitle>{isEditing ? "Editar Sitio" : "Crear Nuevo Sitio"}</DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Update the configuration for this client site."
-              : "Set up a new client site and IMAP connection."}
+              ? "Actualiza la configuración de este sitio."
+              : "Configura un nuevo sitio y su conexión IMAP."}
           </DialogDescription>
         </DialogHeader>
 
@@ -155,9 +155,9 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Site Name</FormLabel>
+                    <FormLabel>Nombre del Sitio</FormLabel>
                     <FormControl>
-                      <Input placeholder="Acme Corp" {...field} />
+                      <Input placeholder="Mi Sitio" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -168,9 +168,9 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                 name="slug"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>URL Slug</FormLabel>
+                    <FormLabel>Slug URL</FormLabel>
                     <FormControl>
-                      <Input placeholder="acme" data-testid="input-slug" {...field} />
+                      <Input placeholder="mi-sitio" data-testid="input-slug" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -183,9 +183,9 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
               name="logoUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Logo URL (Optional)</FormLabel>
+                  <FormLabel>URL del Logo (Opcional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/logo.png" {...field} />
+                    <Input placeholder="https://ejemplo.com/logo.png" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -193,14 +193,14 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
             />
 
             <div className="border-t border-border pt-4 mt-4">
-              <h4 className="font-medium text-sm mb-3 text-muted-foreground">IMAP Configuration</h4>
+              <h4 className="font-medium text-sm mb-3 text-muted-foreground">Configuración IMAP</h4>
               <div className="space-y-4">
                 <FormField
                   control={form.control}
                   name="imapHost"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>IMAP Host</FormLabel>
+                      <FormLabel>Host IMAP</FormLabel>
                       <FormControl>
                         <Input placeholder="imap.gmail.com" {...field} />
                       </FormControl>
@@ -214,9 +214,9 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                     name="imapEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email Address</FormLabel>
+                        <FormLabel>Correo Electrónico</FormLabel>
                         <FormControl>
-                          <Input placeholder="client@gmail.com" type="email" {...field} />
+                          <Input placeholder="cliente@gmail.com" type="text" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -227,10 +227,10 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                     name="imapPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>App Password</FormLabel>
+                        <FormLabel>Contraseña de App</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder={isEditing ? "(unchanged)" : "••••••••"}
+                            placeholder={isEditing ? "(sin cambios)" : "••••••••"}
                             type="password"
                             {...field}
                           />
@@ -245,11 +245,11 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
 
             <div className="flex justify-end pt-4 gap-2">
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? "Save Changes" : "Create Site"}
+                {isEditing ? "Guardar Cambios" : "Crear Sitio"}
               </Button>
             </div>
           </form>
