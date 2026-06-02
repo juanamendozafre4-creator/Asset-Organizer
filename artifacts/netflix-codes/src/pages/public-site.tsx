@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useGetSiteInfo, getGetSiteInfoQueryKey } from "@workspace/api-client-react";
-import { Loader2, AlertCircle, Radio } from "lucide-react";
+import { Loader2, AlertCircle, Radio, Volume2 } from "lucide-react";
 import { NetflixCodeCard } from "@/components/netflix-code-card";
 import { useSiteCodesStream } from "@/hooks/useSiteCodesStream";
 import { useSpeechNotification } from "@/hooks/useSpeechNotification";
@@ -66,7 +66,7 @@ export default function PublicSite() {
     site ? slug : undefined
   );
 
-  useSpeechNotification(codes);
+  const { needsUnlock, unlock } = useSpeechNotification(codes);
 
   if (isLoadingSite) {
     return (
@@ -141,6 +141,18 @@ export default function PublicSite() {
           )}
         </div>
       </header>
+
+      {/* Audio unlock banner — shown until user taps it */}
+      {needsUnlock && (
+        <button
+          onClick={unlock}
+          className="w-full py-3 px-4 flex items-center justify-center gap-3 text-sm font-semibold cursor-pointer transition-opacity hover:opacity-90 active:opacity-75"
+          style={{ background: "rgba(0,0,0,0.45)", color: "#ffffff" }}
+        >
+          <Volume2 className="w-4 h-4 shrink-0" />
+          Toca aquí para activar notificaciones de audio
+        </button>
+      )}
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-3xl flex flex-col">
         <div className="flex justify-between items-center mb-6">
