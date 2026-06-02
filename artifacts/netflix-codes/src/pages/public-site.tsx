@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useGetSiteInfo, getGetSiteInfoQueryKey } from "@workspace/api-client-react";
-import { Loader2, AlertCircle, Radio, Volume2 } from "lucide-react";
+import { Loader2, AlertCircle, Radio } from "lucide-react";
 import { NetflixCodeCard } from "@/components/netflix-code-card";
 import { useSiteCodesStream } from "@/hooks/useSiteCodesStream";
 import { useSpeechNotification } from "@/hooks/useSpeechNotification";
@@ -66,7 +66,7 @@ export default function PublicSite() {
     site ? slug : undefined
   );
 
-  const { needsUnlock, unlock } = useSpeechNotification(codes);
+  useSpeechNotification(codes);
 
   if (isLoadingSite) {
     return (
@@ -196,30 +196,6 @@ export default function PublicSite() {
         )}
       </main>
 
-      {needsUnlock && (
-        <div
-          className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center gap-3 px-4 py-5"
-          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
-        >
-          <p className="text-white/70 text-xs text-center">
-            Tu dispositivo requiere que toques la pantalla para activar el audio
-          </p>
-          <button
-            onClick={unlock}
-            className="flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-base shadow-2xl active:scale-95 transition-transform select-none w-full max-w-sm justify-center"
-            style={{
-              background: "#E50914",
-              color: "#ffffff",
-              WebkitTapHighlightColor: "transparent",
-              fontSize: "1rem",
-              letterSpacing: "0.01em",
-            }}
-          >
-            <Volume2 className="w-5 h-5 shrink-0" />
-            Toca aquí para activar el audio
-          </button>
-        </div>
-      )}
     </div>
   );
 }
