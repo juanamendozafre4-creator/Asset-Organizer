@@ -38,7 +38,7 @@ router.get("/sites/:slug", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json({ name: site.name, logoUrl: site.logoUrl ?? null, themeColor: site.themeColor, slug: site.slug });
+  res.json({ name: site.name, logoUrl: site.logoUrl ?? null, description: site.description ?? null, themeColor: site.themeColor, slug: site.slug });
 });
 
 router.get("/sites/:slug/codes", async (req, res): Promise<void> => {

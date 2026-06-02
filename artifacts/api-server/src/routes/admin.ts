@@ -20,6 +20,7 @@ function serializeSite(site: typeof sitesTable.$inferSelect) {
     slug: site.slug,
     name: site.name,
     logoUrl: site.logoUrl ?? null,
+    description: site.description ?? null,
     themeColor: site.themeColor,
     imapHost: site.imapHost,
     imapEmail: site.imapEmail,
@@ -54,6 +55,7 @@ router.post("/admin/sites", requireAuth, async (req, res): Promise<void> => {
       slug: parsed.data.slug,
       name: parsed.data.name,
       logoUrl: parsed.data.logoUrl ?? null,
+      description: parsed.data.description ?? null,
       themeColor: parsed.data.themeColor ?? "#141414",
       imapHost: parsed.data.imapHost,
       imapEmail: parsed.data.imapEmail,
@@ -84,6 +86,7 @@ router.put("/admin/sites/:id", requireAuth, async (req, res): Promise<void> => {
   if (parsed.data.slug != null) updateData.slug = parsed.data.slug;
   if (parsed.data.name != null) updateData.name = parsed.data.name;
   if ("logoUrl" in parsed.data) updateData.logoUrl = parsed.data.logoUrl ?? null;
+  if ("description" in parsed.data) updateData.description = parsed.data.description ?? null;
   if (parsed.data.themeColor != null) updateData.themeColor = parsed.data.themeColor;
   if (parsed.data.imapHost != null) updateData.imapHost = parsed.data.imapHost;
   if (parsed.data.imapEmail != null) updateData.imapEmail = parsed.data.imapEmail;

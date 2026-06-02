@@ -55,6 +55,7 @@ export const ListSitesResponseItem = zod.object({
   "slug": zod.string(),
   "name": zod.string(),
   "logoUrl": zod.string().nullable(),
+  "description": zod.string().nullish(),
   "themeColor": zod.string(),
   "imapHost": zod.string(),
   "imapEmail": zod.string(),
@@ -70,6 +71,7 @@ export const CreateSiteBody = zod.object({
   "slug": zod.string(),
   "name": zod.string(),
   "logoUrl": zod.string().nullish(),
+  "description": zod.string().nullish(),
   "themeColor": zod.string().optional(),
   "imapHost": zod.string(),
   "imapEmail": zod.string(),
@@ -88,6 +90,7 @@ export const UpdateSiteBody = zod.object({
   "slug": zod.string().optional(),
   "name": zod.string().optional(),
   "logoUrl": zod.string().nullish(),
+  "description": zod.string().nullish(),
   "themeColor": zod.string().optional(),
   "imapHost": zod.string().optional(),
   "imapEmail": zod.string().optional(),
@@ -99,6 +102,7 @@ export const UpdateSiteResponse = zod.object({
   "slug": zod.string(),
   "name": zod.string(),
   "logoUrl": zod.string().nullable(),
+  "description": zod.string().nullish(),
   "themeColor": zod.string(),
   "imapHost": zod.string(),
   "imapEmail": zod.string(),
@@ -137,6 +141,7 @@ export const GetSiteInfoParams = zod.object({
 export const GetSiteInfoResponse = zod.object({
   "name": zod.string(),
   "logoUrl": zod.string().nullable(),
+  "description": zod.string().nullable(),
   "themeColor": zod.string(),
   "slug": zod.string()
 })

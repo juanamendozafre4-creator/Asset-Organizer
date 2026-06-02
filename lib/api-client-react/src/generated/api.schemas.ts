@@ -29,6 +29,8 @@ export interface Site {
   name: string;
   /** @nullable */
   logoUrl: string | null;
+  /** @nullable */
+  description?: string | null;
   themeColor: string;
   imapHost: string;
   imapEmail: string;
@@ -40,6 +42,8 @@ export interface SiteInput {
   name: string;
   /** @nullable */
   logoUrl?: string | null;
+  /** @nullable */
+  description?: string | null;
   themeColor?: string;
   imapHost: string;
   imapEmail: string;
@@ -51,6 +55,8 @@ export interface SiteUpdate {
   name?: string;
   /** @nullable */
   logoUrl?: string | null;
+  /** @nullable */
+  description?: string | null;
   themeColor?: string;
   imapHost?: string;
   imapEmail?: string;
@@ -62,6 +68,8 @@ export interface SitePublicInfo {
   name: string;
   /** @nullable */
   logoUrl: string | null;
+  /** @nullable */
+  description: string | null;
   themeColor: string;
   slug: string;
 }

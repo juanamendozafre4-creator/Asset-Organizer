@@ -313,6 +313,8 @@ components:
           type: string
         logoUrl:
           type: ["string", "null"]
+        description:
+          type: ["string", "null"]
         themeColor:
           type: string
         imapHost:
@@ -331,6 +333,8 @@ components:
         name:
           type: string
         logoUrl:
+          type: ["string", "null"]
+        description:
           type: ["string", "null"]
         themeColor:
           type: string
@@ -351,6 +355,8 @@ components:
           type: string
         logoUrl:
           type: ["string", "null"]
+        description:
+          type: ["string", "null"]
         themeColor:
           type: string
         imapHost:
@@ -367,11 +373,13 @@ components:
           type: string
         logoUrl:
           type: ["string", "null"]
+        description:
+          type: ["string", "null"]
         themeColor:
           type: string
         slug:
           type: string
-      required: [name, logoUrl, themeColor, slug]
+      required: [name, logoUrl, description, themeColor, slug]
 
     NetflixCode:
       type: object

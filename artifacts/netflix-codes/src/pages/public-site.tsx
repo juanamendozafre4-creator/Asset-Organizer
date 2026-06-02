@@ -123,9 +123,17 @@ export default function PublicSite() {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: textColor }}>
             {site.name}
           </h1>
-          <p className="mt-2 font-mono text-sm" style={{ color: mutedColor }}>
+          <p className="mt-1 font-mono text-sm" style={{ color: mutedColor }}>
             Códigos de Acceso
           </p>
+          {site.description && (
+            <p
+              className="mt-3 text-sm leading-relaxed max-w-md whitespace-pre-line"
+              style={{ color: mutedColor }}
+            >
+              {site.description}
+            </p>
+          )}
         </div>
       </header>
 

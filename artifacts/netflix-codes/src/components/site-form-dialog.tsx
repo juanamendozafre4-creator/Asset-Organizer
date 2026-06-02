@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateSite, useUpdateSite, getListSitesQueryKey, Site } from "@workspace/api-client-react";
@@ -43,6 +44,7 @@ const siteSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   slug: z.string().min(1, "El slug es requerido").regex(/^[a-z0-9-]+$/, "Solo letras minúsculas, números y guiones"),
   logoUrl: z.string().optional().or(z.literal("")),
+  description: z.string().max(500, "Máximo 500 caracteres").optional().or(z.literal("")),
   themeColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Color inválido").default("#141414"),
   imapHost: z.string().min(1, "El host IMAP es requerido"),
   imapEmail: z.string().min(1, "El correo es requerido"),
@@ -147,6 +149,7 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
       name: "",
       slug: "",
       logoUrl: "",
+      description: "",
       themeColor: "#141414",
       imapHost: "",
       imapEmail: "",
@@ -164,6 +167,7 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
           name: siteToEdit.name,
           slug: siteToEdit.slug,
           logoUrl: siteToEdit.logoUrl || "",
+          description: siteToEdit.description || "",
           themeColor: siteToEdit.themeColor || "#141414",
           imapHost: siteToEdit.imapHost,
           imapEmail: siteToEdit.imapEmail,
@@ -171,7 +175,7 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
         });
         setLogoPreview(siteToEdit.logoUrl || "");
       } else {
-        form.reset({ name: "", slug: "", logoUrl: "", themeColor: "#141414", imapHost: "", imapEmail: "", imapPassword: "" });
+        form.reset({ name: "", slug: "", logoUrl: "", description: "", themeColor: "#141414", imapHost: "", imapEmail: "", imapPassword: "" });
         setLogoPreview("");
       }
       setShowPreview(false);
@@ -383,6 +387,28 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                 </div>
               )}
             </div>
+
+            {/* Description */}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Instrucciones para el cliente <span className="text-muted-foreground font-normal">(Opcional)</span></FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Ej: Para solicitar tu código, ve a Ajustes en tu TV → Obtener código de acceso. El código aparecerá aquí en segundos."
+                      className="resize-none text-sm min-h-[80px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    {(field.value?.length ?? 0)}/500 · Se mostrará debajo del nombre en la página del cliente
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Color palette */}
             <div className="space-y-3">
