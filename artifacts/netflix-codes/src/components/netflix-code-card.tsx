@@ -1,12 +1,58 @@
-import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
+import { useState, useEffect } from "react";
+import { parseISO } from "date-fns";
 import type { NetflixCode } from "@workspace/api-client-react";
-import { MonitorSmartphone, XCircle, HelpCircle, Mail } from "lucide-react";
+import { MonitorSmartphone, XCircle, HelpCircle, Mail, Clock } from "lucide-react";
 
 const CODE_TTL_MS = 15 * 60 * 1000;
+const COLOMBIA_TZ = "America/Bogota";
 
 function cleanText(text: string): string {
   return text.replace(/\*/g, "").replace(/\s+/g, " ").trim();
+}
+
+/** Formatea una fecha en zona Colombia. Ej: "2 de junio, 3:07 a. m." */
+function formatColombiaTime(isoString: string): string {
+  const date = parseISO(isoString);
+  return new Intl.DateTimeFormat("es-CO", {
+    timeZone: COLOMBIA_TZ,
+    day: "numeric",
+    month: "long",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+}
+
+/** Devuelve milisegundos restantes antes del vencimiento (puede ser negativo). */
+function msRemaining(receivedAt: string): number {
+  const expiry = parseISO(receivedAt).getTime() + CODE_TTL_MS;
+  return expiry - Date.now();
+}
+
+/** Convierte ms a texto "MM:SS". Si <= 0 devuelve "00:00". */
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return "00:00";
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+/** Hook que actualiza el tiempo restante cada segundo. */
+function useCountdown(receivedAt: string) {
+  const [remaining, setRemaining] = useState(() => msRemaining(receivedAt));
+
+  useEffect(() => {
+    setRemaining(msRemaining(receivedAt));
+    const id = setInterval(() => {
+      const r = msRemaining(receivedAt);
+      setRemaining(r);
+      if (r <= 0) clearInterval(id);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [receivedAt]);
+
+  return remaining;
 }
 
 interface NetflixCodeCardProps {
@@ -28,7 +74,9 @@ export function NetflixCodeCard({
   cardBg = "rgba(255,255,255,0.07)",
   cardBorder = "rgba(255,255,255,0.10)",
 }: NetflixCodeCardProps) {
-  const expiredByTime = Date.now() - parseISO(code.receivedAt).getTime() > CODE_TTL_MS;
+  const remaining = useCountdown(code.receivedAt);
+
+  const expiredByTime = remaining <= 0;
   const expiredByServer = code.code === "EXPIRED";
   const isExpired = expiredByTime || expiredByServer;
   const hasCode = code.code && code.code !== "EXPIRED";
@@ -38,6 +86,14 @@ export function NetflixCodeCard({
   const expiredBg = dark ? "rgba(220,38,38,0.12)" : "rgba(220,38,38,0.06)";
   const expiredBorder = dark ? "rgba(220,38,38,0.30)" : "rgba(220,38,38,0.25)";
   const unavailableBg = dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)";
+
+  // Countdown color: green > 5min, yellow 2-5min, red < 2min
+  const countdownColor =
+    remaining > 5 * 60 * 1000
+      ? "#4ade80"
+      : remaining > 2 * 60 * 1000
+      ? "#facc15"
+      : "#f87171";
 
   return (
     <div
@@ -104,6 +160,14 @@ export function NetflixCodeCard({
               >
                 {code.code}
               </div>
+              {/* Contador regresivo */}
+              <div
+                className="mt-4 flex items-center gap-1.5 text-sm font-semibold tabular-nums"
+                style={{ color: countdownColor }}
+              >
+                <Clock className="h-4 w-4" />
+                <span>Vence en {formatCountdown(remaining)}</span>
+              </div>
             </div>
           ) : (
             <div
@@ -122,14 +186,14 @@ export function NetflixCodeCard({
         </div>
       </div>
 
-      {/* Pie */}
+      {/* Pie — hora en zona Colombia */}
       <div
         className="px-6 py-3 border-t flex items-center justify-between text-xs"
         style={{ background: footerBg, borderColor: cardBorder, color: mutedColor }}
       >
         <span>Recibido</span>
         <time dateTime={code.receivedAt}>
-          {format(parseISO(code.receivedAt), "d 'de' MMMM, h:mm a", { locale: es })}
+          {formatColombiaTime(code.receivedAt)}
         </time>
       </div>
     </div>
