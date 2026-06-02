@@ -1,12 +1,8 @@
 import { useParams } from "wouter";
-import {
-  useGetSiteInfo,
-  useListSiteCodes,
-  getListSiteCodesQueryKey,
-  getGetSiteInfoQueryKey
-} from "@workspace/api-client-react";
-import { Loader2, RefreshCw, AlertCircle } from "lucide-react";
+import { useGetSiteInfo, getGetSiteInfoQueryKey } from "@workspace/api-client-react";
+import { Loader2, AlertCircle, Radio } from "lucide-react";
 import { NetflixCodeCard } from "@/components/netflix-code-card";
+import { useSiteCodesStream } from "@/hooks/useSiteCodesStream";
 import {
   isDark,
   getTextColor,
@@ -16,30 +12,43 @@ import {
   getLogoBg,
 } from "@/lib/color-utils";
 
-function RefreshButton({
-  onClick,
-  disabled,
-  isSpinning,
+function LiveBadge({
+  status,
   textColor,
-  borderColor,
+  mutedColor,
 }: {
-  onClick: () => void;
-  disabled: boolean;
-  isSpinning: boolean;
+  status: "connecting" | "live" | "reconnecting" | "error";
   textColor: string;
-  borderColor: string;
+  mutedColor: string;
 }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-50"
-      style={{ color: textColor, borderColor, background: "transparent" }}
-    >
-      <RefreshCw className={`w-3.5 h-3.5 ${isSpinning ? "animate-spin" : ""}`} />
-      Actualizar
-    </button>
-  );
+  if (status === "live") {
+    return (
+      <div className="flex items-center gap-1.5 text-xs" style={{ color: mutedColor }}>
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+        </span>
+        En vivo
+      </div>
+    );
+  }
+  if (status === "reconnecting") {
+    return (
+      <div className="flex items-center gap-1.5 text-xs" style={{ color: mutedColor }}>
+        <Radio className="w-3.5 h-3.5 animate-pulse" />
+        Reconectando…
+      </div>
+    );
+  }
+  if (status === "connecting") {
+    return (
+      <div className="flex items-center gap-1.5 text-xs" style={{ color: mutedColor }}>
+        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        Conectando…
+      </div>
+    );
+  }
+  return null;
 }
 
 export default function PublicSite() {
@@ -52,18 +61,9 @@ export default function PublicSite() {
     }
   });
 
-  const {
-    data: codes,
-    isLoading: isLoadingCodes,
-    isRefetching,
-    refetch
-  } = useListSiteCodes(slug, {
-    query: {
-      enabled: !!site,
-      refetchInterval: 30000,
-      queryKey: getListSiteCodesQueryKey(slug),
-    }
-  });
+  const { codes, status, isLoading: isLoadingCodes, imapError } = useSiteCodesStream(
+    site ? slug : undefined
+  );
 
   if (isLoadingSite) {
     return (
@@ -142,20 +142,22 @@ export default function PublicSite() {
           <h2 className="text-lg font-medium" style={{ color: mutedColor }}>
             Solicitudes Recientes
           </h2>
-          <RefreshButton
-            onClick={() => refetch()}
-            disabled={isRefetching || isLoadingCodes}
-            isSpinning={isRefetching}
-            textColor={mutedColor}
-            borderColor={cardBorder}
-          />
+          <LiveBadge status={status} textColor={textColor} mutedColor={mutedColor} />
         </div>
 
         {isLoadingCodes ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin" style={{ color: mutedColor }} />
           </div>
-        ) : codes && codes.length > 0 ? (
+        ) : imapError ? (
+          <div
+            className="flex-1 flex flex-col items-center justify-center py-20 text-center rounded-xl border-2 border-dashed"
+            style={{ borderColor: cardBorder }}
+          >
+            <AlertCircle className="w-8 h-8 mb-3" style={{ color: mutedColor }} />
+            <p className="text-sm" style={{ color: mutedColor }}>{imapError}</p>
+          </div>
+        ) : codes.length > 0 ? (
           <div className="space-y-6">
             {codes.map((code) => (
               <NetflixCodeCard
