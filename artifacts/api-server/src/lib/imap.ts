@@ -362,8 +362,33 @@ export async function testImapConnection(config: SiteImapConfig): Promise<{ succ
     await client.logout();
     return { success: true, message: `Conexión exitosa con ${config.email}` };
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Error desconocido";
-    return { success: false, message: `Error de conexión: ${message}` };
+    const raw = err instanceof Error ? err.message : "Error desconocido";
+    const code = (err as NodeJS.ErrnoException).code ?? "";
+
+    let message: string;
+
+    if (raw.includes("Command failed") || raw.includes("AUTHENTICATE") || raw.includes("LOGIN")) {
+      if (config.host.includes("gmail")) {
+        message =
+          "Autenticación rechazada por Gmail. Asegúrate de usar una Contraseña de Aplicación (no la contraseña normal). " +
+          "Si ya la tienes, espera 1–2 minutos antes de volver a probar — Gmail bloquea temporalmente los intentos repetidos.";
+      } else {
+        message =
+          "Autenticación rechazada. Verifica que el correo y la contraseña sean correctos y que el acceso IMAP esté habilitado.";
+      }
+    } else if (code === "ENOTFOUND" || raw.includes("ENOTFOUND")) {
+      message = `Servidor no encontrado: "${config.host}". Verifica que el host IMAP sea correcto.`;
+    } else if (code === "ECONNREFUSED" || raw.includes("ECONNREFUSED")) {
+      message = `Conexión rechazada por "${config.host}:993". Verifica que el puerto IMAP (993) esté abierto.`;
+    } else if (code === "ETIMEDOUT" || raw.includes("ETIMEDOUT") || raw.includes("timeout")) {
+      message = `Tiempo de espera agotado al conectar con "${config.host}". El servidor no responde.`;
+    } else if (raw.includes("certificate") || raw.includes("SSL") || raw.includes("TLS")) {
+      message = `Error de certificado SSL con "${config.host}". El servidor puede no soportar conexiones seguras en el puerto 993.`;
+    } else {
+      message = `Error de conexión: ${raw}`;
+    }
+
+    return { success: false, message };
   }
 }
 
