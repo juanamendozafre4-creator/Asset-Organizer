@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { parseISO } from "date-fns";
 import type { NetflixCode } from "@workspace/api-client-react";
-import { MonitorSmartphone, XCircle, HelpCircle, Mail, Clock, ExternalLink } from "lucide-react";
+import { MonitorSmartphone, XCircle, Mail, Clock } from "lucide-react";
 
 const CODE_TTL_MS = 15 * 60 * 1000;
 const COLOMBIA_TZ = "America/Bogota";
@@ -158,7 +158,7 @@ export function NetflixCodeCard({
           )}
         </div>
 
-        {/* Código / Vencido / No disponible */}
+        {/* Código / Vencido */}
         <div className="pt-1">
           {isExpired ? (
             <div
@@ -200,45 +200,7 @@ export function NetflixCodeCard({
                 <span>Vence en {formatCountdown(remaining)}</span>
               </div>
             </div>
-          ) : code.netflixLink ? (
-            <a
-              href={code.netflixLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full rounded-xl py-6 px-4 flex flex-col items-center gap-3 transition-opacity hover:opacity-80 active:opacity-60"
-              style={{ background: codeBlockBg, textDecoration: "none" }}
-            >
-              <p
-                className="text-xs font-medium uppercase tracking-widest"
-                style={{ color: mutedColor }}
-              >
-                Código de acceso temporal
-              </p>
-              <div
-                className="flex items-center gap-2 text-base font-semibold"
-                style={{ color: textColor }}
-              >
-                <ExternalLink className="h-5 w-5 shrink-0" />
-                <span>Ver código en Netflix</span>
-              </div>
-              <p className="text-xs text-center" style={{ color: mutedColor }}>
-                Toca para abrir el código directamente en Netflix
-              </p>
-            </a>
-          ) : (
-            <div
-              className="w-full rounded-xl py-6 px-4 flex flex-col items-center gap-2"
-              style={{ background: unavailableBg, border: `1px solid ${cardBorder}` }}
-            >
-              <HelpCircle className="h-6 w-6" style={{ color: mutedColor }} />
-              <p className="text-sm font-medium" style={{ color: mutedColor }}>
-                Código no disponible
-              </p>
-              <p className="text-xs text-center" style={{ color: mutedColor }}>
-                No se pudo leer el código desde el correo
-              </p>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
 
