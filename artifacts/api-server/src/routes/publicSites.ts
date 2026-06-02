@@ -62,7 +62,7 @@ router.get("/sites/:slug/codes", async (req, res): Promise<void> => {
     const password = decrypt(site.imapPasswordEncrypted);
     const rawEmails = await fetchNetflixEmailsForSite(
       { host: site.imapHost, email: site.imapEmail, password },
-      10
+      20
     );
 
     const SUBJECT_FILTER = "Tu código de acceso temporal de Netflix";
@@ -94,8 +94,12 @@ router.get("/sites/:slug/codes", async (req, res): Promise<void> => {
       })
     );
 
-    req.log.info({ slug: site.slug, count: codes.length }, "Fetched codes for site");
-    res.json(ListSiteCodesResponse.parse(codes));
+    const sorted = codes
+      .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime())
+      .slice(0, 10);
+
+    req.log.info({ slug: site.slug, count: sorted.length }, "Fetched codes for site");
+    res.json(ListSiteCodesResponse.parse(sorted));
   } catch (err) {
     req.log.error({ err, slug: site.slug }, "IMAP error");
     res.status(503).json({ error: "Error al conectar con el servidor de correo" });
