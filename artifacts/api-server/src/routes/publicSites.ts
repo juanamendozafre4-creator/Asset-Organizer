@@ -9,6 +9,7 @@ import {
   extractCode,
   extractExpiry,
   decodeEmailBody,
+  extractEmailParts,
   extractNetflixLink,
   fetchCodeFromNetflixLink,
   extractAccountEmail,
@@ -39,8 +40,9 @@ async function buildCodesForSite(site: SiteRow) {
 
   const codes = await Promise.all(
     filtered.map(async (email) => {
+      const { html: rawHtml } = extractEmailParts(email.source);
       const body = decodeEmailBody(email.source);
-      let code = extractCode(body);
+      let code = extractCode(body, rawHtml || undefined);
       const netflixLink = extractNetflixLink(email.source);
 
       if (!code && netflixLink) {

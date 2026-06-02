@@ -316,17 +316,40 @@ export function extractDeviceInfo(body: string): string {
   return "Información del dispositivo no disponible";
 }
 
-export function extractCode(body: string): string | null {
-  const patterns = [
+export function extractCode(body: string, rawHtml?: string): string | null {
+  // 1. Try specific contextual patterns in the decoded plain text
+  const textPatterns = [
     /tu\s+c[oó]digo\s+(?:de\s+acceso\s+(?:temporal\s+)?)?(?:es[:\s]+)?([0-9]{4})\b/i,
+    /c[oó]digo\s+(?:de\s+acceso\s+)?(?:temporal\s+)?(?:es[:\s]+)?([0-9]{4})\b/i,
     /c[oó]digo[:\s]+([0-9]{4})\b/i,
     /\bcode[:\s]+([0-9]{4})\b/i,
-    /\b([0-9]{4})\b/,
+    /acceso\s+temporal[^0-9]{0,40}([0-9]{4})\b/i,
+    /temporal[^0-9]{0,20}([0-9]{4})\b/i,
   ];
-  for (const p of patterns) {
+  for (const p of textPatterns) {
     const m = body.match(p);
     if (m) return m[1].trim();
   }
+
+  // 2. Try structural HTML patterns — Netflix puts the code alone inside a styled element
+  if (rawHtml) {
+    const htmlPatterns = [
+      // Standalone 4-digit number as the only content of a block element
+      /<(?:td|th|p|div|span|h\d)[^>]*>\s*([0-9]{4})\s*<\/(?:td|th|p|div|span|h\d)>/i,
+      // Large font-size element (Netflix renders the code at ≥36px)
+      /font-size\s*:\s*(?:[3-9]\d|[1-9]\d{2,})px[^>]*>\s*([0-9]{4})\s*</i,
+      // Letter-spacing or tracking hint — typically only on the code
+      /letter-spacing[^>]*>\s*([0-9]{4})\s*</i,
+    ];
+    for (const p of htmlPatterns) {
+      const m = rawHtml.match(p);
+      if (m) return m[1].trim();
+    }
+  }
+
+  // Do NOT use a bare /\b\d{4}\b/ fallback — it grabs years (2025, 2026),
+  // phone suffixes, and other false positives. Return null so the caller
+  // can fall back to fetchCodeFromNetflixLink which is far more reliable.
   return null;
 }
 
