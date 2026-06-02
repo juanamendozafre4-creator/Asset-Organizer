@@ -276,9 +276,63 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
   }
 }
 
+/**
+ * Fetch Netflix emails using an already-connected ImapFlow client
+ * that already has INBOX locked. Does NOT connect or disconnect.
+ * Use this from the IDLE loop to avoid opening a second IMAP connection.
+ */
+export async function fetchEmailsFromLockedInbox(
+  client: ImapFlow,
+  limit = 20
+): Promise<RawEmail[]> {
+  const results: RawEmail[] = [];
+
+  const foundEs = await client
+    .search({ subject: "código de acceso temporal" })
+    .catch(() => [] as number[]);
+  const foundEn = await client
+    .search({ subject: "Netflix temporary access code" })
+    .catch(() => [] as number[]);
+
+  const found = [...(foundEs as number[]), ...(foundEn as number[])];
+  const allIds = [...new Set(found.filter((x): x is number => typeof x === "number"))];
+  const ids = allIds.sort((a, b) => b - a).slice(0, limit);
+
+  if (ids.length === 0) return results;
+
+  // Fetch all messages in a single IMAP FETCH command (much faster than sequential fetchOne)
+  const range = ids.join(",");
+  try {
+    for await (const msg of client.fetch(range, {
+      source: true,
+      internalDate: true,
+      envelope: true,
+    })) {
+      const receivedRaw = msg.internalDate;
+      const receivedAt =
+        receivedRaw instanceof Date
+          ? receivedRaw
+          : typeof receivedRaw === "string"
+            ? new Date(receivedRaw)
+            : new Date();
+
+      results.push({
+        uid: String(msg.seq),
+        source: msg.source?.toString("utf-8") ?? "",
+        receivedAt,
+        subject: msg.envelope?.subject ?? "",
+      });
+    }
+  } catch (err) {
+    logger.warn({ err, range }, "Error batch-fetching emails");
+  }
+
+  return results;
+}
+
 export async function fetchNetflixEmailsForSite(
   config: SiteImapConfig,
-  limit = 10
+  limit = 20
 ): Promise<RawEmail[]> {
   const client = new ImapFlow({
     host: config.host,
@@ -291,61 +345,17 @@ export async function fetchNetflixEmailsForSite(
     logger: false,
   });
 
-  const results: RawEmail[] = [];
-
   try {
     await client.connect();
     const lock = await client.getMailboxLock("INBOX");
-
     try {
-      // Search for both Spanish and English Netflix temporary access code emails
-      const foundEs = await client
-        .search({ subject: "código de acceso temporal" })
-        .catch(() => [] as number[]);
-      const foundEn = await client
-        .search({ subject: "Netflix temporary access code" })
-        .catch(() => [] as number[]);
-
-      const found = [...(foundEs as number[]), ...(foundEn as number[])];
-      const allIds = [...new Set(found.filter((x): x is number => typeof x === "number"))];
-      const ids = allIds.sort((a, b) => b - a).slice(0, limit);
-
-      for (const seq of ids) {
-        try {
-          const msg = await client.fetchOne(String(seq), {
-            source: true,
-            internalDate: true,
-            envelope: true,
-          });
-
-          if (msg) {
-            const receivedRaw = msg.internalDate;
-            const receivedAt =
-              receivedRaw instanceof Date
-                ? receivedRaw
-                : typeof receivedRaw === "string"
-                  ? new Date(receivedRaw)
-                  : new Date();
-
-            results.push({
-              uid: String(seq),
-              source: msg.source?.toString("utf-8") ?? "",
-              receivedAt,
-              subject: msg.envelope?.subject ?? "",
-            });
-          }
-        } catch (err) {
-          logger.warn({ err, seq }, "Error fetching individual email");
-        }
-      }
+      return await fetchEmailsFromLockedInbox(client, limit);
     } finally {
       lock.release();
     }
   } finally {
     await client.logout();
   }
-
-  return results;
 }
 
 export async function testImapConnection(config: SiteImapConfig): Promise<{ success: boolean; message: string }> {

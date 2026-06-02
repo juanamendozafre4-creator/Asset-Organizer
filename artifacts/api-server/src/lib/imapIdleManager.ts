@@ -10,11 +10,15 @@ type SiteRow = {
   imapPasswordEncrypted: string;
 };
 
-type BuildFn = (site: SiteRow) => Promise<unknown[]>;
+/**
+ * Fetches and processes emails using an existing connected IMAP client.
+ * Passed in from backgroundPoller to avoid a circular import.
+ */
+type BuildWithClientFn = (client: ImapFlow, site: SiteRow) => Promise<unknown[]>;
 
 interface IdleState {
   active: boolean;
-  connected: boolean; // true only while INBOX is selected and IDLE is running
+  connected: boolean;
   client: ImapFlow | null;
 }
 
@@ -24,7 +28,7 @@ function sleep(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
 }
 
-async function runIdleLoop(site: SiteRow, buildCodes: BuildFn) {
+async function runIdleLoop(site: SiteRow, buildWithClient: BuildWithClientFn) {
   const state = states.get(site.slug)!;
   let retryDelay = 5_000;
 
@@ -50,12 +54,20 @@ async function runIdleLoop(site: SiteRow, buildCodes: BuildFn) {
       state.connected = true;
       logger.info({ slug: site.slug }, "IDLE: connected and INBOX selected");
 
-      // Warm cache immediately on connect
-      buildCodes(site)
-        .then((codes) => setCacheEntry(site.slug, codes))
-        .catch((err) =>
-          logger.warn({ err, slug: site.slug }, "IDLE: initial fetch failed")
-        );
+      // Initial fetch using the SAME connection — no second IMAP connection opened
+      // Timeout of 45s to avoid blocking the IDLE loop indefinitely
+      try {
+        const codes = await Promise.race([
+          buildWithClient(client, site),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Initial fetch timed out after 45s")), 45_000)
+          ),
+        ]);
+        setCacheEntry(site.slug, codes);
+        logger.info({ slug: site.slug, count: (codes as unknown[]).length }, "IDLE: initial fetch done");
+      } catch (err) {
+        logger.warn({ err, slug: site.slug }, "IDLE: initial fetch failed");
+      }
 
       try {
         while (state.active) {
@@ -77,24 +89,17 @@ async function runIdleLoop(site: SiteRow, buildCodes: BuildFn) {
           if (!state.active) break;
 
           if (existsReceived) {
-            logger.info(
-              { slug: site.slug },
-              "IDLE: EXISTS notification — fetching codes immediately"
-            );
-            buildCodes(site)
-              .then((codes) => {
-                setCacheEntry(site.slug, codes);
-                logger.info(
-                  { slug: site.slug, count: codes.length },
-                  "IDLE: cache updated after new email"
-                );
-              })
-              .catch((err) =>
-                logger.warn(
-                  { err, slug: site.slug },
-                  "IDLE: fetch after EXISTS failed"
-                )
+            logger.info({ slug: site.slug }, "IDLE: EXISTS — fetching with existing connection");
+            try {
+              const codes = await buildWithClient(client, site);
+              setCacheEntry(site.slug, codes);
+              logger.info(
+                { slug: site.slug, count: (codes as unknown[]).length },
+                "IDLE: cache updated after new email"
               );
+            } catch (err) {
+              logger.warn({ err, slug: site.slug }, "IDLE: fetch after EXISTS failed");
+            }
           }
         }
       } finally {
@@ -126,13 +131,13 @@ async function runIdleLoop(site: SiteRow, buildCodes: BuildFn) {
   logger.info({ slug: site.slug }, "IDLE: loop stopped");
 }
 
-export function startIdleForSite(site: SiteRow, buildCodes: BuildFn) {
+export function startIdleForSite(site: SiteRow, buildWithClient: BuildWithClientFn) {
   if (states.has(site.slug)) return;
 
   const state: IdleState = { active: true, connected: false, client: null };
   states.set(site.slug, state);
 
-  runIdleLoop(site, buildCodes).catch((err) =>
+  runIdleLoop(site, buildWithClient).catch((err) =>
     logger.error({ err, slug: site.slug }, "IDLE: fatal unhandled error")
   );
 

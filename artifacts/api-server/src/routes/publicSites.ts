@@ -2,8 +2,11 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { db, sitesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { decrypt } from "../lib/crypto";
+import { ImapFlow } from "imapflow";
 import {
+  type RawEmail,
   fetchNetflixEmailsForSite,
+  fetchEmailsFromLockedInbox,
   extractProfileName,
   extractDeviceInfo,
   extractCode,
@@ -36,13 +39,7 @@ const SUBJECT_FILTERS = [
   "netflix temporary access code",
 ];
 
-export async function buildCodesForSite(site: SiteRow) {
-  const password = decrypt(site.imapPasswordEncrypted);
-  const rawEmails = await fetchNetflixEmailsForSite(
-    { host: site.imapHost, email: site.imapEmail, password },
-    20
-  );
-
+async function processRawEmails(site: SiteRow, rawEmails: RawEmail[]) {
   const filtered = rawEmails.filter((email) => {
     const subjectLow = email.subject.toLowerCase();
     return SUBJECT_FILTERS.some((f) => subjectLow.includes(f));
@@ -54,7 +51,6 @@ export async function buildCodesForSite(site: SiteRow) {
       const body = decodeEmailBody(email.source);
       let code = extractCode(body, rawHtml || undefined);
 
-      // Try extracting from the email subject before hitting the Netflix link
       if (!code) {
         code = extractCodeFromSubject(email.subject);
         if (code) {
@@ -63,7 +59,6 @@ export async function buildCodesForSite(site: SiteRow) {
       }
 
       const netflixLink = extractNetflixLink(email.source);
-
       if (!code && netflixLink) {
         code = await fetchCodeFromNetflixLink(netflixLink);
       }
@@ -84,6 +79,25 @@ export async function buildCodesForSite(site: SiteRow) {
   return codes
     .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime())
     .slice(0, 10);
+}
+
+/** Full fetch: opens its own IMAP connection. Use as fallback when IDLE is not connected. */
+export async function buildCodesForSite(site: SiteRow) {
+  const password = decrypt(site.imapPasswordEncrypted);
+  const rawEmails = await fetchNetflixEmailsForSite(
+    { host: site.imapHost, email: site.imapEmail, password },
+    20
+  );
+  return processRawEmails(site, rawEmails);
+}
+
+/**
+ * Fetch + process using an already-connected ImapFlow client (INBOX already locked).
+ * Zero new IMAP connections — used by the IDLE loop to avoid rate-limiting.
+ */
+export async function buildCodesWithExistingClient(client: ImapFlow, site: SiteRow) {
+  const rawEmails = await fetchEmailsFromLockedInbox(client, 20);
+  return processRawEmails(site, rawEmails);
 }
 
 function codesFingerprint(codes: { id: number | string; receivedAt: string }[]): string {
