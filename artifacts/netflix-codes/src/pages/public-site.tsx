@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useGetSiteInfo, getGetSiteInfoQueryKey } from "@workspace/api-client-react";
-import { Loader2, AlertCircle, Radio } from "lucide-react";
+import { Loader2, AlertCircle, Radio, Volume2 } from "lucide-react";
 import { NetflixCodeCard } from "@/components/netflix-code-card";
 import { useSiteCodesStream } from "@/hooks/useSiteCodesStream";
 import { useSpeechNotification } from "@/hooks/useSpeechNotification";
@@ -66,7 +66,7 @@ export default function PublicSite() {
     site ? slug : undefined
   );
 
-  useSpeechNotification(codes);
+  const { needsUnlock, unlock } = useSpeechNotification(codes);
 
   if (isLoadingSite) {
     return (
@@ -195,6 +195,26 @@ export default function PublicSite() {
           </div>
         )}
       </main>
+
+      {needsUnlock && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center p-4 pb-safe"
+          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}
+        >
+          <button
+            onClick={unlock}
+            className="flex items-center gap-2.5 px-6 py-3.5 rounded-full font-semibold text-sm shadow-2xl active:scale-95 transition-transform select-none"
+            style={{
+              background: themeColor,
+              color: textColor,
+              border: `1.5px solid ${cardBorder}`,
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            <Volume2 className="w-4 h-4 shrink-0" />
+            Toca para activar las notificaciones de voz
+          </button>
+        </div>
+      )}
     </div>
   );
 }
