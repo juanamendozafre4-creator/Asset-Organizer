@@ -2,6 +2,17 @@ export function getAdminToken() {
   return localStorage.getItem("admin_token");
 }
 
+export function getAdminEmail(): string | null {
+  const token = getAdminToken();
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return (payload as { email?: string }).email ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function setAdminToken(token: string) {
   localStorage.setItem("admin_token", token);
 }

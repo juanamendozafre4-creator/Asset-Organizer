@@ -1,20 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useListSites, getListSitesQueryKey, useDeleteSite, useTestSiteConnection, Site } from "@workspace/api-client-react";
-import { getAdminToken, getAdminHeaders, removeAdminToken } from "@/lib/auth";
+import { getAdminToken, getAdminHeaders, getAdminEmail, removeAdminToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Plus, LogOut, Trash2, Edit2, Play, ExternalLink } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Plus, LogOut, Trash2, Edit2, Play, ExternalLink, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SiteFormDialog from "@/components/site-form-dialog";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const token = getAdminToken();
 
   useEffect(() => {
@@ -38,27 +47,81 @@ export default function AdminDashboard() {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSite, setEditingSite] = useState<Site | undefined>();
+
   const [siteToDelete, setSiteToDelete] = useState<number | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deletePasswordError, setDeletePasswordError] = useState("");
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const handleLogout = () => {
     removeAdminToken();
     setLocation("/admin");
   };
 
-  const handleDelete = (id: number) => {
-    deleteSite.mutate(
-      { id },
-      {
-        onSuccess: () => {
-          toast({ title: "Sitio eliminado" });
-          queryClient.invalidateQueries({ queryKey: getListSitesQueryKey() });
-          setSiteToDelete(null);
-        },
-        onError: () => {
-          toast({ title: "Error al eliminar el sitio", variant: "destructive" });
-        },
+  const openDeleteDialog = (id: number) => {
+    setSiteToDelete(id);
+    setDeletePassword("");
+    setDeletePasswordError("");
+    setTimeout(() => passwordInputRef.current?.focus(), 80);
+  };
+
+  const closeDeleteDialog = () => {
+    if (isVerifyingPassword) return;
+    setSiteToDelete(null);
+    setDeletePassword("");
+    setDeletePasswordError("");
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!siteToDelete || !deletePassword) {
+      setDeletePasswordError("Ingresa tu contraseña para continuar.");
+      return;
+    }
+
+    const email = getAdminEmail();
+    if (!email) {
+      setDeletePasswordError("No se pudo obtener el usuario. Recarga la página.");
+      return;
+    }
+
+    setIsVerifyingPassword(true);
+    setDeletePasswordError("");
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password: deletePassword }),
+      });
+
+      if (!res.ok) {
+        setDeletePasswordError("Contraseña incorrecta. Inténtalo de nuevo.");
+        setDeletePassword("");
+        setTimeout(() => passwordInputRef.current?.focus(), 50);
+        return;
       }
-    );
+
+      deleteSite.mutate(
+        { id: siteToDelete },
+        {
+          onSuccess: () => {
+            toast({ title: "Sitio eliminado correctamente" });
+            queryClient.invalidateQueries({ queryKey: getListSitesQueryKey() });
+            setSiteToDelete(null);
+            setDeletePassword("");
+            setDeletePasswordError("");
+          },
+          onError: () => {
+            toast({ title: "Error al eliminar el sitio", variant: "destructive" });
+          },
+        }
+      );
+    } catch {
+      setDeletePasswordError("Error de red. Inténtalo de nuevo.");
+    } finally {
+      setIsVerifyingPassword(false);
+    }
   };
 
   const handleTestConnection = (id: number) => {
@@ -82,6 +145,8 @@ export default function AdminDashboard() {
   };
 
   if (!token) return null;
+
+  const isDeleting = isVerifyingPassword || deleteSite.isPending;
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
@@ -152,7 +217,7 @@ export default function AdminDashboard() {
                       <span className="truncate ml-2">{site.imapEmail}</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between pt-4 border-t border-border/50">
                     <div className="flex gap-2">
                       <Button
@@ -170,12 +235,12 @@ export default function AdminDashboard() {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive border-transparent hover:border-destructive/20"
-                        onClick={() => setSiteToDelete(site.id)}
+                        onClick={() => openDeleteDialog(site.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    
+
                     <div className="flex gap-2">
                       <Button
                         variant="secondary"
@@ -191,7 +256,7 @@ export default function AdminDashboard() {
                         variant="default"
                         size="sm"
                         className="h-8 text-xs font-medium"
-                        onClick={() => window.open(`/${site.slug}`, '_blank')}
+                        onClick={() => window.open(`/${site.slug}`, "_blank")}
                       >
                         <ExternalLink className="h-3 w-3 mr-1.5" />
                         Ver
@@ -211,27 +276,58 @@ export default function AdminDashboard() {
         siteToEdit={editingSite}
       />
 
-      <AlertDialog open={!!siteToDelete} onOpenChange={(open) => !open && setSiteToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esto eliminará permanentemente el sitio y toda su configuración. Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => siteToDelete && handleDelete(siteToDelete)}
-              disabled={deleteSite.isPending}
+      <Dialog open={!!siteToDelete} onOpenChange={(open) => !open && closeDeleteDialog()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              Eliminar sitio
+            </DialogTitle>
+            <DialogDescription>
+              Esta acción es permanente y no se puede deshacer. Ingresa tu contraseña de administrador para confirmar.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <Label htmlFor="delete-password" className="flex items-center gap-1.5 text-sm">
+              <Lock className="h-3.5 w-3.5" />
+              Contraseña de administrador
+            </Label>
+            <Input
+              id="delete-password"
+              ref={passwordInputRef}
+              type="password"
+              placeholder="••••••••"
+              value={deletePassword}
+              onChange={(e) => {
+                setDeletePassword(e.target.value);
+                if (deletePasswordError) setDeletePasswordError("");
+              }}
+              onKeyDown={(e) => e.key === "Enter" && !isDeleting && handleConfirmDelete()}
+              disabled={isDeleting}
+              className={deletePasswordError ? "border-destructive focus-visible:ring-destructive" : ""}
+              autoComplete="current-password"
+            />
+            {deletePasswordError && (
+              <p className="text-sm text-destructive">{deletePasswordError}</p>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={closeDeleteDialog} disabled={isDeleting}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting || !deletePassword}
             >
-              {deleteSite.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Eliminar sitio
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
