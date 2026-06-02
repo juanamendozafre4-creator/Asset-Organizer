@@ -288,7 +288,7 @@ export async function fetchEmailsFromLockedInbox(
   const results: RawEmail[] = [];
 
   const foundEs = await client
-    .search({ subject: "código de acceso temporal" })
+    .search({ subject: "acceso temporal" })
     .catch(() => [] as number[]);
   const foundEn = await client
     .search({ subject: "Netflix temporary access code" })
