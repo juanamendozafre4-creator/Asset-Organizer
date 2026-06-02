@@ -52,10 +52,12 @@ export function NetflixCodeCard({
             Hola, {cleanText(code.profileName)}
           </h2>
 
-          <div className="flex items-start sm:items-center gap-2 text-base" style={{ color: mutedColor }}>
-            <MonitorSmartphone className="h-5 w-5 shrink-0 mt-0.5 sm:mt-0" />
-            <p className="leading-snug font-medium">{cleanText(code.deviceInfo)}</p>
-          </div>
+          {code.deviceInfo && cleanText(code.deviceInfo) && (
+            <div className="flex items-start sm:items-center gap-2 text-base" style={{ color: mutedColor }}>
+              <MonitorSmartphone className="h-5 w-5 shrink-0 mt-0.5 sm:mt-0" />
+              <p className="leading-snug font-medium">{cleanText(code.deviceInfo)}</p>
+            </div>
+          )}
 
           {code.accountEmail && (
             <div className="flex items-center gap-2 text-base" style={{ color: mutedColor }}>

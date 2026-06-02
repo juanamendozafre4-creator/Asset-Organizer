@@ -23,8 +23,7 @@ import {
   getCacheEntry,
   isCacheValid,
   setCacheEntry,
-  setFetchingPromise,
-  clearFetchingPromise,
+  codeEvents,
 } from "../lib/codesCache";
 
 const router: IRouter = Router();
@@ -35,9 +34,8 @@ const SUBJECT_FILTERS = [
   "código de acceso temporal",
   "netflix temporary access code",
 ];
-const SSE_POLL_INTERVAL = 8000;
 
-async function buildCodesForSite(site: SiteRow) {
+export async function buildCodesForSite(site: SiteRow) {
   const password = decrypt(site.imapPasswordEncrypted);
   const rawEmails = await fetchNetflixEmailsForSite(
     { host: site.imapHost, email: site.imapEmail, password },
@@ -78,29 +76,6 @@ async function buildCodesForSite(site: SiteRow) {
     .slice(0, 10);
 }
 
-async function fetchAndCache(site: SiteRow): Promise<unknown[]> {
-  const slug = site.slug;
-  const existing = getCacheEntry(slug);
-
-  if (existing?.fetchingPromise) {
-    return existing.fetchingPromise;
-  }
-
-  const promise = buildCodesForSite(site)
-    .then((codes) => {
-      setCacheEntry(slug, codes);
-      clearFetchingPromise(slug);
-      return codes as unknown[];
-    })
-    .catch((err) => {
-      clearFetchingPromise(slug);
-      throw err;
-    });
-
-  setFetchingPromise(slug, promise);
-  return promise;
-}
-
 function codesFingerprint(codes: { id: number | string; receivedAt: string }[]): string {
   return codes.map((c) => `${c.id}:${c.receivedAt}`).join("|");
 }
@@ -122,14 +97,21 @@ router.get("/sites/:slug", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json({ name: site.name, logoUrl: site.logoUrl ?? null, description: site.description ?? null, themeColor: site.themeColor, slug: site.slug });
+  res.json({
+    name: site.name,
+    logoUrl: site.logoUrl ?? null,
+    description: site.description ?? null,
+    themeColor: site.themeColor,
+    slug: site.slug,
+  });
 
-  // Warm the cache in background after responding
+  // Trigger an immediate fetch if no valid cache exists
   if (!isCacheValid(site.slug)) {
-    fetchAndCache(site).catch(() => {});
+    buildCodesForSite(site)
+      .then((codes) => setCacheEntry(site.slug, codes))
+      .catch(() => {});
   }
 });
-
 
 router.get("/sites/:slug/codes", async (req, res): Promise<void> => {
   const params = ListSiteCodesParams.safeParse(req.params);
@@ -186,53 +168,44 @@ router.get("/sites/:slug/stream", async (req: Request, res: Response): Promise<v
   }, 20000);
 
   let lastFingerprint = "";
-  let pollTimer: ReturnType<typeof setTimeout> | null = null;
-  let closed = false;
 
-  // --- Send cached data IMMEDIATELY if available ---
+  // Send cached data immediately if available
   const cached = getCacheEntry(slug);
-  if (cached && cached.codes.length > 0 && isCacheValid(slug)) {
+  if (cached && cached.codes.length > 0) {
     const typedCodes = cached.codes as { id: string | number; receivedAt: string }[];
     lastFingerprint = codesFingerprint(typedCodes);
     sendEvent("codes", cached.codes);
     req.log.info({ slug }, "SSE: served from cache immediately");
+  } else {
+    // No cache yet — trigger an immediate fetch in the background
+    buildCodesForSite(site)
+      .then((codes) => setCacheEntry(slug, codes))
+      .catch((err) => {
+        req.log.error({ err, slug }, "SSE: initial fetch failed");
+        sendEvent("imap_error", { message: "Error al conectar con el servidor de correo" });
+      });
   }
 
-  const poll = async () => {
-    if (closed) return;
-    try {
-      const codes = await fetchAndCache(site);
-      const typedCodes = codes as { id: string | number; receivedAt: string }[];
-      const fp = codesFingerprint(typedCodes);
-      if (fp !== lastFingerprint) {
-        lastFingerprint = fp;
-        sendEvent("codes", codes);
-      }
-    } catch (err) {
-      req.log.error({ err, slug }, "SSE IMAP error");
-      sendEvent("imap_error", { message: "Error al conectar con el servidor de correo" });
-    }
-    if (!closed) {
-      pollTimer = setTimeout(poll, SSE_POLL_INTERVAL);
+  // Listen for cache updates from the background poller
+  const onUpdate = (codes: unknown[]) => {
+    const typedCodes = codes as { id: string | number; receivedAt: string }[];
+    const fp = codesFingerprint(typedCodes);
+    if (fp !== lastFingerprint) {
+      lastFingerprint = fp;
+      sendEvent("codes", codes);
+      req.log.info({ slug }, "SSE: pushed updated codes");
     }
   };
 
+  codeEvents.on(`update:${slug}`, onUpdate);
+
   req.on("close", () => {
-    closed = true;
+    codeEvents.off(`update:${slug}`, onUpdate);
     clearInterval(keepAlive);
-    if (pollTimer) clearTimeout(pollTimer);
     req.log.info({ slug }, "SSE client disconnected");
   });
 
   req.log.info({ slug }, "SSE client connected");
-
-  // If we already sent cached data, start polling after interval
-  // If no cache, fetch immediately
-  if (cached && cached.codes.length > 0 && isCacheValid(slug)) {
-    pollTimer = setTimeout(poll, SSE_POLL_INTERVAL);
-  } else {
-    await poll();
-  }
 });
 
 export default router;
