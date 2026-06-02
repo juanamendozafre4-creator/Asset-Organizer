@@ -159,18 +159,35 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
       return null;
     }
 
+    const finalUrl = res.url;
     const html = await res.text();
 
-    // 0. Detect expired/invalid link — Netflix renders specific text
+    // Log a snippet for debugging what Netflix actually returns
+    logger.debug({ finalUrl, htmlLength: html.length, snippet: html.slice(0, 600) }, "Netflix page fetched");
+
+    // 0a. Detect expired/invalid link by redirect — if the final URL no longer points
+    //     to the travel/verify path, the token was rejected (redirect to login/home).
+    if (finalUrl && !finalUrl.includes("travel/verify") && !finalUrl.includes("temporaryAccess")) {
+      logger.info({ url, finalUrl }, "Netflix redirected away from verify page — token expired/invalid");
+      return "EXPIRED";
+    }
+
+    // 0b. Detect expired/invalid link — Netflix renders specific text
     const expiredPatterns = [
       /este\s+c[oó]digo\s+ha\s+caducado/i,
       /c[oó]digo\s+ha\s+caducado/i,
       /c[oó]digo\s+expirado/i,
       /enlace\s+ha\s+expirado/i,
+      /este\s+enlace\s+(?:ya\s+no\s+es\s+v[aá]lido|ha\s+vencido|expir)/i,
+      /enlace\s+(?:ya\s+no\s+es\s+v[aá]lido|expirado|vencido)/i,
       /this\s+code\s+has\s+expired/i,
       /code\s+is\s+no\s+longer\s+valid/i,
       /link\s+has\s+expired/i,
       /nftoken.*invalid/i,
+      /token.*(?:invalid|expired|caducado)/i,
+      /no\s+(?:es|fue)\s+posible\s+verificar/i,
+      /no\s+se\s+pudo\s+verificar/i,
+      /verif.*no\s+v[aá]lid/i,
     ];
     for (const p of expiredPatterns) {
       if (p.test(html)) {
