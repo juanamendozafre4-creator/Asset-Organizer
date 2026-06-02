@@ -33,6 +33,35 @@ export function useSpeechNotification(codes: NetflixCode[]) {
   const isFirstLoadRef = useRef(true);
   const pendingMsgRef = useRef<string | null>(null);
 
+  // On mount: immediately probe if speech is blocked so unlock button appears ASAP
+  useEffect(() => {
+    if (!speechSupported) return;
+
+    const utterance = new SpeechSynthesisUtterance(" ");
+    utterance.lang = "es-ES";
+    utterance.volume = 0;
+
+    let started = false;
+    utterance.onstart = () => {
+      started = true;
+      unlockedRef.current = true;
+      setNeedsUnlock(false);
+    };
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+
+    // If speech didn't start within 1s, show unlock button proactively
+    const t = setTimeout(() => {
+      if (!started && !unlockedRef.current) {
+        window.speechSynthesis.cancel();
+        setNeedsUnlock(true);
+      }
+    }, 1000);
+
+    return () => clearTimeout(t);
+  }, []);
+
   const tryAutoSpeak = useCallback((text: string) => {
     if (!speechSupported) return;
 
@@ -52,7 +81,6 @@ export function useSpeechNotification(codes: NetflixCode[]) {
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
 
-    // Mobile browsers silently block auto-speak — detect it after 1.5s
     setTimeout(() => {
       if (!started && !unlockedRef.current) {
         window.speechSynthesis.cancel();
@@ -70,7 +98,12 @@ export function useSpeechNotification(codes: NetflixCode[]) {
     if (isFirstLoadRef.current) {
       prevTopIdRef.current = topCode.id;
       isFirstLoadRef.current = false;
-      tryAutoSpeak(WELCOME_MESSAGE);
+      if (unlockedRef.current) {
+        rawSpeak(WELCOME_MESSAGE);
+      } else {
+        pendingMsgRef.current = WELCOME_MESSAGE;
+        tryAutoSpeak(WELCOME_MESSAGE);
+      }
       return;
     }
 

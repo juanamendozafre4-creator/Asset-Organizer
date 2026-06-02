@@ -197,21 +197,26 @@ export default function PublicSite() {
       </main>
 
       {needsUnlock && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center p-4 pb-safe"
-          style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}
+        <div
+          className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center gap-3 px-4 py-5"
+          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
         >
+          <p className="text-white/70 text-xs text-center">
+            Tu dispositivo requiere que toques la pantalla para activar el audio
+          </p>
           <button
             onClick={unlock}
-            className="flex items-center gap-2.5 px-6 py-3.5 rounded-full font-semibold text-sm shadow-2xl active:scale-95 transition-transform select-none"
+            className="flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-base shadow-2xl active:scale-95 transition-transform select-none w-full max-w-sm justify-center"
             style={{
-              background: themeColor,
-              color: textColor,
-              border: `1.5px solid ${cardBorder}`,
+              background: "#E50914",
+              color: "#ffffff",
               WebkitTapHighlightColor: "transparent",
+              fontSize: "1rem",
+              letterSpacing: "0.01em",
             }}
           >
-            <Volume2 className="w-4 h-4 shrink-0" />
-            Toca para activar las notificaciones de voz
+            <Volume2 className="w-5 h-5 shrink-0" />
+            Toca aquí para activar el audio
           </button>
         </div>
       )}

@@ -19,6 +19,13 @@ import {
   ListSiteCodesParams,
   ListSiteCodesResponse,
 } from "@workspace/api-zod";
+import {
+  getCacheEntry,
+  isCacheValid,
+  setCacheEntry,
+  setFetchingPromise,
+  clearFetchingPromise,
+} from "../lib/codesCache";
 
 const router: IRouter = Router();
 
@@ -30,7 +37,7 @@ const SUBJECT_FILTERS = [
 ];
 const SSE_POLL_INTERVAL = 8000;
 
-async function buildCodesForSite(site: SiteRow, _debugDump?: (uid: string, body: string, html: string) => void) {
+async function buildCodesForSite(site: SiteRow) {
   const password = decrypt(site.imapPasswordEncrypted);
   const rawEmails = await fetchNetflixEmailsForSite(
     { host: site.imapHost, email: site.imapEmail, password },
@@ -46,7 +53,6 @@ async function buildCodesForSite(site: SiteRow, _debugDump?: (uid: string, body:
     filtered.map(async (email) => {
       const { html: rawHtml } = extractEmailParts(email.source);
       const body = decodeEmailBody(email.source);
-      _debugDump?.(email.uid, body, rawHtml ?? "");
       let code = extractCode(body, rawHtml || undefined);
       const netflixLink = extractNetflixLink(email.source);
 
@@ -72,6 +78,29 @@ async function buildCodesForSite(site: SiteRow, _debugDump?: (uid: string, body:
     .slice(0, 10);
 }
 
+async function fetchAndCache(site: SiteRow): Promise<unknown[]> {
+  const slug = site.slug;
+  const existing = getCacheEntry(slug);
+
+  if (existing?.fetchingPromise) {
+    return existing.fetchingPromise;
+  }
+
+  const promise = buildCodesForSite(site)
+    .then((codes) => {
+      setCacheEntry(slug, codes);
+      clearFetchingPromise(slug);
+      return codes as unknown[];
+    })
+    .catch((err) => {
+      clearFetchingPromise(slug);
+      throw err;
+    });
+
+  setFetchingPromise(slug, promise);
+  return promise;
+}
+
 function codesFingerprint(codes: { id: number | string; receivedAt: string }[]): string {
   return codes.map((c) => `${c.id}:${c.receivedAt}`).join("|");
 }
@@ -94,6 +123,11 @@ router.get("/sites/:slug", async (req, res): Promise<void> => {
   }
 
   res.json({ name: site.name, logoUrl: site.logoUrl ?? null, description: site.description ?? null, themeColor: site.themeColor, slug: site.slug });
+
+  // Warm the cache in background after responding
+  if (!isCacheValid(site.slug)) {
+    fetchAndCache(site).catch(() => {});
+  }
 });
 
 
@@ -155,11 +189,21 @@ router.get("/sites/:slug/stream", async (req: Request, res: Response): Promise<v
   let pollTimer: ReturnType<typeof setTimeout> | null = null;
   let closed = false;
 
+  // --- Send cached data IMMEDIATELY if available ---
+  const cached = getCacheEntry(slug);
+  if (cached && cached.codes.length > 0 && isCacheValid(slug)) {
+    const typedCodes = cached.codes as { id: string | number; receivedAt: string }[];
+    lastFingerprint = codesFingerprint(typedCodes);
+    sendEvent("codes", cached.codes);
+    req.log.info({ slug }, "SSE: served from cache immediately");
+  }
+
   const poll = async () => {
     if (closed) return;
     try {
-      const codes = await buildCodesForSite(site);
-      const fp = codesFingerprint(codes);
+      const codes = await fetchAndCache(site);
+      const typedCodes = codes as { id: string | number; receivedAt: string }[];
+      const fp = codesFingerprint(typedCodes);
       if (fp !== lastFingerprint) {
         lastFingerprint = fp;
         sendEvent("codes", codes);
@@ -181,7 +225,14 @@ router.get("/sites/:slug/stream", async (req: Request, res: Response): Promise<v
   });
 
   req.log.info({ slug }, "SSE client connected");
-  await poll();
+
+  // If we already sent cached data, start polling after interval
+  // If no cache, fetch immediately
+  if (cached && cached.codes.length > 0 && isCacheValid(slug)) {
+    pollTimer = setTimeout(poll, SSE_POLL_INTERVAL);
+  } else {
+    await poll();
+  }
 });
 
 export default router;
