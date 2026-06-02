@@ -169,20 +169,24 @@ router.get("/sites/:slug/stream", async (req: Request, res: Response): Promise<v
 
   let lastFingerprint = "";
 
-  // Send cached data immediately if available
+  // Send cached data immediately (even if stale) so the user sees something fast
   const cached = getCacheEntry(slug);
   if (cached && cached.codes.length > 0) {
     const typedCodes = cached.codes as { id: string | number; receivedAt: string }[];
     lastFingerprint = codesFingerprint(typedCodes);
     sendEvent("codes", cached.codes);
     req.log.info({ slug }, "SSE: served from cache immediately");
-  } else {
-    // No cache yet — trigger an immediate fetch in the background
+  }
+
+  // Trigger a fresh fetch if cache is missing or stale
+  if (!isCacheValid(slug)) {
     buildCodesForSite(site)
       .then((codes) => setCacheEntry(slug, codes))
       .catch((err) => {
-        req.log.error({ err, slug }, "SSE: initial fetch failed");
-        sendEvent("imap_error", { message: "Error al conectar con el servidor de correo" });
+        req.log.error({ err, slug }, "SSE: background refresh failed");
+        if (!cached || cached.codes.length === 0) {
+          sendEvent("imap_error", { message: "Error al conectar con el servidor de correo" });
+        }
       });
   }
 

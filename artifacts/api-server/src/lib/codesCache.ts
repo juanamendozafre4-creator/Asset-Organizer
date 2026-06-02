@@ -10,7 +10,7 @@ const cache = new Map<string, CacheEntry>();
 export const codeEvents = new EventEmitter();
 codeEvents.setMaxListeners(0);
 
-const CACHE_TTL_MS = 35_000;
+const CACHE_TTL_MS = 15_000;
 
 export function getCacheEntry(slug: string): CacheEntry | undefined {
   return cache.get(slug);

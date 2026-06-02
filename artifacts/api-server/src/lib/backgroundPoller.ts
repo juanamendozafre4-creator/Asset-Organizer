@@ -2,8 +2,9 @@ import { db, sitesTable } from "@workspace/db";
 import { logger } from "./logger";
 import { setCacheEntry } from "./codesCache";
 import { buildCodesForSite } from "../routes/publicSites";
+import { startIdleForSite, getActiveIdleSlugs } from "./imapIdleManager";
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 10_000;
 
 async function pollAllSites() {
   let sites: (typeof sitesTable.$inferSelect)[];
@@ -12,6 +13,14 @@ async function pollAllSites() {
   } catch (err) {
     logger.error({ err }, "Background poller: failed to fetch sites");
     return;
+  }
+
+  const activeSlugs = new Set(getActiveIdleSlugs());
+
+  for (const site of sites) {
+    if (!activeSlugs.has(site.slug)) {
+      startIdleForSite(site, buildCodesForSite as (s: typeof site) => Promise<unknown[]>);
+    }
   }
 
   await Promise.allSettled(
