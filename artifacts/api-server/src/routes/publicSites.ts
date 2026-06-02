@@ -115,12 +115,8 @@ router.get("/sites/:slug", async (req, res): Promise<void> => {
     slug: site.slug,
   });
 
-  // Trigger an immediate fetch if no valid cache exists
-  if (!isCacheValid(site.slug)) {
-    buildCodesForSite(site)
-      .then((codes) => setCacheEntry(site.slug, codes))
-      .catch(() => {});
-  }
+  // Pre-warm cache when site info is requested (no-op if already fresh or in-progress)
+  requestFetch(site).catch(() => {});
 });
 
 router.get("/sites/:slug/codes", async (req, res): Promise<void> => {
