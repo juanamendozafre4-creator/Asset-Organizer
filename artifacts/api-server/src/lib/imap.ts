@@ -134,6 +134,23 @@ export function extractNetflixLink(source: string): string | null {
   return null;
 }
 
+export function extractCodeFromSubject(subject: string): string | null {
+  if (!subject) return null;
+  const patterns = [
+    // "código de acceso temporal: 1234" or "código: 1234"
+    /c[oó]digo(?:\s+de\s+acceso(?:\s+temporal)?)?\s*[:\-]\s*([0-9]{4})\b/i,
+    // "temporary access code: 1234"
+    /(?:temporary\s+)?access\s+code\s*[:\-]\s*([0-9]{4})\b/i,
+    // Standalone 4-digit at end or beginning: "Netflix 1234" or "1234 Netflix"
+    /\b([0-9]{4})\b/,
+  ];
+  for (const p of patterns) {
+    const m = subject.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
 export async function fetchCodeFromNetflixLink(url: string): Promise<string | null> {
   try {
     const res = await fetch(url, {
@@ -150,7 +167,7 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
         "Sec-Fetch-Site": "none",
         "Upgrade-Insecure-Requests": "1",
       },
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(4000),
       redirect: "follow",
     });
 
@@ -602,14 +619,27 @@ export function extractCode(body: string, rawHtml?: string): string | null {
     const htmlPatterns = [
       // Standalone 4-digit number as the only content of a block element
       /<(?:td|th|p|div|span|h\d)[^>]*>\s*([0-9]{4})\s*<\/(?:td|th|p|div|span|h\d)>/i,
-      // Large font-size element (Netflix renders the code at ≥36px)
-      /font-size\s*:\s*(?:[3-9]\d|[1-9]\d{2,})px[^>]*>\s*([0-9]{4})\s*</i,
+      // Large font-size element (Netflix renders the code at ≥24px)
+      /font-size\s*:\s*(?:[2-9]\d|[1-9]\d{2,})px[^>]*>\s*([0-9]{4})\s*</i,
       // Letter-spacing or tracking hint — typically only on the code
       /letter-spacing[^>]*>\s*([0-9]{4})\s*</i,
+      // font tag with large size attribute
+      /<font[^>]+size\s*=\s*["']?[5-9]["']?[^>]*>\s*([0-9]{4})\s*<\/font>/i,
+      // Centered table cell — common Netflix layout
+      /<td[^>]*align\s*=\s*["']?center["']?[^>]*>\s*<?[^>]*>?\s*([0-9]{4})\s*<?\/[^>]*>?\s*<\/td>/i,
+      // Bold or strong wrapping just the code
+      /<(?:b|strong)[^>]*>\s*([0-9]{4})\s*<\/(?:b|strong)>/i,
+      // data-testid with code/pin/acceso
+      /data-testid=["'][^"']*(?:code|pin|acceso)[^"']*["'][^>]*>\s*([0-9]{4})\s*</i,
+      // aria-label containing the code
+      /aria-label=["'][^"']*([0-9]{4})[^"']*["']/i,
     ];
     for (const p of htmlPatterns) {
       const m = rawHtml.match(p);
-      if (m) return m[1].trim();
+      if (m) {
+        const candidate = m[m.length - 1];
+        if (candidate) return candidate.trim();
+      }
     }
   }
 

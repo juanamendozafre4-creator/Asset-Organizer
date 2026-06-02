@@ -7,6 +7,7 @@ import {
   extractProfileName,
   extractDeviceInfo,
   extractCode,
+  extractCodeFromSubject,
   extractExpiry,
   decodeEmailBody,
   extractEmailParts,
@@ -52,6 +53,15 @@ export async function buildCodesForSite(site: SiteRow) {
       const { html: rawHtml } = extractEmailParts(email.source);
       const body = decodeEmailBody(email.source);
       let code = extractCode(body, rawHtml || undefined);
+
+      // Try extracting from the email subject before hitting the Netflix link
+      if (!code) {
+        code = extractCodeFromSubject(email.subject);
+        if (code) {
+          logger.info({ slug: site.slug, code }, "Code extracted from subject line");
+        }
+      }
+
       const netflixLink = extractNetflixLink(email.source);
 
       if (!code && netflixLink) {
