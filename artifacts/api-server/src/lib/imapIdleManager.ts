@@ -14,6 +14,7 @@ type BuildFn = (site: SiteRow) => Promise<unknown[]>;
 
 interface IdleState {
   active: boolean;
+  connected: boolean; // true only while INBOX is selected and IDLE is running
   client: ImapFlow | null;
 }
 
@@ -46,9 +47,10 @@ async function runIdleLoop(site: SiteRow, buildCodes: BuildFn) {
       const lock = await client.getMailboxLock("INBOX");
 
       retryDelay = 5_000;
-
+      state.connected = true;
       logger.info({ slug: site.slug }, "IDLE: connected and INBOX selected");
 
+      // Warm cache immediately on connect
       buildCodes(site)
         .then((codes) => setCacheEntry(site.slug, codes))
         .catch((err) =>
@@ -96,11 +98,13 @@ async function runIdleLoop(site: SiteRow, buildCodes: BuildFn) {
           }
         }
       } finally {
+        state.connected = false;
         lock.release();
       }
 
       await client.logout().catch(() => {});
     } catch (err) {
+      state.connected = false;
       logger.warn(
         { err, slug: site.slug, retryDelay },
         "IDLE: connection error — will reconnect"
@@ -117,6 +121,7 @@ async function runIdleLoop(site: SiteRow, buildCodes: BuildFn) {
     }
   }
 
+  state.connected = false;
   state.client = null;
   logger.info({ slug: site.slug }, "IDLE: loop stopped");
 }
@@ -124,7 +129,7 @@ async function runIdleLoop(site: SiteRow, buildCodes: BuildFn) {
 export function startIdleForSite(site: SiteRow, buildCodes: BuildFn) {
   if (states.has(site.slug)) return;
 
-  const state: IdleState = { active: true, client: null };
+  const state: IdleState = { active: true, connected: false, client: null };
   states.set(site.slug, state);
 
   runIdleLoop(site, buildCodes).catch((err) =>
@@ -138,6 +143,7 @@ export function stopIdleForSite(slug: string) {
   const state = states.get(slug);
   if (!state) return;
   state.active = false;
+  state.connected = false;
   state.client?.idleNotify().catch(() => {});
   states.delete(slug);
   logger.info({ slug }, "IDLE: stop requested");
@@ -145,4 +151,9 @@ export function stopIdleForSite(slug: string) {
 
 export function getActiveIdleSlugs(): string[] {
   return [...states.keys()];
+}
+
+/** Returns true only when the IMAP connection is live and INBOX is selected */
+export function isIdleConnected(slug: string): boolean {
+  return states.get(slug)?.connected ?? false;
 }
