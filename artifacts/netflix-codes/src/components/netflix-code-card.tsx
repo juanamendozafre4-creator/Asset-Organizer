@@ -55,6 +55,36 @@ function useCountdown(receivedAt: string) {
   return remaining;
 }
 
+/** Devuelve texto "hace X segundos/minutos/horas" a partir de una fecha ISO. */
+function formatTimeAgo(isoString: string): string {
+  const elapsed = Date.now() - parseISO(isoString).getTime();
+  const sec = Math.floor(elapsed / 1000);
+  if (sec < 5) return "justo ahora";
+  if (sec < 60) return `hace ${sec} segundo${sec !== 1 ? "s" : ""}`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `hace ${min} minuto${min !== 1 ? "s" : ""}`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `hace ${hr} hora${hr !== 1 ? "s" : ""}`;
+  const days = Math.floor(hr / 24);
+  return `hace ${days} día${days !== 1 ? "s" : ""}`;
+}
+
+/** Hook que actualiza el texto "hace X" en tiempo real. */
+function useTimeAgo(receivedAt: string) {
+  const [label, setLabel] = useState(() => formatTimeAgo(receivedAt));
+
+  useEffect(() => {
+    setLabel(formatTimeAgo(receivedAt));
+    const elapsed = Date.now() - parseISO(receivedAt).getTime();
+    // Actualizar cada segundo mientras sea < 2 minutos, luego cada 30s
+    const interval = elapsed < 2 * 60 * 1000 ? 1000 : 30_000;
+    const id = setInterval(() => setLabel(formatTimeAgo(receivedAt)), interval);
+    return () => clearInterval(id);
+  }, [receivedAt]);
+
+  return label;
+}
+
 interface NetflixCodeCardProps {
   code: NetflixCode;
   themeColor?: string;
@@ -75,6 +105,7 @@ export function NetflixCodeCard({
   cardBorder = "rgba(255,255,255,0.10)",
 }: NetflixCodeCardProps) {
   const remaining = useCountdown(code.receivedAt);
+  const timeAgo = useTimeAgo(code.receivedAt);
 
   const expiredByTime = remaining <= 0;
   const expiredByServer = code.code === "EXPIRED";
@@ -186,12 +217,17 @@ export function NetflixCodeCard({
         </div>
       </div>
 
-      {/* Pie — hora en zona Colombia */}
+      {/* Pie — tiempo relativo + hora exacta */}
       <div
         className="px-6 py-3 border-t flex items-center justify-between text-xs"
         style={{ background: footerBg, borderColor: cardBorder, color: mutedColor }}
       >
-        <span>Recibido</span>
+        <span
+          className="font-semibold tabular-nums transition-all duration-500"
+          title={formatColombiaTime(code.receivedAt)}
+        >
+          {timeAgo}
+        </span>
         <time dateTime={code.receivedAt}>
           {formatColombiaTime(code.receivedAt)}
         </time>
