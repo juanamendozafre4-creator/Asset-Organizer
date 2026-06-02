@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
 import type { NetflixCode } from "@workspace/api-client-react";
 
+const WELCOME_MESSAGE =
+  "Elige el código que sea los datos de tu dispositivo y tu perfil y ponlo en tu dispositivo para seguir disfrutando de Netflix";
+
 const MESSAGE =
   "Llegó un código nuevo, verifica que sean los datos de tu dispositivo y tu perfil y ponlo en tu dispositivo para seguir disfrutando de Netflix";
 
@@ -32,6 +35,7 @@ export function useSpeechNotification(codes: NetflixCode[]) {
     if (isFirstLoadRef.current) {
       prevTopIdRef.current = topCode.id;
       isFirstLoadRef.current = false;
+      speak(WELCOME_MESSAGE);
       return;
     }
 
