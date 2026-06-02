@@ -24,24 +24,29 @@ const router: IRouter = Router();
 
 type SiteRow = typeof sitesTable.$inferSelect;
 
-const SUBJECT_FILTER = "Tu código de acceso temporal de Netflix";
+const SUBJECT_FILTERS = [
+  "código de acceso temporal",
+  "netflix temporary access code",
+];
 const SSE_POLL_INTERVAL = 8000;
 
-async function buildCodesForSite(site: SiteRow) {
+async function buildCodesForSite(site: SiteRow, _debugDump?: (uid: string, body: string, html: string) => void) {
   const password = decrypt(site.imapPasswordEncrypted);
   const rawEmails = await fetchNetflixEmailsForSite(
     { host: site.imapHost, email: site.imapEmail, password },
     20
   );
 
-  const filtered = rawEmails.filter((email) =>
-    email.subject.toLowerCase().includes(SUBJECT_FILTER.toLowerCase())
-  );
+  const filtered = rawEmails.filter((email) => {
+    const subjectLow = email.subject.toLowerCase();
+    return SUBJECT_FILTERS.some((f) => subjectLow.includes(f));
+  });
 
   const codes = await Promise.all(
     filtered.map(async (email) => {
       const { html: rawHtml } = extractEmailParts(email.source);
       const body = decodeEmailBody(email.source);
+      _debugDump?.(email.uid, body, rawHtml ?? "");
       let code = extractCode(body, rawHtml || undefined);
       const netflixLink = extractNetflixLink(email.source);
 
@@ -90,6 +95,7 @@ router.get("/sites/:slug", async (req, res): Promise<void> => {
 
   res.json({ name: site.name, logoUrl: site.logoUrl ?? null, description: site.description ?? null, themeColor: site.themeColor, slug: site.slug });
 });
+
 
 router.get("/sites/:slug/codes", async (req, res): Promise<void> => {
   const params = ListSiteCodesParams.safeParse(req.params);

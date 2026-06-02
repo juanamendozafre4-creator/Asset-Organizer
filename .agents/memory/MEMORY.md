@@ -1,0 +1,1 @@
+- [Netflix email extraction quirks](netflix-email-quirks.md) — QP+UTF-8 encoding fix, multi-line date normalization, false device match prevention.

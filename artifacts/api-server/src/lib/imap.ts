@@ -22,14 +22,6 @@ function decodeQuotedPrintable(str: string): string {
     );
 }
 
-function decodeBase64Mime(str: string): string {
-  try {
-    return Buffer.from(str.replace(/\s+/g, ""), "base64").toString("utf-8");
-  } catch {
-    return str;
-  }
-}
-
 interface EmailParts {
   plain: string;
   html: string;
@@ -49,6 +41,12 @@ export function extractEmailParts(source: string): EmailParts {
     const ctMatch = part.match(/Content-Type:\s*(text\/(?:plain|html))/i);
     if (!ctMatch) continue;
     const contentType = ctMatch[1].toLowerCase();
+
+    // Detect charset — needed for correct multi-byte decoding
+    const charsetMatch = part.match(/charset=["']?([\w-]+)["']?/i);
+    const charset = (charsetMatch?.[1] ?? "utf-8").toLowerCase().replace(/-/g, "");
+    const isLatin1 = charset === "iso88591" || charset === "latin1" || charset === "windows1252" || charset === "windows1250";
+
     const encMatch = part.match(/Content-Transfer-Encoding:\s*(base64|quoted-printable)/i);
     const encoding = encMatch?.[1]?.toLowerCase();
     const bodyMatch = part.match(/(?:\r?\n){2}([\s\S]+)/);
@@ -56,9 +54,24 @@ export function extractEmailParts(source: string): EmailParts {
 
     let body = bodyMatch[1].trim();
     if (encoding === "base64") {
-      body = decodeBase64Mime(body);
+      try {
+        const buf = Buffer.from(body.replace(/\s+/g, ""), "base64");
+        body = isLatin1 ? buf.toString("latin1") : buf.toString("utf-8");
+      } catch {
+        // keep raw
+      }
     } else if (encoding === "quoted-printable") {
+      // decodeQuotedPrintable maps =XX hex bytes to String.fromCharCode(0xXX),
+      // which produces Latin-1 codepoints. If the real charset is UTF-8, those
+      // codepoints are actually UTF-8 byte values that must be re-assembled.
       body = decodeQuotedPrintable(body);
+      if (!isLatin1) {
+        try {
+          body = Buffer.from(body, "latin1").toString("utf-8");
+        } catch {
+          // keep as-is — better garbled than crashed
+        }
+      }
     }
 
     if (contentType === "text/plain" && !result.plain) result.plain = body;
@@ -208,11 +221,16 @@ export async function fetchNetflixEmailsForSite(
     const lock = await client.getMailboxLock("INBOX");
 
     try {
-      const SUBJECT_FILTER = "Tu código de acceso temporal de Netflix";
+      // Search for both Spanish and English Netflix temporary access code emails
+      const foundEs = await client
+        .search({ subject: "código de acceso temporal" })
+        .catch(() => [] as number[]);
+      const foundEn = await client
+        .search({ subject: "Netflix temporary access code" })
+        .catch(() => [] as number[]);
 
-      const found = await client.search({ subject: SUBJECT_FILTER }).catch(() => [] as number[]);
-
-      const allIds = [...new Set((found as number[]).filter((x): x is number => typeof x === "number"))];
+      const found = [...(foundEs as number[]), ...(foundEn as number[])];
+      const allIds = [...new Set(found.filter((x): x is number => typeof x === "number"))];
       const ids = allIds.sort((a, b) => b - a).slice(0, limit);
 
       for (const seq of ids) {
@@ -300,38 +318,97 @@ export function extractProfileName(body: string): string {
 }
 
 export function extractDeviceInfo(body: string): string {
-  // "Solicitud de Sebastian desde: Hyundai - Smart TV a las 31 de mayo, 10:15 p. m. GMT-5"
-  // Pattern: "Solicitud de <name/anything> desde[:]" then device, "a las" then time
-  const full = body.match(
-    /Solicitud de [^.]+?desde[:\s]+(.+?)\s+a las\s+([^\n<\r.]+)/i
+  // Normalize multi-line dates: "a las 1\r\nde junio" → "a las 1 de junio"
+  // This happens when the plain-text line wraps right after the day number.
+  const normalized = body
+    .replace(/(\d)\r?\n([a-záéíóúàèì\w])/gi, "$1 $2")
+    .replace(/\r\n/g, "\n");
+
+  function cleanText(s: string): string {
+    // Remove markdown bold markers (*text*) used in Netflix plain-text emails
+    return s.replace(/\*/g, "").trim();
+  }
+
+  function cleanTime(s: string): string {
+    // Strip trailing text that isn't part of the time:
+    // "2 de junio, 11:19 a. m. GMT+10 Obtener código" → "2 de junio, 11:19 a. m. GMT+10"
+    return s
+      .replace(/\s+Obtener\b.*/i, "")
+      .replace(/\s+Si\s+no\b.*/i, "")
+      .replace(/\s+If\s+you\b.*/i, "")
+      .replace(/\s+Este\s+enlace\b.*/i, "")
+      .replace(/[,\s]+$/, "")
+      .trim();
+  }
+
+  function isFalseDevice(s: string): boolean {
+    // Reject the generic phrase Netflix uses when the device is only shown graphically
+    return /dispositivo que aparece/i.test(s) || s.length < 2;
+  }
+
+  // Spanish full pattern: "Solicitud de <anything> desde[:]  <device>  a las  <time>"
+  // Time capture uses [^\n<] — allows dots (for "a. m.") but stops at newline/tag
+  const full = normalized.match(
+    /Solicitud de .+?desde[:\s]+(.+?)\s+a las\s+([^\n<]+)/i
   );
-  if (full) return `${full[1].trim()} — ${full[2].trim()}`;
+  if (full) {
+    const device = cleanText(full[1]);
+    const time = cleanTime(cleanText(full[2]));
+    if (!isFalseDevice(device)) return `${device} — ${time}`;
+  }
 
-  const dev = body.match(/Solicitud de [^.]+?desde[:\s]+([^\n<\r.]+)/i);
-  if (dev) return dev[1].trim();
+  // Spanish device-only pattern (no time found)
+  const dev = normalized.match(/Solicitud de .+?desde[:\s]+([^\n<]+)/i);
+  if (dev) {
+    const device = cleanText(dev[1]);
+    if (!isFalseDevice(device)) return device;
+  }
 
-  const eng = body.match(/request (?:is )?from[:\s]+([^\n<\r]+)/i);
-  if (eng) return `Request from: ${eng[1].trim()}`;
+  // English: "Request from: <device> at <time>" or "request from <device>"
+  const engFull = normalized.match(
+    /(?:access\s+)?request\s+from[:\s]+(.+?)\s+at\s+([^\n<]+)/i
+  );
+  if (engFull) {
+    const device = cleanText(engFull[1]);
+    const time = cleanTime(cleanText(engFull[2]));
+    if (!isFalseDevice(device)) return `${device} — ${time}`;
+  }
+
+  const engDev = normalized.match(/(?:access\s+)?request\s+from[:\s]+([^\n<]+)/i);
+  if (engDev) {
+    const device = cleanText(engDev[1]);
+    if (!isFalseDevice(device)) return device;
+  }
 
   return "Información del dispositivo no disponible";
 }
 
 export function extractCode(body: string, rawHtml?: string): string | null {
-  // 1. Try specific contextual patterns in the decoded plain text
+  // 1. Standalone 4-digit line — most reliable in Netflix plain-text emails where
+  //    the code is presented alone on its own line with optional surrounding whitespace.
+  const standalone = body.match(/^[ \t]*([0-9]{4})[ \t]*$/m);
+  if (standalone) return standalone[1].trim();
+
+  // 2. Specific contextual patterns in the decoded plain text (Spanish + English)
   const textPatterns = [
+    // Spanish
     /tu\s+c[oó]digo\s+(?:de\s+acceso\s+(?:temporal\s+)?)?(?:es[:\s]+)?([0-9]{4})\b/i,
     /c[oó]digo\s+(?:de\s+acceso\s+)?(?:temporal\s+)?(?:es[:\s]+)?([0-9]{4})\b/i,
     /c[oó]digo[:\s]+([0-9]{4})\b/i,
-    /\bcode[:\s]+([0-9]{4})\b/i,
     /acceso\s+temporal[^0-9]{0,40}([0-9]{4})\b/i,
     /temporal[^0-9]{0,20}([0-9]{4})\b/i,
+    // English
+    /your\s+(?:temporary\s+)?(?:access\s+)?code\s+is[:\s]+([0-9]{4})\b/i,
+    /temporary\s+access\s+code[:\s]+([0-9]{4})\b/i,
+    /\baccess\s+code[:\s]+([0-9]{4})\b/i,
+    /\bcode[:\s]+([0-9]{4})\b/i,
   ];
   for (const p of textPatterns) {
     const m = body.match(p);
     if (m) return m[1].trim();
   }
 
-  // 2. Try structural HTML patterns — Netflix puts the code alone inside a styled element
+  // 3. Structural HTML patterns — Netflix puts the code alone inside a styled element
   if (rawHtml) {
     const htmlPatterns = [
       // Standalone 4-digit number as the only content of a block element
@@ -354,8 +431,9 @@ export function extractCode(body: string, rawHtml?: string): string | null {
 }
 
 export function extractExpiry(body: string): string {
+  // Allow non-breaking spaces / garbled UTF-8 bytes between the number and unit
   const m = body.match(
-    /(?:vence|expires?|v[aá]lido)[^\d]*(\d+)\s*(minutos?|minutes?|hours?|horas?)/i
+    /(?:vence|expires?|v[aá]lido)[^0-9]*(\d+)[^a-z]*?(minutos?|minutes?|hours?|horas?)/i
   );
   if (m) return `${m[1]} ${m[2]}`;
   return "15 minutos";
