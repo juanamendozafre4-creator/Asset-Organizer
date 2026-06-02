@@ -3,6 +3,7 @@ import { useGetSiteInfo, getGetSiteInfoQueryKey } from "@workspace/api-client-re
 import { Loader2, AlertCircle, Radio } from "lucide-react";
 import { NetflixCodeCard } from "@/components/netflix-code-card";
 import { useSiteCodesStream } from "@/hooks/useSiteCodesStream";
+import { useSpeechNotification } from "@/hooks/useSpeechNotification";
 import {
   isDark,
   getTextColor,
@@ -64,6 +65,8 @@ export default function PublicSite() {
   const { codes, status, isLoading: isLoadingCodes, imapError } = useSiteCodesStream(
     site ? slug : undefined
   );
+
+  useSpeechNotification(codes);
 
   if (isLoadingSite) {
     return (
