@@ -25,6 +25,7 @@ import {
   setCacheEntry,
   codeEvents,
 } from "../lib/codesCache";
+import { requestFetch } from "../lib/backgroundPoller";
 
 const router: IRouter = Router();
 
@@ -178,16 +179,27 @@ router.get("/sites/:slug/stream", async (req: Request, res: Response): Promise<v
 
   let lastFingerprint = "";
 
-  // Serve cached data immediately — no IMAP call from here ever.
-  // The background poller + IMAP IDLE keep the cache always warm.
+  // Serve cached data immediately — background poller + IMAP IDLE keep the cache warm.
   const cached = getCacheEntry(slug);
   if (cached && cached.codes.length > 0) {
     const typedCodes = cached.codes as { id: string | number; receivedAt: string }[];
     lastFingerprint = codesFingerprint(typedCodes);
     sendEvent("codes", cached.codes);
     req.log.info({ slug }, "SSE: served from cache immediately");
-  } else {
-    req.log.info({ slug }, "SSE: cache empty — waiting for background poller");
+  } else if (!cached) {
+    // Cache is completely cold (e.g. server just restarted).
+    // Request a fetch — deduplicated so only one IMAP connection opens even if
+    // multiple clients connect simultaneously.
+    req.log.info({ slug }, "SSE: cache cold — requesting on-demand fetch");
+    requestFetch(site)
+      .then(() => {
+        // setCacheEntry already emits the codeEvents update, so the listener below
+        // will push the codes to this client automatically.
+      })
+      .catch((err) => {
+        req.log.error({ err, slug }, "SSE: on-demand fetch failed");
+        sendEvent("imap_error", { message: "Error al conectar con el servidor de correo" });
+      });
   }
 
   // Listen for cache updates from the background poller / IMAP IDLE
