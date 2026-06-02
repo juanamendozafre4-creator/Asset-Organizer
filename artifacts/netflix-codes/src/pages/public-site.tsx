@@ -110,23 +110,25 @@ export default function PublicSite() {
         style={{ borderColor: dividerColor, background: headerBg }}
       >
         <div className="container mx-auto max-w-3xl flex flex-col items-center text-center">
-          {site.logoUrl && (
-            <div
-              className="w-16 h-16 md:w-20 md:h-20 mb-4 rounded-xl overflow-hidden flex items-center justify-center shadow-lg"
-              style={{ background: logoBg }}
-            >
-              <img
-                src={site.logoUrl}
-                alt={site.name}
-                className="max-w-full max-h-full object-contain"
-                style={{ mixBlendMode: dark ? "screen" : "multiply" }}
-              />
-            </div>
-          )}
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: textColor }}>
-            {site.name}
-          </h1>
-          <p className="mt-1 font-mono text-sm" style={{ color: mutedColor }}>
+          <div className="flex items-center gap-4">
+            {site.logoUrl && (
+              <div
+                className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-xl overflow-hidden flex items-center justify-center shadow-lg"
+                style={{ background: logoBg }}
+              >
+                <img
+                  src={site.logoUrl}
+                  alt={site.name}
+                  className="max-w-full max-h-full object-contain"
+                  style={{ mixBlendMode: dark ? "screen" : "multiply" }}
+                />
+              </div>
+            )}
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: textColor }}>
+              {site.name}
+            </h1>
+          </div>
+          <p className="mt-2 font-mono text-sm" style={{ color: mutedColor }}>
             Códigos de Acceso
           </p>
           {site.description && (
