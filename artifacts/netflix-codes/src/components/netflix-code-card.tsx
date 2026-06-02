@@ -1,7 +1,7 @@
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import type { NetflixCode } from "@workspace/api-client-react";
-import { MonitorSmartphone, XCircle, Loader2, Mail } from "lucide-react";
+import { MonitorSmartphone, XCircle, HelpCircle, Mail } from "lucide-react";
 
 const CODE_TTL_MS = 15 * 60 * 1000;
 
@@ -28,12 +28,16 @@ export function NetflixCodeCard({
   cardBg = "rgba(255,255,255,0.07)",
   cardBorder = "rgba(255,255,255,0.10)",
 }: NetflixCodeCardProps) {
-  const expired = Date.now() - parseISO(code.receivedAt).getTime() > CODE_TTL_MS;
+  const expiredByTime = Date.now() - parseISO(code.receivedAt).getTime() > CODE_TTL_MS;
+  const expiredByServer = code.code === "EXPIRED";
+  const isExpired = expiredByTime || expiredByServer;
+  const hasCode = code.code && code.code !== "EXPIRED";
 
   const codeBlockBg = dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)";
   const footerBg = dark ? "rgba(0,0,0,0.20)" : "rgba(0,0,0,0.04)";
   const expiredBg = dark ? "rgba(220,38,38,0.12)" : "rgba(220,38,38,0.06)";
   const expiredBorder = dark ? "rgba(220,38,38,0.30)" : "rgba(220,38,38,0.25)";
+  const unavailableBg = dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)";
 
   return (
     <div
@@ -67,9 +71,9 @@ export function NetflixCodeCard({
           )}
         </div>
 
-        {/* Código o vencido */}
+        {/* Código / Vencido / No disponible */}
         <div className="pt-1">
-          {expired ? (
+          {isExpired ? (
             <div
               className="w-full rounded-xl py-6 px-4 flex flex-col items-center gap-2"
               style={{ background: expiredBg, border: `1px solid ${expiredBorder}` }}
@@ -79,10 +83,10 @@ export function NetflixCodeCard({
                 Código vencido
               </p>
               <p className="text-xs" style={{ color: mutedColor }}>
-                El enlace expiró (más de 15 minutos)
+                {expiredByServer ? "El enlace ya no es válido en Netflix" : "El enlace expiró (más de 15 minutos)"}
               </p>
             </div>
-          ) : code.code ? (
+          ) : hasCode ? (
             <div
               className="w-full rounded-xl py-5 sm:py-7 px-4 flex flex-col items-center justify-center"
               style={{ background: codeBlockBg }}
@@ -104,11 +108,14 @@ export function NetflixCodeCard({
           ) : (
             <div
               className="w-full rounded-xl py-6 px-4 flex flex-col items-center gap-2"
-              style={{ background: codeBlockBg, border: `1px solid ${cardBorder}` }}
+              style={{ background: unavailableBg, border: `1px solid ${cardBorder}` }}
             >
-              <Loader2 className="h-6 w-6 animate-spin" style={{ color: mutedColor }} />
-              <p className="text-sm" style={{ color: mutedColor }}>
-                Obteniendo código...
+              <HelpCircle className="h-6 w-6" style={{ color: mutedColor }} />
+              <p className="text-sm font-medium" style={{ color: mutedColor }}>
+                Código no disponible
+              </p>
+              <p className="text-xs text-center" style={{ color: mutedColor }}>
+                No se pudo leer el código desde el correo
               </p>
             </div>
           )}

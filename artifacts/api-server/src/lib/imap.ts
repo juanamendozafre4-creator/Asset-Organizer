@@ -161,6 +161,24 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
 
     const html = await res.text();
 
+    // 0. Detect expired/invalid link — Netflix renders specific text
+    const expiredPatterns = [
+      /este\s+c[oó]digo\s+ha\s+caducado/i,
+      /c[oó]digo\s+ha\s+caducado/i,
+      /c[oó]digo\s+expirado/i,
+      /enlace\s+ha\s+expirado/i,
+      /this\s+code\s+has\s+expired/i,
+      /code\s+is\s+no\s+longer\s+valid/i,
+      /link\s+has\s+expired/i,
+      /nftoken.*invalid/i,
+    ];
+    for (const p of expiredPatterns) {
+      if (p.test(html)) {
+        logger.info({ url }, "Netflix page indicates code is expired");
+        return "EXPIRED";
+      }
+    }
+
     // 1. Look in embedded JSON state (Netflix uses server-side rendered JSON blobs)
     const jsonPatterns = [
       /"accessCode"\s*:\s*"?([0-9]{4})"?/i,
@@ -168,12 +186,16 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
       /"verificationCode"\s*:\s*"?([0-9]{4})"?/i,
       /"pin"\s*:\s*"?([0-9]{4})"?/i,
       /accessCode['":\s]+([0-9]{4})\b/i,
+      /"temporaryCode"\s*:\s*"?([0-9]{4})"?/i,
+      /"travelCode"\s*:\s*"?([0-9]{4})"?/i,
+      /['"](code|pin|access)['"]\s*:\s*['"]\s*([0-9]{4})\s*['"]/i,
     ];
     for (const p of jsonPatterns) {
       const m = html.match(p);
       if (m) {
-        logger.info({ code: m[1] }, "Extracted Netflix code from JSON blob");
-        return m[1];
+        const code = m[m.length - 1];
+        logger.info({ code }, "Extracted Netflix code from JSON blob");
+        return code;
       }
     }
 
@@ -181,7 +203,7 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
     const htmlPatterns = [
       /class="[^"]*(?:code|pin|access)[^"]*"[^>]*>\s*([0-9]{4})\s*</i,
       /data-testid="[^"]*code[^"]*"[^>]*>\s*([0-9]{4})\s*</i,
-      />\s{0,5}([0-9]{4})\s{0,5}</,
+      />\s{0,8}([0-9]{4})\s{0,8}</,
     ];
     for (const p of htmlPatterns) {
       const m = html.match(p);
@@ -189,6 +211,27 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
         logger.info({ code: m[1] }, "Extracted Netflix code from HTML element");
         return m[1];
       }
+    }
+
+    // 3. Netflix sometimes renders each digit in its own element (e.g. <span>4</span><span>1</span>…)
+    const digitSpan = html.match(
+      /<[a-z][^>]{0,60}>\s*(\d)\s*<\/[a-z]+>\s*<[a-z][^>]{0,60}>\s*(\d)\s*<\/[a-z]+>\s*<[a-z][^>]{0,60}>\s*(\d)\s*<\/[a-z]+>\s*<[a-z][^>]{0,60}>\s*(\d)\s*<\/[a-z]+>/i
+    );
+    if (digitSpan) {
+      const code = digitSpan[1] + digitSpan[2] + digitSpan[3] + digitSpan[4];
+      logger.info({ code }, "Extracted Netflix code from digit spans");
+      return code;
+    }
+
+    // 4. Last resort: scan for a lone 4-digit group in visible text (between > and <)
+    //    excluding common false positives like years (1900-2099) and port numbers
+    const allMatches = [...html.matchAll(/>\s*([0-9]{4})\s*</g)];
+    const candidate = allMatches
+      .map((m) => m[1])
+      .find((n) => !/^(19|20)\d{2}$/.test(n)); // exclude years
+    if (candidate) {
+      logger.info({ code: candidate }, "Extracted Netflix code via fallback scan");
+      return candidate;
     }
 
     logger.warn({ url, htmlLength: html.length }, "Could not extract 4-digit code from Netflix page");
