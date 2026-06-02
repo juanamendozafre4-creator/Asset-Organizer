@@ -62468,6 +62468,145 @@ var require_package4 = __commonJS({
   }
 });
 
+// ../../node_modules/.pnpm/nodemailer@8.0.10/node_modules/nodemailer/lib/errors.js
+var require_errors = __commonJS({
+  "../../node_modules/.pnpm/nodemailer@8.0.10/node_modules/nodemailer/lib/errors.js"(exports, module) {
+    "use strict";
+    var ERROR_CODES = {
+      // Connection errors
+      ECONNECTION: "Connection closed unexpectedly",
+      ETIMEDOUT: "Connection or operation timed out",
+      ESOCKET: "Socket-level error",
+      EDNS: "DNS resolution failed",
+      // TLS/Security errors
+      ETLS: "TLS handshake or STARTTLS failed",
+      EREQUIRETLS: "REQUIRETLS not supported by server (RFC 8689)",
+      // Protocol errors
+      EPROTOCOL: "Invalid SMTP server response",
+      EENVELOPE: "Invalid mail envelope (sender or recipients)",
+      EMESSAGE: "Message delivery error",
+      ESTREAM: "Stream processing error",
+      // Authentication errors
+      EAUTH: "Authentication failed",
+      ENOAUTH: "Authentication credentials not provided",
+      EOAUTH2: "OAuth2 token generation or refresh error",
+      // Resource errors
+      EMAXLIMIT: "Pool resource limit reached (max messages per connection)",
+      // Transport-specific errors
+      ESENDMAIL: "Sendmail command error",
+      ESES: "AWS SES transport error",
+      // Configuration and access errors
+      ECONFIG: "Invalid configuration",
+      EPROXY: "Proxy connection error",
+      EFILEACCESS: "File access rejected (disableFileAccess is set)",
+      EURLACCESS: "URL access rejected (disableUrlAccess is set)",
+      EFETCH: "HTTP fetch error"
+    };
+    module.exports = { ERROR_CODES };
+    for (const code of Object.keys(ERROR_CODES)) {
+      module.exports[code] = code;
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/nodemailer@8.0.10/node_modules/nodemailer/lib/smtp-connection/http-proxy-client.js
+var require_http_proxy_client = __commonJS({
+  "../../node_modules/.pnpm/nodemailer@8.0.10/node_modules/nodemailer/lib/smtp-connection/http-proxy-client.js"(exports, module) {
+    "use strict";
+    var net = __require("net");
+    var tls = __require("tls");
+    var urllib = __require("url");
+    var errors = require_errors();
+    function httpProxyClient(proxyUrl, destinationPort, destinationHost, callback) {
+      const proxy = urllib.parse(proxyUrl);
+      const options = {
+        host: proxy.hostname,
+        port: Number(proxy.port) ? Number(proxy.port) : proxy.protocol === "https:" ? 443 : 80
+      };
+      let connect;
+      if (proxy.protocol === "https:") {
+        options.rejectUnauthorized = false;
+        connect = tls.connect.bind(tls);
+      } else {
+        connect = net.connect.bind(net);
+      }
+      let socket;
+      let finished = false;
+      const tempSocketErr = (err) => {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        try {
+          socket.destroy();
+        } catch (_E) {
+        }
+        callback(err);
+      };
+      const timeoutErr = () => {
+        const err = new Error("Proxy socket timed out");
+        err.code = "ETIMEDOUT";
+        tempSocketErr(err);
+      };
+      socket = connect(options, () => {
+        if (finished) {
+          return;
+        }
+        const reqHeaders = {
+          Host: destinationHost + ":" + destinationPort,
+          Connection: "close"
+        };
+        if (proxy.auth) {
+          reqHeaders["Proxy-Authorization"] = "Basic " + Buffer.from(proxy.auth).toString("base64");
+        }
+        socket.write(
+          // HTTP method
+          "CONNECT " + destinationHost + ":" + destinationPort + " HTTP/1.1\r\n" + // HTTP request headers
+          Object.keys(reqHeaders).map((key) => key + ": " + reqHeaders[key]).join("\r\n") + // End request
+          "\r\n\r\n"
+        );
+        let headers = "";
+        const onSocketData = (chunk) => {
+          let match;
+          let remainder;
+          if (finished) {
+            return;
+          }
+          headers += chunk.toString("binary");
+          if (match = headers.match(/\r\n\r\n/)) {
+            socket.removeListener("data", onSocketData);
+            remainder = headers.substr(match.index + match[0].length);
+            headers = headers.substr(0, match.index);
+            if (remainder) {
+              socket.unshift(Buffer.from(remainder, "binary"));
+            }
+            finished = true;
+            match = headers.match(/^HTTP\/\d+\.\d+ (\d+)/i);
+            if (!match || (match[1] || "").charAt(0) !== "2") {
+              try {
+                socket.destroy();
+              } catch (_E) {
+              }
+              const err = new Error("Invalid response from proxy" + (match && ": " + match[1] || ""));
+              err.code = errors.EPROXY;
+              return callback(err);
+            }
+            socket.removeListener("error", tempSocketErr);
+            socket.removeListener("timeout", timeoutErr);
+            socket.setTimeout(0);
+            return callback(null, socket);
+          }
+        };
+        socket.on("data", onSocketData);
+      });
+      socket.setTimeout(httpProxyClient.timeout || 30 * 1e3);
+      socket.on("timeout", timeoutErr);
+      socket.once("error", tempSocketErr);
+    }
+    module.exports = httpProxyClient;
+  }
+});
+
 // ../../node_modules/.pnpm/smart-buffer@4.2.0/node_modules/smart-buffer/build/utils.js
 var require_utils6 = __commonJS({
   "../../node_modules/.pnpm/smart-buffer@4.2.0/node_modules/smart-buffer/build/utils.js"(exports) {
@@ -66616,7 +66755,7 @@ var require_build = __commonJS({
 var require_proxy_connection = __commonJS({
   "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/proxy-connection.js"(exports, module) {
     "use strict";
-    var httpProxyClient = __require("nodemailer/lib/smtp-connection/http-proxy-client");
+    var httpProxyClient = require_http_proxy_client();
     var { SocksClient } = require_build();
     var util2 = __require("util");
     var httpProxyClientAsync = util2.promisify(httpProxyClient);
@@ -87146,7 +87285,7 @@ var require_destroy = __commonJS({
 });
 
 // ../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/errors.js
-var require_errors = __commonJS({
+var require_errors2 = __commonJS({
   "../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/errors.js"(exports, module) {
     "use strict";
     var codes = {};
@@ -87249,7 +87388,7 @@ var require_errors = __commonJS({
 var require_state = __commonJS({
   "../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/internal/streams/state.js"(exports, module) {
     "use strict";
-    var ERR_INVALID_OPT_VALUE = require_errors().codes.ERR_INVALID_OPT_VALUE;
+    var ERR_INVALID_OPT_VALUE = require_errors2().codes.ERR_INVALID_OPT_VALUE;
     function highWaterMarkFrom(options, isDuplex, duplexKey) {
       return options.highWaterMark != null ? options.highWaterMark : isDuplex ? options[duplexKey] : null;
     }
@@ -87308,7 +87447,7 @@ var require_stream_writable = __commonJS({
     var destroyImpl = require_destroy();
     var _require = require_state();
     var getHighWaterMark = _require.getHighWaterMark;
-    var _require$codes = require_errors().codes;
+    var _require$codes = require_errors2().codes;
     var ERR_INVALID_ARG_TYPE = _require$codes.ERR_INVALID_ARG_TYPE;
     var ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED;
     var ERR_MULTIPLE_CALLBACK = _require$codes.ERR_MULTIPLE_CALLBACK;
@@ -88083,7 +88222,7 @@ var require_string_decoder = __commonJS({
 var require_end_of_stream = __commonJS({
   "../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/internal/streams/end-of-stream.js"(exports, module) {
     "use strict";
-    var ERR_STREAM_PREMATURE_CLOSE = require_errors().codes.ERR_STREAM_PREMATURE_CLOSE;
+    var ERR_STREAM_PREMATURE_CLOSE = require_errors2().codes.ERR_STREAM_PREMATURE_CLOSE;
     function once(callback) {
       var called = false;
       return function() {
@@ -88428,7 +88567,7 @@ var require_from = __commonJS({
       }
       return (hint === "string" ? String : Number)(input);
     }
-    var ERR_INVALID_ARG_TYPE = require_errors().codes.ERR_INVALID_ARG_TYPE;
+    var ERR_INVALID_ARG_TYPE = require_errors2().codes.ERR_INVALID_ARG_TYPE;
     function from(Readable, iterable, opts) {
       var iterator;
       if (iterable && typeof iterable.next === "function") {
@@ -88505,7 +88644,7 @@ var require_stream_readable = __commonJS({
     var destroyImpl = require_destroy();
     var _require = require_state();
     var getHighWaterMark = _require.getHighWaterMark;
-    var _require$codes = require_errors().codes;
+    var _require$codes = require_errors2().codes;
     var ERR_INVALID_ARG_TYPE = _require$codes.ERR_INVALID_ARG_TYPE;
     var ERR_STREAM_PUSH_AFTER_EOF = _require$codes.ERR_STREAM_PUSH_AFTER_EOF;
     var ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED;
@@ -89210,7 +89349,7 @@ var require_stream_transform = __commonJS({
   "../../node_modules/.pnpm/readable-stream@3.6.2/node_modules/readable-stream/lib/_stream_transform.js"(exports, module) {
     "use strict";
     module.exports = Transform;
-    var _require$codes = require_errors().codes;
+    var _require$codes = require_errors2().codes;
     var ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED;
     var ERR_MULTIPLE_CALLBACK = _require$codes.ERR_MULTIPLE_CALLBACK;
     var ERR_TRANSFORM_ALREADY_TRANSFORMING = _require$codes.ERR_TRANSFORM_ALREADY_TRANSFORMING;
@@ -89336,7 +89475,7 @@ var require_pipeline = __commonJS({
         callback.apply(void 0, arguments);
       };
     }
-    var _require$codes = require_errors().codes;
+    var _require$codes = require_errors2().codes;
     var ERR_MISSING_ARGS = _require$codes.ERR_MISSING_ARGS;
     var ERR_STREAM_DESTROYED = _require$codes.ERR_STREAM_DESTROYED;
     function noop(err) {
