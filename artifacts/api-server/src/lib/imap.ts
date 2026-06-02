@@ -318,20 +318,22 @@ export function extractProfileName(body: string): string {
 }
 
 export function extractDeviceInfo(body: string): string {
-  // Normalize multi-line dates: "a las 1\r\nde junio" → "a las 1 de junio"
-  // This happens when the plain-text line wraps right after the day number.
+  // Normalize the body to collapse common Netflix line-wrapping patterns:
+  // 1. Digit + optional trailing spaces + newline + word-char: "1\nde" → "1 de"
+  // 2. "Solicitud de X\ndesde:" → "Solicitud de X desde:" (profile-name on its own line)
+  // 3. Normalize CRLF to LF
   const normalized = body
-    .replace(/(\d)\r?\n([a-záéíóúàèì\w])/gi, "$1 $2")
+    .replace(/(\d)[ \t]*\r?\n([ \t]*[a-záéíóúàèì\w])/gi, "$1 $2")
+    .replace(/(Solicitud de [^\r\n]+?)[ \t]*\r?\n[ \t]*(desde\b)/gi, "$1 $2")
     .replace(/\r\n/g, "\n");
 
   function cleanText(s: string): string {
-    // Remove markdown bold markers (*text*) used in Netflix plain-text emails
+    // Remove markdown bold markers (*text*) and trim
     return s.replace(/\*/g, "").trim();
   }
 
   function cleanTime(s: string): string {
-    // Strip trailing text that isn't part of the time:
-    // "2 de junio, 11:19 a. m. GMT+10 Obtener código" → "2 de junio, 11:19 a. m. GMT+10"
+    // Strip trailing text that isn't part of the time
     return s
       .replace(/\s+Obtener\b.*/i, "")
       .replace(/\s+Si\s+no\b.*/i, "")
@@ -346,10 +348,12 @@ export function extractDeviceInfo(body: string): string {
     return /dispositivo que aparece/i.test(s) || s.length < 2;
   }
 
-  // Spanish full pattern: "Solicitud de <anything> desde[:]  <device>  a las  <time>"
-  // Time capture uses [^\n<] — allows dots (for "a. m.") but stops at newline/tag
+  // Spanish full pattern: "Solicitud de <name> desde[:]  <device>  a las  <time>"
+  // Uses [\s\S]+? so it crosses newlines (covers "a las" split to next line).
+  // Outer match is tried on single-line normalized text; the cross-line part only
+  // matters when "a las" wraps to the next line after the device name.
   const full = normalized.match(
-    /Solicitud de .+?desde[:\s]+(.+?)\s+a las\s+([^\n<]+)/i
+    /Solicitud de [\s\S]+?desde[:\s]+([^\n]+?)[ \t]*\n?[ \t]*a las[ \t]+([^\n<]+)/i
   );
   if (full) {
     const device = cleanText(full[1]);
@@ -357,20 +361,41 @@ export function extractDeviceInfo(body: string): string {
     if (!isFalseDevice(device)) return `${device} — ${time}`;
   }
 
-  // Spanish device-only pattern (no time found)
-  const dev = normalized.match(/Solicitud de .+?desde[:\s]+([^\n<]+)/i);
+  // Spanish inline fallback: "desde: <device> a las <time>" all on one line
+  const fullInline = normalized.match(
+    /desde[:\s]+(.+?)\s+a las\s+([^\n<]+)/i
+  );
+  if (fullInline) {
+    const device = cleanText(fullInline[1]);
+    const time = cleanTime(cleanText(fullInline[2]));
+    if (!isFalseDevice(device)) return `${device} — ${time}`;
+  }
+
+  // Spanish device-only fallback (no time found): capture until end of line
+  const dev = normalized.match(/Solicitud de [\s\S]+?desde[:\s]+([^\n<]+)/i);
   if (dev) {
     const device = cleanText(dev[1]);
-    if (!isFalseDevice(device)) return device;
+    // Strip trailing " a las ..." if it snuck in
+    const clean = device.replace(/\s+a las\b.*/i, "").trim();
+    if (!isFalseDevice(clean)) return clean;
   }
 
   // English: "Request from: <device> at <time>" or "request from <device>"
   const engFull = normalized.match(
-    /(?:access\s+)?request\s+from[:\s]+(.+?)\s+at\s+([^\n<]+)/i
+    /(?:access\s+)?request\s+from[:\s]+([^\n]+?)[ \t]*\n?[ \t]*at[ \t]+([^\n<]+)/i
   );
   if (engFull) {
     const device = cleanText(engFull[1]);
     const time = cleanTime(cleanText(engFull[2]));
+    if (!isFalseDevice(device)) return `${device} — ${time}`;
+  }
+
+  const engFallback = normalized.match(
+    /(?:access\s+)?request\s+from[:\s]+(.+?)\s+at\s+([^\n<]+)/i
+  );
+  if (engFallback) {
+    const device = cleanText(engFallback[1]);
+    const time = cleanTime(cleanText(engFallback[2]));
     if (!isFalseDevice(device)) return `${device} — ${time}`;
   }
 
