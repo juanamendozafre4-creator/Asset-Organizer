@@ -349,14 +349,45 @@ export function extractAccountEmail(body: string): string | null {
 }
 
 export function extractProfileName(body: string): string {
-  const patterns = [
-    /Hola[,\s]+([^\n<,\r:]+)/i,
-    /Hello[,\s]+([^\n<,\r:]+)/i,
+  // IMPORTANT: use the raw body (with newlines) for "Hola, X" patterns so that
+  // "Hola,\ncódigo de acceso" doesn't incorrectly capture "código de acceso".
+  // Only use the collapsed version for "Solicitud de X desde:" which is one line.
+  const flat = body.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ");
+
+  // 1. Standard greeting with newline/tag as natural boundary
+  const holaPatterns = [
+    /Hola[,\s]+([^\n<,\r:]{1,30})/i,
+    /Hello[,\s]+([^\n<,\r:]{1,30})/i,
   ];
-  for (const p of patterns) {
+  for (const p of holaPatterns) {
+    const m = body.match(p);
+    if (m) {
+      const name = m[1].trim().replace(/\s+/g, " ");
+      // Reject if it looks like email body text (contains keywords or is too long)
+      const isBodyText = /c[oó]digo|acceso|temporal|netflix|enlace|correo|solicitud/i.test(name);
+      if (name.length > 0 && !isBodyText) return name;
+    }
+  }
+
+  // 2. "Solicitud de X desde:" — X is the profile name (collapse-safe, one line)
+  const solicitudPatterns = [
+    /Solicitud de ([^\n<,\r:]{1,30}?)\s+desde[:\s]/i,
+    /request from ([^\n<,\r:]{1,30}?) at\b/i,
+  ];
+  for (const p of solicitudPatterns) {
+    const m = flat.match(p);
+    if (m) {
+      const name = m[1].trim().replace(/\s+/g, " ");
+      if (name.length > 0) return name;
+    }
+  }
+
+  // 3. Numeric-only profile name is still valid (e.g. profile named "2")
+  for (const p of holaPatterns) {
     const m = body.match(p);
     if (m) return m[1].trim().replace(/\s+/g, " ");
   }
+
   return "Usuario";
 }
 
@@ -377,6 +408,8 @@ function flattenHtml(html: string): string {
 
 function normalizeForDevice(text: string): string {
   return text
+    // Normalize ordinal indicators: "1.\nº" → "1.º"
+    .replace(/(\d+\.)[ \t]*\r?\n[ \t]*(º)/g, "$1$2")
     // Join digit + newline + word (e.g. "1\nde junio")
     .replace(/(\d)[ \t]*\r?\n([ \t]*[a-záéíóúàèì\w])/gi, "$1 $2")
     // Join "Solicitud de X\ndesde:"
@@ -458,6 +491,33 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
       if (!isFalseDevice(device)) return device;
     }
 
+    // Super-broad fallback: collapse all newlines in a window around "desde:" / "from:"
+    // and re-try — catches cases where the sentence is split across multiple lines
+    const desdeIdx = text.search(/desde[:\s]|from[:\s]/i);
+    if (desdeIdx !== -1) {
+      const window = text
+        .slice(Math.max(0, desdeIdx - 120), desdeIdx + 250)
+        .replace(/[\r\n]+/g, " ")
+        .replace(/\s+/g, " ");
+      const inlineW = window.match(/desde[:\s]+(.+?)\s+a las\s+([^\n<]+)/i);
+      if (inlineW) {
+        const device = cleanText(inlineW[1]);
+        const time = cleanTime(cleanText(inlineW[2]));
+        if (!isFalseDevice(device)) return `${device} — ${time}`;
+      }
+      const devOnlyW = window.match(/desde[:\s]+([^<]{3,80})/i);
+      if (devOnlyW) {
+        const raw = cleanText(devOnlyW[1]).replace(/\s+a las\b.*/i, "").trim();
+        if (!isFalseDevice(raw) && raw.length > 2) return raw;
+      }
+      const fromW = window.match(/from[:\s]+(.+?)\s+at\s+([^\n<]+)/i);
+      if (fromW) {
+        const device = cleanText(fromW[1]);
+        const time = cleanTime(cleanText(fromW[2]));
+        if (!isFalseDevice(device)) return `${device} — ${time}`;
+      }
+    }
+
     return null;
   }
 
@@ -474,7 +534,25 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
   const result = tryExtract(normalized);
   if (result) return result;
 
-  return "Información del dispositivo no disponible";
+  // 3. Last resort: collapse ALL newlines in the entire body and re-try
+  const collapsed = body.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ");
+  const collapsedResult = tryExtract(collapsed);
+  if (collapsedResult) return collapsedResult;
+
+  // 4. Absolute last resort: grab the raw "Solicitud de X desde: Y" line as-is
+  //    from the collapsed body, even without a clean time.
+  //    Still reject known false-device phrases (e.g. "el dispositivo que aparece").
+  const rawLine = collapsed.match(/Solicitud de .{1,60}?desde[:\s]+([^.]{5,120})/i);
+  if (rawLine) {
+    const raw = rawLine[1]
+      .replace(/\s+a las\b.*/i, "")
+      .replace(/\s+Obtener\b.*/i, "")
+      .replace(/\*/g, "")
+      .trim();
+    if (raw.length > 2 && !isFalseDevice(raw)) return raw;
+  }
+
+  return "";
 }
 
 export function extractCode(body: string, rawHtml?: string): string | null {
