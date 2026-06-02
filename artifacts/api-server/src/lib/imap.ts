@@ -208,14 +208,11 @@ export async function fetchNetflixEmailsForSite(
     const lock = await client.getMailboxLock("INBOX");
 
     try {
-      const searches = await Promise.all([
-        client.search({ subject: "código de acceso temporal" }).catch(() => []),
-        client.search({ subject: "temporary access code" }).catch(() => []),
-        client.search({ subject: "acceso temporal" }).catch(() => []),
-        client.search({ from: "netflix.com" }).catch(() => []),
-      ]);
+      const SUBJECT_FILTER = "Tu código de acceso temporal de Netflix";
 
-      const allIds = [...new Set(searches.flat().filter((x): x is number => typeof x === "number"))];
+      const found = await client.search({ subject: SUBJECT_FILTER }).catch(() => [] as number[]);
+
+      const allIds = [...new Set((found as number[]).filter((x): x is number => typeof x === "number"))];
       const ids = allIds.sort((a, b) => b - a).slice(0, limit);
 
       for (const seq of ids) {

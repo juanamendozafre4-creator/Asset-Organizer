@@ -65,8 +65,13 @@ router.get("/sites/:slug/codes", async (req, res): Promise<void> => {
       10
     );
 
+    const SUBJECT_FILTER = "Tu código de acceso temporal de Netflix";
+    const filtered = rawEmails.filter((email) =>
+      email.subject.toLowerCase().includes(SUBJECT_FILTER.toLowerCase())
+    );
+
     const codes = await Promise.all(
-      rawEmails.map(async (email) => {
+      filtered.map(async (email) => {
         const body = decodeEmailBody(email.source);
         let code = extractCode(body);
         const netflixLink = extractNetflixLink(email.source);
