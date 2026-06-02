@@ -187,16 +187,22 @@ router.get("/sites/:slug/stream", async (req: Request, res: Response): Promise<v
     res.write(": keep-alive\n\n");
   }, 20000);
 
-  let lastFingerprint = "";
+  let lastFingerprint = "__unset__";
 
   // Serve cached data immediately — background poller + IMAP IDLE keep the cache warm.
   const cached = getCacheEntry(slug);
-  if (cached && cached.codes.length > 0) {
+  if (cached) {
     const typedCodes = cached.codes as { id: string | number; receivedAt: string }[];
     lastFingerprint = codesFingerprint(typedCodes);
     sendEvent("codes", cached.codes);
-    req.log.info({ slug }, "SSE: served from cache immediately");
-  } else if (!cached) {
+    req.log.info({ slug, count: cached.codes.length }, "SSE: served from cache immediately");
+    // If cache is empty, trigger a fresh fetch in background so codes appear when ready
+    if (cached.codes.length === 0) {
+      requestFetch(site).catch((err) => {
+        req.log.error({ err, slug }, "SSE: background fetch after empty cache failed");
+      });
+    }
+  } else {
     // Cache is completely cold (e.g. server just restarted).
     // Request a fetch — deduplicated so only one IMAP connection opens even if
     // multiple clients connect simultaneously.
