@@ -317,23 +317,38 @@ export function extractProfileName(body: string): string {
   return "Usuario";
 }
 
-export function extractDeviceInfo(body: string): string {
-  // Normalize the body to collapse common Netflix line-wrapping patterns:
-  // 1. Digit + optional trailing spaces + newline + word-char: "1\nde" → "1 de"
-  // 2. "Solicitud de X\ndesde:" → "Solicitud de X desde:" (profile-name on its own line)
-  // 3. Normalize CRLF to LF
-  const normalized = body
-    .replace(/(\d)[ \t]*\r?\n([ \t]*[a-záéíóúàèì\w])/gi, "$1 $2")
-    .replace(/(Solicitud de [^\r\n]+?)[ \t]*\r?\n[ \t]*(desde\b)/gi, "$1 $2")
-    .replace(/\r\n/g, "\n");
+function flattenHtml(html: string): string {
+  return html
+    .replace(/<(?:br|p|tr|th|div|li|h\d|table|section|article)[^>]*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
+function normalizeForDevice(text: string): string {
+  return text
+    // Join digit + newline + word (e.g. "1\nde junio")
+    .replace(/(\d)[ \t]*\r?\n([ \t]*[a-záéíóúàèì\w])/gi, "$1 $2")
+    // Join "Solicitud de X\ndesde:"
+    .replace(/(Solicitud de [^\r\n]+?)[ \t]*\r?\n[ \t]*(desde\b)/gi, "$1 $2")
+    // Join lines where a word wraps (e.g. "Amazon -\nDispositivo")
+    .replace(/([A-Za-zÀ-ÿ0-9\-])[ \t]*\r?\n[ \t]*([A-Za-zÀ-ÿ])/g, "$1 $2")
+    .replace(/\r\n/g, "\n");
+}
+
+export function extractDeviceInfo(body: string, rawHtml?: string): string {
   function cleanText(s: string): string {
-    // Remove markdown bold markers (*text*) and trim
     return s.replace(/\*/g, "").trim();
   }
 
   function cleanTime(s: string): string {
-    // Strip trailing text that isn't part of the time
     return s
       .replace(/\s+Obtener\b.*/i, "")
       .replace(/\s+Si\s+no\b.*/i, "")
@@ -344,66 +359,77 @@ export function extractDeviceInfo(body: string): string {
   }
 
   function isFalseDevice(s: string): boolean {
-    // Reject the generic phrase Netflix uses when the device is only shown graphically
     return /dispositivo que aparece/i.test(s) || s.length < 2;
   }
 
-  // Spanish full pattern: "Solicitud de <name> desde[:]  <device>  a las  <time>"
-  // Uses [\s\S]+? so it crosses newlines (covers "a las" split to next line).
-  // Outer match is tried on single-line normalized text; the cross-line part only
-  // matters when "a las" wraps to the next line after the device name.
-  const full = normalized.match(
-    /Solicitud de [\s\S]+?desde[:\s]+([^\n]+?)[ \t]*\n?[ \t]*a las[ \t]+([^\n<]+)/i
-  );
-  if (full) {
-    const device = cleanText(full[1]);
-    const time = cleanTime(cleanText(full[2]));
-    if (!isFalseDevice(device)) return `${device} — ${time}`;
+  function tryExtract(text: string): string | null {
+    // Spanish full: "Solicitud de <name> desde: <device> a las <time>"
+    const full = text.match(
+      /Solicitud de [\s\S]+?desde[:\s]+([^\n]+?)[ \t]*\n?[ \t]*a las[ \t]+([^\n<]+)/i
+    );
+    if (full) {
+      const device = cleanText(full[1]);
+      const time = cleanTime(cleanText(full[2]));
+      if (!isFalseDevice(device)) return `${device} — ${time}`;
+    }
+
+    // Spanish inline: "desde: <device> a las <time>" on one line
+    const fullInline = text.match(/desde[:\s]+(.+?)\s+a las\s+([^\n<]+)/i);
+    if (fullInline) {
+      const device = cleanText(fullInline[1]);
+      const time = cleanTime(cleanText(fullInline[2]));
+      if (!isFalseDevice(device)) return `${device} — ${time}`;
+    }
+
+    // Spanish device-only: "desde: <device>" (no time)
+    const dev = text.match(/Solicitud de [\s\S]+?desde[:\s]+([^\n<]+)/i);
+    if (dev) {
+      const device = cleanText(dev[1]).replace(/\s+a las\b.*/i, "").trim();
+      if (!isFalseDevice(device)) return device;
+    }
+
+    // English full: "request from: <device> at <time>"
+    const engFull = text.match(
+      /(?:access\s+)?request\s+from[:\s]+([^\n]+?)[ \t]*\n?[ \t]*at[ \t]+([^\n<]+)/i
+    );
+    if (engFull) {
+      const device = cleanText(engFull[1]);
+      const time = cleanTime(cleanText(engFull[2]));
+      if (!isFalseDevice(device)) return `${device} — ${time}`;
+    }
+
+    // English inline
+    const engFallback = text.match(
+      /(?:access\s+)?request\s+from[:\s]+(.+?)\s+at\s+([^\n<]+)/i
+    );
+    if (engFallback) {
+      const device = cleanText(engFallback[1]);
+      const time = cleanTime(cleanText(engFallback[2]));
+      if (!isFalseDevice(device)) return `${device} — ${time}`;
+    }
+
+    // English device-only
+    const engDev = text.match(/(?:access\s+)?request\s+from[:\s]+([^\n<]+)/i);
+    if (engDev) {
+      const device = cleanText(engDev[1]);
+      if (!isFalseDevice(device)) return device;
+    }
+
+    return null;
   }
 
-  // Spanish inline fallback: "desde: <device> a las <time>" all on one line
-  const fullInline = normalized.match(
-    /desde[:\s]+(.+?)\s+a las\s+([^\n<]+)/i
-  );
-  if (fullInline) {
-    const device = cleanText(fullInline[1]);
-    const time = cleanTime(cleanText(fullInline[2]));
-    if (!isFalseDevice(device)) return `${device} — ${time}`;
+  // 1. Try HTML first: flatten to a single line — most reliable because
+  //    HTML preserves the full sentence even when plain-text wraps it across lines.
+  if (rawHtml) {
+    const flat = flattenHtml(rawHtml);
+    const result = tryExtract(flat);
+    if (result) return result;
   }
 
-  // Spanish device-only fallback (no time found): capture until end of line
-  const dev = normalized.match(/Solicitud de [\s\S]+?desde[:\s]+([^\n<]+)/i);
-  if (dev) {
-    const device = cleanText(dev[1]);
-    // Strip trailing " a las ..." if it snuck in
-    const clean = device.replace(/\s+a las\b.*/i, "").trim();
-    if (!isFalseDevice(clean)) return clean;
-  }
-
-  // English: "Request from: <device> at <time>" or "request from <device>"
-  const engFull = normalized.match(
-    /(?:access\s+)?request\s+from[:\s]+([^\n]+?)[ \t]*\n?[ \t]*at[ \t]+([^\n<]+)/i
-  );
-  if (engFull) {
-    const device = cleanText(engFull[1]);
-    const time = cleanTime(cleanText(engFull[2]));
-    if (!isFalseDevice(device)) return `${device} — ${time}`;
-  }
-
-  const engFallback = normalized.match(
-    /(?:access\s+)?request\s+from[:\s]+(.+?)\s+at\s+([^\n<]+)/i
-  );
-  if (engFallback) {
-    const device = cleanText(engFallback[1]);
-    const time = cleanTime(cleanText(engFallback[2]));
-    if (!isFalseDevice(device)) return `${device} — ${time}`;
-  }
-
-  const engDev = normalized.match(/(?:access\s+)?request\s+from[:\s]+([^\n<]+)/i);
-  if (engDev) {
-    const device = cleanText(engDev[1]);
-    if (!isFalseDevice(device)) return device;
-  }
+  // 2. Try normalized plain-text body
+  const normalized = normalizeForDevice(body);
+  const result = tryExtract(normalized);
+  if (result) return result;
 
   return "Información del dispositivo no disponible";
 }

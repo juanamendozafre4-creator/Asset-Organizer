@@ -63,7 +63,7 @@ async function buildCodesForSite(site: SiteRow) {
       return {
         id: email.uid,
         profileName: extractProfileName(body),
-        deviceInfo: extractDeviceInfo(body),
+        deviceInfo: extractDeviceInfo(body, rawHtml || undefined),
         code,
         netflixLink: netflixLink ?? null,
         accountEmail: extractAccountEmail(body),
