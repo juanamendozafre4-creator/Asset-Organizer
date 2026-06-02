@@ -114849,7 +114849,7 @@ async function fetchCodeFromNetflixLink(url2) {
 }
 async function fetchEmailsFromLockedInbox(client, limit = 20) {
   const results = [];
-  const foundEs = await client.search({ subject: "c\xF3digo de acceso temporal" }).catch(() => []);
+  const foundEs = await client.search({ subject: "acceso temporal" }).catch(() => []);
   const foundEn = await client.search({ subject: "Netflix temporary access code" }).catch(() => []);
   const found = [...foundEs, ...foundEn];
   const allIds = [...new Set(found.filter((x) => typeof x === "number"))];
@@ -115407,15 +115407,20 @@ data: ${JSON.stringify(data)}
   const keepAlive = setInterval(() => {
     res.write(": keep-alive\n\n");
   }, 2e4);
-  let lastFingerprint = "";
+  let lastFingerprint = "__unset__";
   const cached2 = getCacheEntry(slug);
-  if (cached2 && cached2.codes.length > 0) {
+  if (cached2) {
     const typedCodes = cached2.codes;
     lastFingerprint = codesFingerprint(typedCodes);
     sendEvent("codes", cached2.codes);
-    req.log.info({ slug }, "SSE: served from cache immediately");
-  } else if (!cached2) {
-    req.log.info({ slug }, "SSE: cache cold \u2014 requesting on-demand fetch");
+    req.log.info({ slug, count: cached2.codes.length }, "SSE: served from cache immediately");
+    if (cached2.codes.length === 0) {
+      requestFetch(site).catch((err) => {
+        req.log.error({ err, slug }, "SSE: empty cache fetch failed");
+      });
+    }
+  } else {
+    req.log.info({ slug }, "SSE: cache cold — requesting on-demand fetch");
     requestFetch(site).then(() => {
     }).catch((err) => {
       req.log.error({ err, slug }, "SSE: on-demand fetch failed");
