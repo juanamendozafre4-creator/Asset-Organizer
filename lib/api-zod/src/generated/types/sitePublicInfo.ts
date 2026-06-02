@@ -10,5 +10,6 @@ export interface SitePublicInfo {
   name: string;
   /** @nullable */
   logoUrl: string | null;
+  themeColor: string;
   slug: string;
 }

@@ -1,13 +1,46 @@
 import { useParams } from "wouter";
-import { 
-  useGetSiteInfo, 
-  useListSiteCodes, 
+import {
+  useGetSiteInfo,
+  useListSiteCodes,
   getListSiteCodesQueryKey,
   getGetSiteInfoQueryKey
 } from "@workspace/api-client-react";
 import { Loader2, RefreshCw, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { NetflixCodeCard } from "@/components/netflix-code-card";
+import {
+  isDark,
+  getTextColor,
+  getMutedTextColor,
+  getCardBg,
+  getCardBorder,
+  getLogoBg,
+} from "@/lib/color-utils";
+
+function RefreshButton({
+  onClick,
+  disabled,
+  isSpinning,
+  textColor,
+  borderColor,
+}: {
+  onClick: () => void;
+  disabled: boolean;
+  isSpinning: boolean;
+  textColor: string;
+  borderColor: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-50"
+      style={{ color: textColor, borderColor, background: "transparent" }}
+    >
+      <RefreshCw className={`w-3.5 h-3.5 ${isSpinning ? "animate-spin" : ""}`} />
+      Actualizar
+    </button>
+  );
+}
 
 export default function PublicSite() {
   const { slug } = useParams<{ slug: string }>();
@@ -19,11 +52,11 @@ export default function PublicSite() {
     }
   });
 
-  const { 
-    data: codes, 
+  const {
+    data: codes,
     isLoading: isLoadingCodes,
     isRefetching,
-    refetch 
+    refetch
   } = useListSiteCodes(slug, {
     query: {
       enabled: !!site,
@@ -54,52 +87,96 @@ export default function PublicSite() {
     );
   }
 
+  const themeColor = site.themeColor || "#141414";
+  const dark = isDark(themeColor);
+  const textColor = getTextColor(themeColor);
+  const mutedColor = getMutedTextColor(themeColor);
+  const cardBg = getCardBg(themeColor);
+  const cardBorder = getCardBorder(themeColor);
+  const logoBg = getLogoBg(themeColor);
+  const headerBg = dark ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)";
+  const dividerColor = cardBorder;
+
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
-      <header className="py-6 px-4 md:py-10 border-b border-border/50 bg-card/30">
+    <div
+      className="min-h-[100dvh] flex flex-col"
+      style={{ background: themeColor, color: textColor }}
+    >
+      <header
+        className="py-6 px-4 md:py-10 border-b"
+        style={{ borderColor: dividerColor, background: headerBg }}
+      >
         <div className="container mx-auto max-w-3xl flex flex-col items-center text-center">
           {site.logoUrl && (
-            <div className="w-16 h-16 md:w-20 md:h-20 mb-4 rounded-xl overflow-hidden bg-muted flex items-center justify-center shadow-lg">
-              <img src={site.logoUrl} alt={site.name} className="max-w-full max-h-full object-cover" />
+            <div
+              className="w-16 h-16 md:w-20 md:h-20 mb-4 rounded-xl overflow-hidden flex items-center justify-center shadow-lg"
+              style={{ background: logoBg }}
+            >
+              <img
+                src={site.logoUrl}
+                alt={site.name}
+                className="max-w-full max-h-full object-contain"
+                style={{ mixBlendMode: dark ? "screen" : "multiply" }}
+              />
             </div>
           )}
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{site.name}</h1>
-          <p className="text-muted-foreground mt-2 font-mono text-sm">Códigos de Acceso</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: textColor }}>
+            {site.name}
+          </h1>
+          <p className="mt-2 font-mono text-sm" style={{ color: mutedColor }}>
+            Códigos de Acceso
+          </p>
         </div>
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-3xl flex flex-col">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-medium text-muted-foreground">Solicitudes Recientes</h2>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <h2 className="text-lg font-medium" style={{ color: mutedColor }}>
+            Solicitudes Recientes
+          </h2>
+          <RefreshButton
             onClick={() => refetch()}
             disabled={isRefetching || isLoadingCodes}
-            className="h-8"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isRefetching ? 'animate-spin' : ''}`} />
-            Actualizar
-          </Button>
+            isSpinning={isRefetching}
+            textColor={mutedColor}
+            borderColor={cardBorder}
+          />
         </div>
 
         {isLoadingCodes ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
+            <Loader2 className="w-8 h-8 animate-spin" style={{ color: mutedColor }} />
           </div>
         ) : codes && codes.length > 0 ? (
           <div className="space-y-6">
             {codes.map((code) => (
-              <NetflixCodeCard key={code.id} code={code} />
+              <NetflixCodeCard
+                key={code.id}
+                code={code}
+                themeColor={themeColor}
+                dark={dark}
+                textColor={textColor}
+                mutedColor={mutedColor}
+                cardBg={cardBg}
+                cardBorder={cardBorder}
+              />
             ))}
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border/50 rounded-xl">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
-              <AlertCircle className="w-6 h-6 text-muted-foreground" />
+          <div
+            className="flex-1 flex flex-col items-center justify-center py-20 text-center rounded-xl border-2 border-dashed"
+            style={{ borderColor: cardBorder }}
+          >
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+              style={{ background: cardBg }}
+            >
+              <AlertCircle className="w-6 h-6" style={{ color: mutedColor }} />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-1">No hay solicitudes</h3>
-            <p className="text-sm text-muted-foreground max-w-sm">
+            <h3 className="text-lg font-medium mb-1" style={{ color: textColor }}>
+              No hay solicitudes
+            </h3>
+            <p className="text-sm max-w-sm" style={{ color: mutedColor }}>
               No se han detectado solicitudes de código de acceso temporal de Netflix. Aparecerán aquí automáticamente.
             </p>
           </div>

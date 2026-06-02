@@ -11,6 +11,7 @@ export interface SiteUpdate {
   name?: string;
   /** @nullable */
   logoUrl?: string | null;
+  themeColor?: string;
   imapHost?: string;
   imapEmail?: string;
   /** @nullable */

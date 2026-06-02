@@ -14,6 +14,7 @@ export const sitesTable = pgTable("sites", {
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   logoUrl: text("logo_url"),
+  themeColor: text("theme_color").default("#141414").notNull(),
   imapHost: text("imap_host").notNull(),
   imapEmail: text("imap_email").notNull(),
   imapPasswordEncrypted: text("imap_password_encrypted").notNull(),

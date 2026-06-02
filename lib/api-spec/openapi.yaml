@@ -313,13 +313,15 @@ components:
           type: string
         logoUrl:
           type: ["string", "null"]
+        themeColor:
+          type: string
         imapHost:
           type: string
         imapEmail:
           type: string
         createdAt:
           type: string
-      required: [id, slug, name, logoUrl, imapHost, imapEmail, createdAt]
+      required: [id, slug, name, logoUrl, themeColor, imapHost, imapEmail, createdAt]
 
     SiteInput:
       type: object
@@ -330,6 +332,8 @@ components:
           type: string
         logoUrl:
           type: ["string", "null"]
+        themeColor:
+          type: string
         imapHost:
           type: string
         imapEmail:
@@ -347,6 +351,8 @@ components:
           type: string
         logoUrl:
           type: ["string", "null"]
+        themeColor:
+          type: string
         imapHost:
           type: string
         imapEmail:
@@ -361,9 +367,11 @@ components:
           type: string
         logoUrl:
           type: ["string", "null"]
+        themeColor:
+          type: string
         slug:
           type: string
-      required: [name, logoUrl, slug]
+      required: [name, logoUrl, themeColor, slug]
 
     NetflixCode:
       type: object
@@ -376,11 +384,15 @@ components:
           type: string
         code:
           type: ["string", "null"]
+        netflixLink:
+          type: ["string", "null"]
+        accountEmail:
+          type: ["string", "null"]
         receivedAt:
           type: string
         expiresIn:
           type: ["string", "null"]
-      required: [id, profileName, deviceInfo, code, receivedAt, expiresIn]
+      required: [id, profileName, deviceInfo, code, netflixLink, accountEmail, receivedAt, expiresIn]
 
     ConnectionTestResult:
       type: object

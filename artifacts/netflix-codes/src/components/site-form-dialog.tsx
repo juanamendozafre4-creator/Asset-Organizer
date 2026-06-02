@@ -23,12 +23,27 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateSite, useUpdateSite, getListSitesQueryKey, Site } from "@workspace/api-client-react";
 import { getAdminHeaders, getAdminToken } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Upload, X, ImageIcon } from "lucide-react";
+import { Loader2, Upload, X, ImageIcon, Eye, MonitorSmartphone } from "lucide-react";
+import { isDark, getTextColor, getMutedTextColor, getCardBg, getCardBorder, getLogoBg } from "@/lib/color-utils";
+
+const PRESET_COLORS = [
+  { hex: "#141414", label: "Negro Netflix" },
+  { hex: "#E50914", label: "Rojo Netflix" },
+  { hex: "#0f172a", label: "Azul oscuro" },
+  { hex: "#0f4c75", label: "Azul océano" },
+  { hex: "#1b4332", label: "Verde oscuro" },
+  { hex: "#3b0764", label: "Morado" },
+  { hex: "#7c2d12", label: "Naranja oscuro" },
+  { hex: "#1e293b", label: "Gris pizarra" },
+  { hex: "#f8fafc", label: "Blanco suave" },
+  { hex: "#fef3c7", label: "Crema" },
+];
 
 const siteSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   slug: z.string().min(1, "El slug es requerido").regex(/^[a-z0-9-]+$/, "Solo letras minúsculas, números y guiones"),
   logoUrl: z.string().optional().or(z.literal("")),
+  themeColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Color inválido").default("#141414"),
   imapHost: z.string().min(1, "El host IMAP es requerido"),
   imapEmail: z.string().min(1, "El correo es requerido"),
   imapPassword: z.string().optional(),
@@ -42,12 +57,84 @@ interface SiteFormDialogProps {
   siteToEdit?: Site;
 }
 
+function SitePreview({ name, logoUrl, themeColor }: { name: string; logoUrl: string; themeColor: string }) {
+  const dark = isDark(themeColor);
+  const textColor = getTextColor(themeColor);
+  const mutedColor = getMutedTextColor(themeColor);
+  const cardBg = getCardBg(themeColor);
+  const cardBorder = getCardBorder(themeColor);
+  const logoBg = getLogoBg(themeColor);
+
+  return (
+    <div
+      className="rounded-xl overflow-hidden border border-border/50 select-none"
+      style={{ background: themeColor, minHeight: 200 }}
+    >
+      <div
+        className="px-4 py-4 border-b flex flex-col items-center text-center gap-2"
+        style={{ borderColor: cardBorder, background: dark ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.25)" }}
+      >
+        {logoUrl ? (
+          <div
+            className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center"
+            style={{ background: logoBg }}
+          >
+            <img
+              src={logoUrl}
+              alt={name}
+              className="max-w-full max-h-full object-contain"
+              style={{ mixBlendMode: dark ? "screen" : "multiply" }}
+            />
+          </div>
+        ) : (
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ background: logoBg }}
+          >
+            <ImageIcon className="w-5 h-5" style={{ color: mutedColor }} />
+          </div>
+        )}
+        <div>
+          <p className="text-sm font-bold" style={{ color: textColor }}>
+            {name || "Nombre del sitio"}
+          </p>
+          <p className="text-xs font-mono" style={{ color: mutedColor }}>
+            Códigos de Acceso
+          </p>
+        </div>
+      </div>
+
+      <div className="px-4 py-3 space-y-2">
+        <div
+          className="rounded-lg p-3"
+          style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+        >
+          <p className="text-xs font-bold mb-1" style={{ color: textColor }}>Hola, Usuario</p>
+          <div className="flex items-center gap-1.5 mb-2" style={{ color: mutedColor }}>
+            <MonitorSmartphone className="w-3 h-3" />
+            <p className="text-xs">Smart TV — ejemplo</p>
+          </div>
+          <div
+            className="rounded-lg py-2 px-3 flex flex-col items-center"
+            style={{ background: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)" }}
+          >
+            <p className="text-xs font-mono font-bold tracking-[0.2em]" style={{ color: textColor }}>
+              1234
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: SiteFormDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const createSite = useCreateSite({ request: { headers: getAdminHeaders() } });
   const updateSite = useUpdateSite({ request: { headers: getAdminHeaders() } });
@@ -60,11 +147,15 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
       name: "",
       slug: "",
       logoUrl: "",
+      themeColor: "#141414",
       imapHost: "",
       imapEmail: "",
       imapPassword: "",
     },
   });
+
+  const watchedColor = form.watch("themeColor");
+  const watchedName = form.watch("name");
 
   useEffect(() => {
     if (isOpen) {
@@ -73,15 +164,17 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
           name: siteToEdit.name,
           slug: siteToEdit.slug,
           logoUrl: siteToEdit.logoUrl || "",
+          themeColor: siteToEdit.themeColor || "#141414",
           imapHost: siteToEdit.imapHost,
           imapEmail: siteToEdit.imapEmail,
           imapPassword: "",
         });
         setLogoPreview(siteToEdit.logoUrl || "");
       } else {
-        form.reset({ name: "", slug: "", logoUrl: "", imapHost: "", imapEmail: "", imapPassword: "" });
+        form.reset({ name: "", slug: "", logoUrl: "", themeColor: "#141414", imapHost: "", imapEmail: "", imapPassword: "" });
         setLogoPreview("");
       }
+      setShowPreview(false);
     }
   }, [isOpen, siteToEdit, form]);
 
@@ -180,9 +273,11 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
 
   const isPending = createSite.isPending || updateSite.isPending;
 
+  const isValidColor = /^#[0-9a-fA-F]{6}$/.test(watchedColor);
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Sitio" : "Crear Nuevo Sitio"}</DialogTitle>
           <DialogDescription>
@@ -285,6 +380,107 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                       Seleccionar archivo
                     </Button>
                   )}
+                </div>
+              )}
+            </div>
+
+            {/* Color palette */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium leading-none">Color de la Página</label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPreview((v) => !v)}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  {showPreview ? "Ocultar vista previa" : "Ver vista previa"}
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {PRESET_COLORS.map((preset) => (
+                  <button
+                    key={preset.hex}
+                    type="button"
+                    title={preset.label}
+                    onClick={() => form.setValue("themeColor", preset.hex, { shouldValidate: true })}
+                    className="w-8 h-8 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                    style={{
+                      background: preset.hex,
+                      borderColor: watchedColor === preset.hex ? "hsl(var(--primary))" : "transparent",
+                      boxShadow: watchedColor === preset.hex ? "0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--primary))" : "0 0 0 1px rgba(0,0,0,0.15)",
+                    }}
+                  />
+                ))}
+
+                {/* Custom color input */}
+                <div className="relative">
+                  <input
+                    type="color"
+                    value={isValidColor ? watchedColor : "#141414"}
+                    onChange={(e) => form.setValue("themeColor", e.target.value, { shouldValidate: true })}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    title="Color personalizado"
+                  />
+                  <div
+                    className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-bold cursor-pointer hover:scale-110 transition-all"
+                    style={{
+                      background: isValidColor ? watchedColor : "#888",
+                      borderColor: "rgba(0,0,0,0.15)",
+                      color: isValidColor && isDark(watchedColor) ? "#fff" : "#000",
+                    }}
+                    title="Personalizar color"
+                  >
+                    +
+                  </div>
+                </div>
+              </div>
+
+              {/* Hex input */}
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-6 h-6 rounded border border-border shrink-0"
+                  style={{ background: isValidColor ? watchedColor : "#888" }}
+                />
+                <FormField
+                  control={form.control}
+                  name="themeColor"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormControl>
+                        <Input
+                          placeholder="#141414"
+                          className="font-mono text-sm h-8"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Live preview */}
+              {showPreview && (
+                <div className="rounded-xl border border-border/60 overflow-hidden">
+                  <div className="px-3 py-2 bg-muted/50 border-b border-border/50 flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                    </div>
+                    <span className="text-xs text-muted-foreground font-mono truncate">
+                      /{form.watch("slug") || "mi-sitio"}
+                    </span>
+                  </div>
+                  <SitePreview
+                    name={watchedName}
+                    logoUrl={logoPreview}
+                    themeColor={isValidColor ? watchedColor : "#141414"}
+                  />
                 </div>
               )}
             </div>

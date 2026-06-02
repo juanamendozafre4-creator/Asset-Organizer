@@ -29,6 +29,7 @@ export interface Site {
   name: string;
   /** @nullable */
   logoUrl: string | null;
+  themeColor: string;
   imapHost: string;
   imapEmail: string;
   createdAt: string;
@@ -39,6 +40,7 @@ export interface SiteInput {
   name: string;
   /** @nullable */
   logoUrl?: string | null;
+  themeColor?: string;
   imapHost: string;
   imapEmail: string;
   imapPassword: string;
@@ -49,6 +51,7 @@ export interface SiteUpdate {
   name?: string;
   /** @nullable */
   logoUrl?: string | null;
+  themeColor?: string;
   imapHost?: string;
   imapEmail?: string;
   /** @nullable */
@@ -59,6 +62,7 @@ export interface SitePublicInfo {
   name: string;
   /** @nullable */
   logoUrl: string | null;
+  themeColor: string;
   slug: string;
 }
 
@@ -68,6 +72,10 @@ export interface NetflixCode {
   deviceInfo: string;
   /** @nullable */
   code: string | null;
+  /** @nullable */
+  netflixLink: string | null;
+  /** @nullable */
+  accountEmail: string | null;
   receivedAt: string;
   /** @nullable */
   expiresIn: string | null;
