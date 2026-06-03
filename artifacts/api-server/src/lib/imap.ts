@@ -61,9 +61,6 @@ export function extractEmailParts(source: string): EmailParts {
         // keep raw
       }
     } else if (encoding === "quoted-printable") {
-      // decodeQuotedPrintable maps =XX hex bytes to String.fromCharCode(0xXX),
-      // which produces Latin-1 codepoints. If the real charset is UTF-8, those
-      // codepoints are actually UTF-8 byte values that must be re-assembled.
       body = decodeQuotedPrintable(body);
       if (!isLatin1) {
         try {
@@ -116,7 +113,6 @@ export function extractNetflixLink(source: string): string | null {
 
   for (const content of searchIn) {
     if (!content) continue;
-    // Also try with quoted-printable unescaped
     const decoded = content.includes("=\r\n") || content.includes("=\n")
       ? decodeQuotedPrintable(content)
       : content;
@@ -137,11 +133,8 @@ export function extractNetflixLink(source: string): string | null {
 export function extractCodeFromSubject(subject: string): string | null {
   if (!subject) return null;
   const patterns = [
-    // "código de acceso temporal: 1234" or "código: 1234"
     /c[oó]digo(?:\s+de\s+acceso(?:\s+temporal)?)?\s*[:\-]\s*([0-9]{4})\b/i,
-    // "temporary access code: 1234"
     /(?:temporary\s+)?access\s+code\s*[:\-]\s*([0-9]{4})\b/i,
-    // Standalone 4-digit at end or beginning: "Netflix 1234" or "1234 Netflix"
     /\b([0-9]{4})\b/,
   ];
   for (const p of patterns) {
@@ -179,17 +172,13 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
     const finalUrl = res.url;
     const html = await res.text();
 
-    // Log a snippet for debugging what Netflix actually returns
     logger.debug({ finalUrl, htmlLength: html.length, snippet: html.slice(0, 600) }, "Netflix page fetched");
 
-    // 0a. Detect expired/invalid link by redirect — if the final URL no longer points
-    //     to the travel/verify path, the token was rejected (redirect to login/home).
     if (finalUrl && !finalUrl.includes("travel/verify") && !finalUrl.includes("temporaryAccess")) {
       logger.info({ url, finalUrl }, "Netflix redirected away from verify page — token expired/invalid");
       return "EXPIRED";
     }
 
-    // 0b. Detect expired/invalid link — Netflix renders specific text
     const expiredPatterns = [
       /este\s+c[oó]digo\s+ha\s+caducado/i,
       /c[oó]digo\s+ha\s+caducado/i,
@@ -213,7 +202,6 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
       }
     }
 
-    // 1. Look in embedded JSON state (Netflix uses server-side rendered JSON blobs)
     const jsonPatterns = [
       /"accessCode"\s*:\s*"?([0-9]{4})"?/i,
       /"code"\s*:\s*"([0-9]{4})"/i,
@@ -233,7 +221,6 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
       }
     }
 
-    // 2. Look in HTML elements — Netflix renders the code inside a <div> or <span>
     const htmlPatterns = [
       /class="[^"]*(?:code|pin|access)[^"]*"[^>]*>\s*([0-9]{4})\s*</i,
       /data-testid="[^"]*code[^"]*"[^>]*>\s*([0-9]{4})\s*</i,
@@ -247,7 +234,6 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
       }
     }
 
-    // 3. Netflix sometimes renders each digit in its own element (e.g. <span>4</span><span>1</span>…)
     const digitSpan = html.match(
       /<[a-z][^>]{0,60}>\s*(\d)\s*<\/[a-z]+>\s*<[a-z][^>]{0,60}>\s*(\d)\s*<\/[a-z]+>\s*<[a-z][^>]{0,60}>\s*(\d)\s*<\/[a-z]+>\s*<[a-z][^>]{0,60}>\s*(\d)\s*<\/[a-z]+>/i
     );
@@ -257,12 +243,10 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
       return code;
     }
 
-    // 4. Last resort: scan for a lone 4-digit group in visible text (between > and <)
-    //    excluding common false positives like years (1900-2099) and port numbers
     const allMatches = [...html.matchAll(/>\s*([0-9]{4})\s*</g)];
     const candidate = allMatches
       .map((m) => m[1])
-      .find((n) => !/^(19|20)\d{2}$/.test(n)); // exclude years
+      .find((n) => !/^(19|20)\d{2}$/.test(n));
     if (candidate) {
       logger.info({ code: candidate }, "Extracted Netflix code via fallback scan");
       return candidate;
@@ -279,7 +263,6 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
 /**
  * Fetch Netflix emails using an already-connected ImapFlow client
  * that already has INBOX locked. Does NOT connect or disconnect.
- * Use this from the IDLE loop to avoid opening a second IMAP connection.
  */
 export async function fetchEmailsFromLockedInbox(
   client: ImapFlow,
@@ -300,7 +283,6 @@ export async function fetchEmailsFromLockedInbox(
 
   if (ids.length === 0) return results;
 
-  // Fetch all messages in a single IMAP FETCH command (much faster than sequential fetchOne)
   const range = ids.join(",");
   try {
     for await (const msg of client.fetch(range, {
@@ -418,12 +400,8 @@ export function extractAccountEmail(body: string): string | null {
 }
 
 export function extractProfileName(body: string): string {
-  // IMPORTANT: use the raw body (with newlines) for "Hola, X" patterns so that
-  // "Hola,\ncódigo de acceso" doesn't incorrectly capture "código de acceso".
-  // Only use the collapsed version for "Solicitud de X desde:" which is one line.
   const flat = body.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ");
 
-  // 1. Standard greeting with newline/tag as natural boundary
   const holaPatterns = [
     /Hola[,\s]+([^\n<,\r:]{1,30})/i,
     /Hello[,\s]+([^\n<,\r:]{1,30})/i,
@@ -432,13 +410,11 @@ export function extractProfileName(body: string): string {
     const m = body.match(p);
     if (m) {
       const name = m[1].trim().replace(/\s+/g, " ");
-      // Reject if it looks like email body text (contains keywords or is too long)
       const isBodyText = /c[oó]digo|acceso|temporal|netflix|enlace|correo|solicitud/i.test(name);
       if (name.length > 0 && !isBodyText) return name;
     }
   }
 
-  // 2. "Solicitud de X desde:" — X is the profile name (collapse-safe, one line)
   const solicitudPatterns = [
     /Solicitud de ([^\n<,\r:]{1,30}?)\s+desde[:\s]/i,
     /request from ([^\n<,\r:]{1,30}?) at\b/i,
@@ -451,7 +427,6 @@ export function extractProfileName(body: string): string {
     }
   }
 
-  // 3. Numeric-only profile name is still valid (e.g. profile named "2")
   for (const p of holaPatterns) {
     const m = body.match(p);
     if (m) return m[1].trim().replace(/\s+/g, " ");
@@ -477,15 +452,29 @@ function flattenHtml(html: string): string {
 
 function normalizeForDevice(text: string): string {
   return text
-    // Normalize ordinal indicators: "1.\nº" → "1.º"
     .replace(/(\d+\.)[ \t]*\r?\n[ \t]*(º)/g, "$1$2")
-    // Join digit + newline + word (e.g. "1\nde junio")
     .replace(/(\d)[ \t]*\r?\n([ \t]*[a-záéíóúàèì\w])/gi, "$1 $2")
-    // Join "Solicitud de X\ndesde:"
     .replace(/(Solicitud de [^\r\n]+?)[ \t]*\r?\n[ \t]*(desde\b)/gi, "$1 $2")
-    // Join lines where a word wraps (e.g. "Amazon -\nDispositivo")
     .replace(/([A-Za-zÀ-ÿ0-9\-])[ \t]*\r?\n[ \t]*([A-Za-zÀ-ÿ])/g, "$1 $2")
     .replace(/\r\n/g, "\n");
+}
+
+/**
+ * Strip trailing noise that Netflix appends after the timestamp on the same line.
+ * e.g. "30 de mayo, 21:58 GMT-5 Solicitar código El enlace caduca…"
+ */
+function stripTrailingNoise(s: string): string {
+  return s
+    .replace(/\s+Obtener\b.*/i, "")
+    .replace(/\s+Solicitar\b.*/i, "")
+    .replace(/\s+Si\s+no\b.*/i, "")
+    .replace(/\s+If\s+you\b.*/i, "")
+    .replace(/\s+Este\s+enlace\b.*/i, "")
+    .replace(/\s+El\s+enlace\b.*/i, "")
+    .replace(/\s+Protege\b.*/i, "")
+    .replace(/\s+Cuida\b.*/i, "")
+    .replace(/[,\s]+$/, "")
+    .trim();
 }
 
 export function extractDeviceInfo(body: string, rawHtml?: string): string {
@@ -494,20 +483,22 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
   }
 
   function cleanTime(s: string): string {
-    return s
-      .replace(/\s+Obtener\b.*/i, "")
-      .replace(/\s+Si\s+no\b.*/i, "")
-      .replace(/\s+If\s+you\b.*/i, "")
-      .replace(/\s+Este\s+enlace\b.*/i, "")
-      .replace(/[,\s]+$/, "")
-      .trim();
+    return stripTrailingNoise(s);
   }
 
+  /**
+   * Returns true when the extracted string is obviously NOT a device name.
+   * Catches:
+   *  - Netflix placeholder phrases ("el dispositivo que aparece", "el dispositivo que ves", etc.)
+   *  - Strings that are too short or absurdly long (> 200 chars means we grabbed a paragraph)
+   */
   function isFalseDevice(s: string): boolean {
     return (
       /dispositivo que aparece/i.test(s) ||
       /el dispositivo/i.test(s) ||
-      s.length < 2
+      /dispositivo que ves/i.test(s) ||
+      s.length < 2 ||
+      s.length > 200
     );
   }
 
@@ -530,11 +521,27 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
       if (!isFalseDevice(device)) return `${device} — ${time}`;
     }
 
-    // Spanish device-only: "desde: <device>" (no time)
-    const dev = text.match(/Solicitud de [\s\S]+?desde[:\s]+([^\n<]+)/i);
+    // Spanish device-only: "Solicitud de <name> desde: <device>" (no time on same line)
+    // FIX: limit captured length to 150 chars to avoid grabbing the whole collapsed body
+    const dev = text.match(/Solicitud de [\s\S]+?desde[:\s]+([^\n<]{1,150})/i);
     if (dev) {
       const device = cleanText(dev[1]).replace(/\s+a las\b.*/i, "").trim();
-      if (!isFalseDevice(device)) return device;
+      const clean = stripTrailingNoise(device);
+      if (!isFalseDevice(clean)) return clean;
+    }
+
+    // NEW: "X ha enviado una solicitud desde <device> [— <date>]"
+    // Handles Netflix format: "4 ha enviado una solicitud desde Roku – Decodificador — 30 de mayo, 21:58 GMT-5"
+    const haEnviado = text.match(
+      /ha\s+enviado\s+una\s+solicitud\s+desde\s+([^—–\n<]{3,80})(?:\s*[—–]\s*([^\n<]{3,60}))?/i
+    );
+    if (haEnviado) {
+      const device = cleanText(haEnviado[1]).trim();
+      const rawTime = haEnviado[2] ? cleanTime(cleanText(haEnviado[2])) : null;
+      const cleanDev = stripTrailingNoise(device);
+      if (!isFalseDevice(cleanDev)) {
+        return rawTime ? `${cleanDev} — ${rawTime}` : cleanDev;
+      }
     }
 
     // English full: "request from: <device> at <time>"
@@ -558,14 +565,13 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
     }
 
     // English device-only
-    const engDev = text.match(/(?:access\s+)?request\s+from[:\s]+([^\n<]+)/i);
+    const engDev = text.match(/(?:access\s+)?request\s+from[:\s]+([^\n<]{1,100})/i);
     if (engDev) {
       const device = cleanText(engDev[1]);
       if (!isFalseDevice(device)) return device;
     }
 
     // Super-broad fallback: collapse all newlines in a window around "desde:" / "from:"
-    // and re-try — catches cases where the sentence is split across multiple lines
     const desdeIdx = text.search(/desde[:\s]|from[:\s]/i);
     if (desdeIdx !== -1) {
       const window = text
@@ -578,9 +584,21 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
         const time = cleanTime(cleanText(inlineW[2]));
         if (!isFalseDevice(device)) return `${device} — ${time}`;
       }
+      // haEnviado inside window
+      const haEnviadoW = window.match(
+        /ha\s+enviado\s+una\s+solicitud\s+desde\s+([^—–\n<]{3,80})(?:\s*[—–]\s*([^\n<]{3,60}))?/i
+      );
+      if (haEnviadoW) {
+        const device = stripTrailingNoise(cleanText(haEnviadoW[1]).trim());
+        const rawTime = haEnviadoW[2] ? cleanTime(cleanText(haEnviadoW[2])) : null;
+        if (!isFalseDevice(device)) {
+          return rawTime ? `${device} — ${rawTime}` : device;
+        }
+      }
+      // FIX: limit devOnlyW to 80 chars (already was {3,80}) — keep as-is
       const devOnlyW = window.match(/desde[:\s]+([^<]{3,80})/i);
       if (devOnlyW) {
-        const raw = cleanText(devOnlyW[1]).replace(/\s+a las\b.*/i, "").trim();
+        const raw = stripTrailingNoise(cleanText(devOnlyW[1]).replace(/\s+a las\b.*/i, "").trim());
         if (!isFalseDevice(raw) && raw.length > 2) return raw;
       }
       const fromW = window.match(/from[:\s]+(.+?)\s+at\s+([^\n<]+)/i);
@@ -595,13 +613,7 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
   }
 
   // ─── Step 0: Direct HTML bold-tag extraction (HIGHEST PRIORITY) ───────────
-  // Netflix consistently wraps the device name in <strong> or <b> tags inside
-  // the "desde:" sentence. Reading this directly from raw HTML is more reliable
-  // than any regex on converted plain-text, because it survives all layout
-  // variations (multi-line cells, inline styles, etc.).
   if (rawHtml) {
-    // 0a. Full match: desde: <strong>DEVICE</strong> ... a las TIME
-    //     Allows up to 300 chars of HTML between the closing tag and "a las"
     const boldFull = rawHtml.match(
       /desde[:\s]+<(?:strong|b|span)[^>]*>([^<]{2,80})<\/(?:strong|b|span)>[^<]{0,300}?a las[:\s]*([^<\r\n]{3,60})/i
     );
@@ -614,8 +626,6 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
       }
     }
 
-    // 0b. Device + time when split across cells/lines:
-    //     desde: ... (any html) ... <strong>DEVICE</strong> ... a las TIME
     const desdeHtmlIdx = rawHtml.search(/desde[:\s]/i);
     if (desdeHtmlIdx !== -1) {
       const window = rawHtml.slice(Math.max(0, desdeHtmlIdx - 30), desdeHtmlIdx + 500);
@@ -631,7 +641,6 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
         }
       }
 
-      // 0c. Device-only fallback: bold tag near "desde:" with no time found
       const nearBoldDevice = window.match(
         /<(?:strong|b|span)[^>]*>([^<]{2,80})<\/(?:strong|b|span)>/i
       );
@@ -665,11 +674,12 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
   // ─── Step 4: Absolute last resort — grab raw "desde: Y" line ─────────────
   const rawLine = collapsed.match(/Solicitud de .{1,60}?desde[:\s]+([^.]{5,120})/i);
   if (rawLine) {
-    const raw = rawLine[1]
-      .replace(/\s+a las\b.*/i, "")
-      .replace(/\s+Obtener\b.*/i, "")
-      .replace(/\*/g, "")
-      .trim();
+    const raw = stripTrailingNoise(
+      rawLine[1]
+        .replace(/\s+a las\b.*/i, "")
+        .replace(/\*/g, "")
+        .trim()
+    );
     if (raw.length > 2 && !isFalseDevice(raw)) return raw;
   }
 
@@ -677,20 +687,15 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
 }
 
 export function extractCode(body: string, rawHtml?: string): string | null {
-  // 1. Standalone 4-digit line — most reliable in Netflix plain-text emails where
-  //    the code is presented alone on its own line with optional surrounding whitespace.
   const standalone = body.match(/^[ \t]*([0-9]{4})[ \t]*$/m);
   if (standalone) return standalone[1].trim();
 
-  // 2. Specific contextual patterns in the decoded plain text (Spanish + English)
   const textPatterns = [
-    // Spanish
     /tu\s+c[oó]digo\s+(?:de\s+acceso\s+(?:temporal\s+)?)?(?:es[:\s]+)?([0-9]{4})\b/i,
     /c[oó]digo\s+(?:de\s+acceso\s+)?(?:temporal\s+)?(?:es[:\s]+)?([0-9]{4})\b/i,
     /c[oó]digo[:\s]+([0-9]{4})\b/i,
     /acceso\s+temporal[^0-9]{0,40}([0-9]{4})\b/i,
     /temporal[^0-9]{0,20}([0-9]{4})\b/i,
-    // English
     /your\s+(?:temporary\s+)?(?:access\s+)?code\s+is[:\s]+([0-9]{4})\b/i,
     /temporary\s+access\s+code[:\s]+([0-9]{4})\b/i,
     /\baccess\s+code[:\s]+([0-9]{4})\b/i,
@@ -701,24 +706,15 @@ export function extractCode(body: string, rawHtml?: string): string | null {
     if (m) return m[1].trim();
   }
 
-  // 3. Structural HTML patterns — Netflix puts the code alone inside a styled element
   if (rawHtml) {
     const htmlPatterns = [
-      // Standalone 4-digit number as the only content of a block element
       /<(?:td|th|p|div|span|h\d)[^>]*>\s*([0-9]{4})\s*<\/(?:td|th|p|div|span|h\d)>/i,
-      // Large font-size element (Netflix renders the code at ≥24px)
       /font-size\s*:\s*(?:[2-9]\d|[1-9]\d{2,})px[^>]*>\s*([0-9]{4})\s*</i,
-      // Letter-spacing or tracking hint — typically only on the code
       /letter-spacing[^>]*>\s*([0-9]{4})\s*</i,
-      // font tag with large size attribute
       /<font[^>]+size\s*=\s*["']?[5-9]["']?[^>]*>\s*([0-9]{4})\s*<\/font>/i,
-      // Centered table cell — common Netflix layout
       /<td[^>]*align\s*=\s*["']?center["']?[^>]*>\s*<?[^>]*>?\s*([0-9]{4})\s*<?\/[^>]*>?\s*<\/td>/i,
-      // Bold or strong wrapping just the code
       /<(?:b|strong)[^>]*>\s*([0-9]{4})\s*<\/(?:b|strong)>/i,
-      // data-testid with code/pin/acceso
       /data-testid=["'][^"']*(?:code|pin|acceso)[^"']*["'][^>]*>\s*([0-9]{4})\s*</i,
-      // aria-label containing the code
       /aria-label=["'][^"']*([0-9]{4})[^"']*["']/i,
     ];
     for (const p of htmlPatterns) {
@@ -730,14 +726,10 @@ export function extractCode(body: string, rawHtml?: string): string | null {
     }
   }
 
-  // Do NOT use a bare /\b\d{4}\b/ fallback — it grabs years (2025, 2026),
-  // phone suffixes, and other false positives. Return null so the caller
-  // can fall back to fetchCodeFromNetflixLink which is far more reliable.
   return null;
 }
 
 export function extractExpiry(body: string): string {
-  // Allow non-breaking spaces / garbled UTF-8 bytes between the number and unit
   const m = body.match(
     /(?:vence|expires?|v[aá]lido)[^0-9]*(\d+)[^a-z]*?(minutos?|minutes?|hours?|horas?)/i
   );
