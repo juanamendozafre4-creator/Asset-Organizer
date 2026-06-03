@@ -18,4 +18,8 @@ export interface SiteUpdate {
   imapEmail?: string;
   /** @nullable */
   imapPassword?: string | null;
+  /** @nullable */
+  welcomeMessage?: string | null;
+  /** @nullable */
+  newCodeMessage?: string | null;
 }
