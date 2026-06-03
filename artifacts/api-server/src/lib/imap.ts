@@ -504,7 +504,11 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
   }
 
   function isFalseDevice(s: string): boolean {
-    return /dispositivo que aparece/i.test(s) || s.length < 2;
+    return (
+      /dispositivo que aparece/i.test(s) ||
+      /el dispositivo/i.test(s) ||
+      s.length < 2
+    );
   }
 
   function tryExtract(text: string): string | null {
@@ -590,27 +594,75 @@ export function extractDeviceInfo(body: string, rawHtml?: string): string {
     return null;
   }
 
-  // 1. Try HTML first: flatten to a single line — most reliable because
-  //    HTML preserves the full sentence even when plain-text wraps it across lines.
+  // ─── Step 0: Direct HTML bold-tag extraction (HIGHEST PRIORITY) ───────────
+  // Netflix consistently wraps the device name in <strong> or <b> tags inside
+  // the "desde:" sentence. Reading this directly from raw HTML is more reliable
+  // than any regex on converted plain-text, because it survives all layout
+  // variations (multi-line cells, inline styles, etc.).
+  if (rawHtml) {
+    // 0a. Full match: desde: <strong>DEVICE</strong> ... a las TIME
+    //     Allows up to 300 chars of HTML between the closing tag and "a las"
+    const boldFull = rawHtml.match(
+      /desde[:\s]+<(?:strong|b|span)[^>]*>([^<]{2,80})<\/(?:strong|b|span)>[^<]{0,300}?a las[:\s]*([^<\r\n]{3,60})/i
+    );
+    if (boldFull) {
+      const device = cleanText(boldFull[1]);
+      const time = cleanTime(cleanText(boldFull[2]));
+      if (!isFalseDevice(device)) {
+        logger.debug({ device, time }, "Device extracted via bold-tag full match");
+        return `${device} — ${time}`;
+      }
+    }
+
+    // 0b. Device + time when split across cells/lines:
+    //     desde: ... (any html) ... <strong>DEVICE</strong> ... a las TIME
+    const desdeHtmlIdx = rawHtml.search(/desde[:\s]/i);
+    if (desdeHtmlIdx !== -1) {
+      const window = rawHtml.slice(Math.max(0, desdeHtmlIdx - 30), desdeHtmlIdx + 500);
+      const nearBoldFull = window.match(
+        /<(?:strong|b|span)[^>]*>([^<]{2,80})<\/(?:strong|b|span)>[^<]{0,300}?a las[:\s]*([^<\r\n]{3,60})/i
+      );
+      if (nearBoldFull) {
+        const device = cleanText(nearBoldFull[1]);
+        const time = cleanTime(cleanText(nearBoldFull[2]));
+        if (!isFalseDevice(device)) {
+          logger.debug({ device, time }, "Device extracted via nearby bold-tag full match");
+          return `${device} — ${time}`;
+        }
+      }
+
+      // 0c. Device-only fallback: bold tag near "desde:" with no time found
+      const nearBoldDevice = window.match(
+        /<(?:strong|b|span)[^>]*>([^<]{2,80})<\/(?:strong|b|span)>/i
+      );
+      if (nearBoldDevice) {
+        const device = cleanText(nearBoldDevice[1]);
+        if (!isFalseDevice(device)) {
+          logger.debug({ device }, "Device extracted via bold-tag device-only fallback");
+          return device;
+        }
+      }
+    }
+  }
+
+  // ─── Step 1: HTML flatten + text patterns ────────────────────────────────
   if (rawHtml) {
     const flat = flattenHtml(rawHtml);
     const result = tryExtract(flat);
     if (result) return result;
   }
 
-  // 2. Try normalized plain-text body
+  // ─── Step 2: Normalized plain-text body ──────────────────────────────────
   const normalized = normalizeForDevice(body);
   const result = tryExtract(normalized);
   if (result) return result;
 
-  // 3. Last resort: collapse ALL newlines in the entire body and re-try
+  // ─── Step 3: Collapse ALL newlines in entire body and retry ──────────────
   const collapsed = body.replace(/[\r\n]+/g, " ").replace(/\s+/g, " ");
   const collapsedResult = tryExtract(collapsed);
   if (collapsedResult) return collapsedResult;
 
-  // 4. Absolute last resort: grab the raw "Solicitud de X desde: Y" line as-is
-  //    from the collapsed body, even without a clean time.
-  //    Still reject known false-device phrases (e.g. "el dispositivo que aparece").
+  // ─── Step 4: Absolute last resort — grab raw "desde: Y" line ─────────────
   const rawLine = collapsed.match(/Solicitud de .{1,60}?desde[:\s]+([^.]{5,120})/i);
   if (rawLine) {
     const raw = rawLine[1]
