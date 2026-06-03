@@ -171,12 +171,12 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
         imapHost: siteToEdit.imapHost,
         imapEmail: siteToEdit.imapEmail,
         imapPassword: "",
-        welcomeMessage: (siteToEdit as any).welcomeMessage || "",
-        newCodeMessage: (siteToEdit as any).newCodeMessage || "",
+        welcomeMessage: (siteToEdit as any).welcomeMessage ?? "",
+        newCodeMessage: (siteToEdit as any).newCodeMessage ?? "",
         repeatIntervalValue: riVal,
         repeatIntervalUnit: riUnit,
-        voiceWelcomeEnabled: (siteToEdit as any).voiceWelcomeEnabled !== false,
-        voiceNewCodeEnabled: (siteToEdit as any).voiceNewCodeEnabled !== false,
+        voiceWelcomeEnabled: (siteToEdit as any).voiceWelcomeEnabled === true || (siteToEdit as any).voiceWelcomeEnabled == null,
+        voiceNewCodeEnabled: (siteToEdit as any).voiceNewCodeEnabled === true || (siteToEdit as any).voiceNewCodeEnabled == null,
       });
       setLogoPreview(siteToEdit.logoUrl || "");
     } else {
