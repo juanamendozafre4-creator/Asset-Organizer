@@ -15199,11 +15199,11 @@ var require_mime_types = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path2) {
-      if (!path2 || typeof path2 !== "string") {
+    function lookup(path3) {
+      if (!path3 || typeof path3 !== "string") {
         return false;
       }
-      var extension2 = extname("x." + path2).toLowerCase().slice(1);
+      var extension2 = extname("x." + path3).toLowerCase().slice(1);
       if (!extension2) {
         return false;
       }
@@ -18674,13 +18674,13 @@ var require_view = __commonJS({
   "../../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/view.js"(exports, module) {
     "use strict";
     var debug = require_src()("express:view");
-    var path2 = __require("node:path");
+    var path3 = __require("node:path");
     var fs = __require("node:fs");
-    var dirname = path2.dirname;
-    var basename = path2.basename;
-    var extname = path2.extname;
-    var join = path2.join;
-    var resolve = path2.resolve;
+    var dirname = path3.dirname;
+    var basename = path3.basename;
+    var extname = path3.extname;
+    var join = path3.join;
+    var resolve = path3.resolve;
     module.exports = View2;
     function View2(name, options) {
       var opts = options || {};
@@ -18709,17 +18709,17 @@ var require_view = __commonJS({
       this.path = this.lookup(fileName);
     }
     View2.prototype.lookup = function lookup(name) {
-      var path3;
+      var path4;
       var roots = [].concat(this.root);
       debug('lookup "%s"', name);
-      for (var i = 0; i < roots.length && !path3; i++) {
+      for (var i = 0; i < roots.length && !path4; i++) {
         var root = roots[i];
         var loc = resolve(root, name);
         var dir = dirname(loc);
         var file2 = basename(loc);
-        path3 = this.resolve(dir, file2);
+        path4 = this.resolve(dir, file2);
       }
-      return path3;
+      return path4;
     };
     View2.prototype.render = function render(options, callback) {
       var sync = true;
@@ -18741,21 +18741,21 @@ var require_view = __commonJS({
     };
     View2.prototype.resolve = function resolve2(dir, file2) {
       var ext = this.ext;
-      var path3 = join(dir, file2);
-      var stat = tryStat(path3);
+      var path4 = join(dir, file2);
+      var stat = tryStat(path4);
       if (stat && stat.isFile()) {
-        return path3;
+        return path4;
       }
-      path3 = join(dir, basename(file2, ext), "index" + ext);
-      stat = tryStat(path3);
+      path4 = join(dir, basename(file2, ext), "index" + ext);
+      stat = tryStat(path4);
       if (stat && stat.isFile()) {
-        return path3;
+        return path4;
       }
     };
-    function tryStat(path3) {
-      debug('stat "%s"', path3);
+    function tryStat(path4) {
+      debug('stat "%s"', path4);
       try {
-        return fs.statSync(path3);
+        return fs.statSync(path4);
       } catch (e) {
         return void 0;
       }
@@ -19891,15 +19891,15 @@ var require_dist = __commonJS({
       let index = 0;
       function consumeUntil(end) {
         const output = [];
-        let path2 = "";
+        let path3 = "";
         function writePath() {
-          if (!path2)
+          if (!path3)
             return;
           output.push({
             type: "text",
-            value: encodePath(path2)
+            value: encodePath(path3)
           });
-          path2 = "";
+          path3 = "";
         }
         while (index < chars.length) {
           const value = chars[index++];
@@ -19911,7 +19911,7 @@ var require_dist = __commonJS({
             if (index === chars.length) {
               throw new PathError(`Unexpected end after \\ at index ${index}`, str);
             }
-            path2 += chars[index++];
+            path3 += chars[index++];
             continue;
           }
           if (value === ":" || value === "*") {
@@ -19955,7 +19955,7 @@ var require_dist = __commonJS({
           if (value === "}" || value === "(" || value === ")" || value === "[" || value === "]" || value === "+" || value === "?" || value === "!") {
             throw new PathError(`Unexpected ${value} at index ${index - 1}`, str);
           }
-          path2 += value;
+          path3 += value;
         }
         if (end) {
           throw new PathError(`Unexpected end at index ${index}, expected ${end}`, str);
@@ -19965,17 +19965,17 @@ var require_dist = __commonJS({
       }
       return new TokenData(consumeUntil(""), str);
     }
-    function compile(path2, options = {}) {
+    function compile(path3, options = {}) {
       const { encode = encodeURIComponent, delimiter = DEFAULT_DELIMITER } = options;
-      const data = typeof path2 === "object" ? path2 : parse3(path2, options);
+      const data = typeof path3 === "object" ? path3 : parse3(path3, options);
       const fn = tokensToFunction(data.tokens, delimiter, encode);
-      return function path3(params = {}) {
+      return function path4(params = {}) {
         const missing = [];
-        const path4 = fn(params, missing);
+        const path5 = fn(params, missing);
         if (missing.length) {
           throw new TypeError(`Missing parameters: ${missing.join(", ")}`);
         }
-        return path4;
+        return path5;
       };
     }
     function tokensToFunction(tokens, delimiter, encode) {
@@ -20037,9 +20037,9 @@ var require_dist = __commonJS({
         return encodeValue(value);
       };
     }
-    function match(path2, options = {}) {
+    function match(path3, options = {}) {
       const { decode = decodeURIComponent, delimiter = DEFAULT_DELIMITER } = options;
-      const { regexp, keys } = pathToRegexp(path2, options);
+      const { regexp, keys } = pathToRegexp(path3, options);
       const decoders = keys.map((key) => {
         if (decode === false)
           return NOOP_VALUE;
@@ -20051,7 +20051,7 @@ var require_dist = __commonJS({
         const m = regexp.exec(input);
         if (!m)
           return false;
-        const path3 = m[0];
+        const path4 = m[0];
         const params = /* @__PURE__ */ Object.create(null);
         for (let i = 1; i < m.length; i++) {
           if (m[i] === void 0)
@@ -20060,21 +20060,21 @@ var require_dist = __commonJS({
           const decoder = decoders[i - 1];
           params[key.name] = decoder(m[i]);
         }
-        return { path: path3, params };
+        return { path: path4, params };
       };
     }
-    function pathToRegexp(path2, options = {}) {
+    function pathToRegexp(path3, options = {}) {
       const { delimiter = DEFAULT_DELIMITER, end = true, sensitive = false, trailing = true } = options;
       const keys = [];
       let source = "";
       let combinations = 0;
-      function process2(path3) {
-        if (Array.isArray(path3)) {
-          for (const p of path3)
+      function process2(path4) {
+        if (Array.isArray(path4)) {
+          for (const p of path4)
             process2(p);
           return;
         }
-        const data = typeof path3 === "object" ? path3 : parse3(path3, options);
+        const data = typeof path4 === "object" ? path4 : parse3(path4, options);
         flatten(data.tokens, 0, [], (tokens) => {
           if (combinations >= 256) {
             throw new PathError("Too many path combinations", data.originalPath);
@@ -20085,7 +20085,7 @@ var require_dist = __commonJS({
           combinations++;
         });
       }
-      process2(path2);
+      process2(path3);
       let pattern = `^(?:${source})`;
       if (trailing)
         pattern += "(?:" + escape2(delimiter) + "$)?";
@@ -20225,18 +20225,18 @@ var require_layer = __commonJS({
     var TRAILING_SLASH_REGEXP = /\/+$/;
     var MATCHING_GROUP_REGEXP = /\((?:\?<(.*?)>)?(?!\?)/g;
     module.exports = Layer;
-    function Layer(path2, options, fn) {
+    function Layer(path3, options, fn) {
       if (!(this instanceof Layer)) {
-        return new Layer(path2, options, fn);
+        return new Layer(path3, options, fn);
       }
-      debug("new %o", path2);
+      debug("new %o", path3);
       const opts = options || {};
       this.handle = fn;
       this.keys = [];
       this.name = fn.name || "<anonymous>";
       this.params = void 0;
       this.path = void 0;
-      this.slash = path2 === "/" && opts.end === false;
+      this.slash = path3 === "/" && opts.end === false;
       function matcher(_path) {
         if (_path instanceof RegExp) {
           const keys = [];
@@ -20275,7 +20275,7 @@ var require_layer = __commonJS({
           decode: decodeParam
         });
       }
-      this.matchers = Array.isArray(path2) ? path2.map(matcher) : [matcher(path2)];
+      this.matchers = Array.isArray(path3) ? path3.map(matcher) : [matcher(path3)];
     }
     Layer.prototype.handleError = function handleError(error40, req, res, next) {
       const fn = this.handle;
@@ -20315,9 +20315,9 @@ var require_layer = __commonJS({
         next(err);
       }
     };
-    Layer.prototype.match = function match(path2) {
+    Layer.prototype.match = function match(path3) {
       let match2;
-      if (path2 != null) {
+      if (path3 != null) {
         if (this.slash) {
           this.params = {};
           this.path = "";
@@ -20325,7 +20325,7 @@ var require_layer = __commonJS({
         }
         let i = 0;
         while (!match2 && i < this.matchers.length) {
-          match2 = this.matchers[i](path2);
+          match2 = this.matchers[i](path3);
           i++;
         }
       }
@@ -20353,13 +20353,13 @@ var require_layer = __commonJS({
         throw err;
       }
     }
-    function loosen(path2) {
-      if (path2 instanceof RegExp || path2 === "/") {
-        return path2;
+    function loosen(path3) {
+      if (path3 instanceof RegExp || path3 === "/") {
+        return path3;
       }
-      return Array.isArray(path2) ? path2.map(function(p) {
+      return Array.isArray(path3) ? path3.map(function(p) {
         return loosen(p);
-      }) : String(path2).replace(TRAILING_SLASH_REGEXP, "");
+      }) : String(path3).replace(TRAILING_SLASH_REGEXP, "");
     }
   }
 });
@@ -20375,9 +20375,9 @@ var require_route = __commonJS({
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
     module.exports = Route;
-    function Route(path2) {
-      debug("new %o", path2);
-      this.path = path2;
+    function Route(path3) {
+      debug("new %o", path3);
+      this.path = path3;
       this.stack = [];
       this.methods = /* @__PURE__ */ Object.create(null);
     }
@@ -20585,8 +20585,8 @@ var require_router = __commonJS({
         if (++sync > 100) {
           return setImmediate(next, err);
         }
-        const path2 = getPathname(req);
-        if (path2 == null) {
+        const path3 = getPathname(req);
+        if (path3 == null) {
           return done(layerError);
         }
         let layer;
@@ -20594,7 +20594,7 @@ var require_router = __commonJS({
         let route;
         while (match !== true && idx < stack.length) {
           layer = stack[idx++];
-          match = matchLayer(layer, path2);
+          match = matchLayer(layer, path3);
           route = layer.route;
           if (typeof match !== "boolean") {
             layerError = layerError || match;
@@ -20632,18 +20632,18 @@ var require_router = __commonJS({
           } else if (route) {
             layer.handleRequest(req, res, next);
           } else {
-            trimPrefix(layer, layerError, layerPath, path2);
+            trimPrefix(layer, layerError, layerPath, path3);
           }
           sync = 0;
         });
       }
-      function trimPrefix(layer, layerError, layerPath, path2) {
+      function trimPrefix(layer, layerError, layerPath, path3) {
         if (layerPath.length !== 0) {
-          if (layerPath !== path2.substring(0, layerPath.length)) {
+          if (layerPath !== path3.substring(0, layerPath.length)) {
             next(layerError);
             return;
           }
-          const c = path2[layerPath.length];
+          const c = path3[layerPath.length];
           if (c && c !== "/") {
             next(layerError);
             return;
@@ -20667,7 +20667,7 @@ var require_router = __commonJS({
     };
     Router7.prototype.use = function use(handler) {
       let offset = 0;
-      let path2 = "/";
+      let path3 = "/";
       if (typeof handler !== "function") {
         let arg = handler;
         while (Array.isArray(arg) && arg.length !== 0) {
@@ -20675,7 +20675,7 @@ var require_router = __commonJS({
         }
         if (typeof arg !== "function") {
           offset = 1;
-          path2 = handler;
+          path3 = handler;
         }
       }
       const callbacks = flatten.call(slice.call(arguments, offset), Infinity);
@@ -20687,8 +20687,8 @@ var require_router = __commonJS({
         if (typeof fn !== "function") {
           throw new TypeError("argument handler must be a function");
         }
-        debug("use %o %s", path2, fn.name || "<anonymous>");
-        const layer = new Layer(path2, {
+        debug("use %o %s", path3, fn.name || "<anonymous>");
+        const layer = new Layer(path3, {
           sensitive: this.caseSensitive,
           strict: false,
           end: false
@@ -20698,9 +20698,9 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router7.prototype.route = function route(path2) {
-      const route2 = new Route(path2);
-      const layer = new Layer(path2, {
+    Router7.prototype.route = function route(path3) {
+      const route2 = new Route(path3);
+      const layer = new Layer(path3, {
         sensitive: this.caseSensitive,
         strict: this.strict,
         end: true
@@ -20713,8 +20713,8 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router7.prototype[method] = function(path2) {
-        const route = this.route(path2);
+      Router7.prototype[method] = function(path3) {
+        const route = this.route(path3);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
       };
@@ -20743,9 +20743,9 @@ var require_router = __commonJS({
       const fqdnIndex = url2.substring(0, pathLength).indexOf("://");
       return fqdnIndex !== -1 ? url2.substring(0, url2.indexOf("/", 3 + fqdnIndex)) : void 0;
     }
-    function matchLayer(layer, path2) {
+    function matchLayer(layer, path3) {
       try {
-        return layer.match(path2);
+        return layer.match(path3);
       } catch (err) {
         return err;
       }
@@ -20973,7 +20973,7 @@ var require_application = __commonJS({
     };
     app2.use = function use(fn) {
       var offset = 0;
-      var path2 = "/";
+      var path3 = "/";
       if (typeof fn !== "function") {
         var arg = fn;
         while (Array.isArray(arg) && arg.length !== 0) {
@@ -20981,7 +20981,7 @@ var require_application = __commonJS({
         }
         if (typeof arg !== "function") {
           offset = 1;
-          path2 = fn;
+          path3 = fn;
         }
       }
       var fns = flatten.call(slice.call(arguments, offset), Infinity);
@@ -20991,12 +20991,12 @@ var require_application = __commonJS({
       var router7 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router7.use(path2, fn2);
+          return router7.use(path3, fn2);
         }
-        debug(".use app under %s", path2);
-        fn2.mountpath = path2;
+        debug(".use app under %s", path3);
+        fn2.mountpath = path3;
         fn2.parent = this;
-        router7.use(path2, function mounted_app(req, res, next) {
+        router7.use(path3, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -21008,8 +21008,8 @@ var require_application = __commonJS({
       }, this);
       return this;
     };
-    app2.route = function route(path2) {
-      return this.router.route(path2);
+    app2.route = function route(path3) {
+      return this.router.route(path3);
     };
     app2.engine = function engine(ext, fn) {
       if (typeof fn !== "function") {
@@ -21052,7 +21052,7 @@ var require_application = __commonJS({
       }
       return this;
     };
-    app2.path = function path2() {
+    app2.path = function path3() {
       return this.parent ? this.parent.path() + this.mountpath : "";
     };
     app2.enabled = function enabled(setting) {
@@ -21068,17 +21068,17 @@ var require_application = __commonJS({
       return this.set(setting, false);
     };
     methods.forEach(function(method) {
-      app2[method] = function(path2) {
+      app2[method] = function(path3) {
         if (method === "get" && arguments.length === 1) {
-          return this.set(path2);
+          return this.set(path3);
         }
-        var route = this.route(path2);
+        var route = this.route(path3);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
       };
     });
-    app2.all = function all(path2) {
-      var route = this.route(path2);
+    app2.all = function all(path3) {
+      var route = this.route(path3);
       var args = slice.call(arguments, 1);
       for (var i = 0; i < methods.length; i++) {
         route[methods[i]].apply(route, args);
@@ -21988,7 +21988,7 @@ var require_request = __commonJS({
       var subdomains2 = !isIP(hostname2) ? hostname2.split(".").reverse() : [hostname2];
       return subdomains2.slice(offset);
     });
-    defineGetter(req, "path", function path2() {
+    defineGetter(req, "path", function path3() {
       return parse3(this).pathname;
     });
     defineGetter(req, "host", function host() {
@@ -22199,8 +22199,8 @@ var require_content_disposition = __commonJS({
       this.type = type;
       this.parameters = parameters;
     }
-    function basename(path2) {
-      const normalized = path2.replaceAll("\\", "/");
+    function basename(path3) {
+      const normalized = path3.replaceAll("\\", "/");
       let end = normalized.length;
       while (end > 0 && normalized[end - 1] === "/") {
         end--;
@@ -22446,27 +22446,27 @@ var require_send = __commonJS({
     var ms = require_ms();
     var onFinished = require_on_finished();
     var parseRange = require_range_parser();
-    var path2 = __require("path");
+    var path3 = __require("path");
     var statuses = require_statuses();
     var Stream = __require("stream");
     var util2 = __require("util");
-    var extname = path2.extname;
-    var join = path2.join;
-    var normalize = path2.normalize;
-    var resolve = path2.resolve;
-    var sep = path2.sep;
+    var extname = path3.extname;
+    var join = path3.join;
+    var normalize = path3.normalize;
+    var resolve = path3.resolve;
+    var sep = path3.sep;
     var BYTES_RANGE_REGEXP = /^ *bytes=/;
     var MAX_MAXAGE = 60 * 60 * 24 * 365 * 1e3;
     var UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/;
     module.exports = send;
-    function send(req, path3, options) {
-      return new SendStream(req, path3, options);
+    function send(req, path4, options) {
+      return new SendStream(req, path4, options);
     }
-    function SendStream(req, path3, options) {
+    function SendStream(req, path4, options) {
       Stream.call(this);
       var opts = options || {};
       this.options = opts;
-      this.path = path3;
+      this.path = path4;
       this.req = req;
       this._acceptRanges = opts.acceptRanges !== void 0 ? Boolean(opts.acceptRanges) : true;
       this._cacheControl = opts.cacheControl !== void 0 ? Boolean(opts.cacheControl) : true;
@@ -22580,10 +22580,10 @@ var require_send = __commonJS({
       var lastModified = this.res.getHeader("Last-Modified");
       return parseHttpDate(lastModified) <= parseHttpDate(ifRange);
     };
-    SendStream.prototype.redirect = function redirect(path3) {
+    SendStream.prototype.redirect = function redirect(path4) {
       var res = this.res;
       if (hasListeners(this, "directory")) {
-        this.emit("directory", res, path3);
+        this.emit("directory", res, path4);
         return;
       }
       if (this.hasTrailingSlash()) {
@@ -22603,38 +22603,38 @@ var require_send = __commonJS({
     SendStream.prototype.pipe = function pipe2(res) {
       var root = this._root;
       this.res = res;
-      var path3 = decode(this.path);
-      if (path3 === -1) {
+      var path4 = decode(this.path);
+      if (path4 === -1) {
         this.error(400);
         return res;
       }
-      if (~path3.indexOf("\0")) {
+      if (~path4.indexOf("\0")) {
         this.error(400);
         return res;
       }
       var parts;
       if (root !== null) {
-        if (path3) {
-          path3 = normalize("." + sep + path3);
+        if (path4) {
+          path4 = normalize("." + sep + path4);
         }
-        if (UP_PATH_REGEXP.test(path3)) {
-          debug('malicious path "%s"', path3);
+        if (UP_PATH_REGEXP.test(path4)) {
+          debug('malicious path "%s"', path4);
           this.error(403);
           return res;
         }
-        parts = path3.split(sep);
-        path3 = normalize(join(root, path3));
+        parts = path4.split(sep);
+        path4 = normalize(join(root, path4));
       } else {
-        if (UP_PATH_REGEXP.test(path3)) {
-          debug('malicious path "%s"', path3);
+        if (UP_PATH_REGEXP.test(path4)) {
+          debug('malicious path "%s"', path4);
           this.error(403);
           return res;
         }
-        parts = normalize(path3).split(sep);
-        path3 = resolve(path3);
+        parts = normalize(path4).split(sep);
+        path4 = resolve(path4);
       }
       if (containsDotFile(parts)) {
-        debug('%s dotfile "%s"', this._dotfiles, path3);
+        debug('%s dotfile "%s"', this._dotfiles, path4);
         switch (this._dotfiles) {
           case "allow":
             break;
@@ -22648,13 +22648,13 @@ var require_send = __commonJS({
         }
       }
       if (this._index.length && this.hasTrailingSlash()) {
-        this.sendIndex(path3);
+        this.sendIndex(path4);
         return res;
       }
-      this.sendFile(path3);
+      this.sendFile(path4);
       return res;
     };
-    SendStream.prototype.send = function send2(path3, stat) {
+    SendStream.prototype.send = function send2(path4, stat) {
       var len = stat.size;
       var options = this.options;
       var opts = {};
@@ -22666,9 +22666,9 @@ var require_send = __commonJS({
         this.headersAlreadySent();
         return;
       }
-      debug('pipe "%s"', path3);
-      this.setHeader(path3, stat);
-      this.type(path3);
+      debug('pipe "%s"', path4);
+      this.setHeader(path4, stat);
+      this.type(path4);
       if (this.isConditionalGET()) {
         if (this.isPreconditionFailure()) {
           this.error(412);
@@ -22717,28 +22717,28 @@ var require_send = __commonJS({
         res.end();
         return;
       }
-      this.stream(path3, opts);
+      this.stream(path4, opts);
     };
-    SendStream.prototype.sendFile = function sendFile(path3) {
+    SendStream.prototype.sendFile = function sendFile(path4) {
       var i = 0;
       var self2 = this;
-      debug('stat "%s"', path3);
-      fs.stat(path3, function onstat(err, stat) {
-        var pathEndsWithSep = path3[path3.length - 1] === sep;
-        if (err && err.code === "ENOENT" && !extname(path3) && !pathEndsWithSep) {
+      debug('stat "%s"', path4);
+      fs.stat(path4, function onstat(err, stat) {
+        var pathEndsWithSep = path4[path4.length - 1] === sep;
+        if (err && err.code === "ENOENT" && !extname(path4) && !pathEndsWithSep) {
           return next(err);
         }
         if (err) return self2.onStatError(err);
-        if (stat.isDirectory()) return self2.redirect(path3);
+        if (stat.isDirectory()) return self2.redirect(path4);
         if (pathEndsWithSep) return self2.error(404);
-        self2.emit("file", path3, stat);
-        self2.send(path3, stat);
+        self2.emit("file", path4, stat);
+        self2.send(path4, stat);
       });
       function next(err) {
         if (self2._extensions.length <= i) {
           return err ? self2.onStatError(err) : self2.error(404);
         }
-        var p = path3 + "." + self2._extensions[i++];
+        var p = path4 + "." + self2._extensions[i++];
         debug('stat "%s"', p);
         fs.stat(p, function(err2, stat) {
           if (err2) return next(err2);
@@ -22748,7 +22748,7 @@ var require_send = __commonJS({
         });
       }
     };
-    SendStream.prototype.sendIndex = function sendIndex(path3) {
+    SendStream.prototype.sendIndex = function sendIndex(path4) {
       var i = -1;
       var self2 = this;
       function next(err) {
@@ -22756,7 +22756,7 @@ var require_send = __commonJS({
           if (err) return self2.onStatError(err);
           return self2.error(404);
         }
-        var p = join(path3, self2._index[i]);
+        var p = join(path4, self2._index[i]);
         debug('stat "%s"', p);
         fs.stat(p, function(err2, stat) {
           if (err2) return next(err2);
@@ -22767,10 +22767,10 @@ var require_send = __commonJS({
       }
       next();
     };
-    SendStream.prototype.stream = function stream(path3, options) {
+    SendStream.prototype.stream = function stream(path4, options) {
       var self2 = this;
       var res = this.res;
-      var stream2 = fs.createReadStream(path3, options);
+      var stream2 = fs.createReadStream(path4, options);
       this.emit("stream", stream2);
       stream2.pipe(res);
       function cleanup() {
@@ -22785,17 +22785,17 @@ var require_send = __commonJS({
         self2.emit("end");
       });
     };
-    SendStream.prototype.type = function type(path3) {
+    SendStream.prototype.type = function type(path4) {
       var res = this.res;
       if (res.getHeader("Content-Type")) return;
-      var ext = extname(path3);
+      var ext = extname(path4);
       var type2 = mime.contentType(ext) || "application/octet-stream";
       debug("content-type %s", type2);
       res.setHeader("Content-Type", type2);
     };
-    SendStream.prototype.setHeader = function setHeader(path3, stat) {
+    SendStream.prototype.setHeader = function setHeader(path4, stat) {
       var res = this.res;
-      this.emit("headers", res, path3, stat);
+      this.emit("headers", res, path4, stat);
       if (this._acceptRanges && !res.getHeader("Accept-Ranges")) {
         debug("accept ranges");
         res.setHeader("Accept-Ranges", "bytes");
@@ -22853,9 +22853,9 @@ var require_send = __commonJS({
       }
       return err instanceof Error ? createError(status, err, { expose: false }) : createError(status, err);
     }
-    function decode(path3) {
+    function decode(path4) {
       try {
-        return decodeURIComponent(path3);
+        return decodeURIComponent(path4);
       } catch (err) {
         return -1;
       }
@@ -22999,7 +22999,7 @@ var require_response = __commonJS({
     var http = __require("node:http");
     var onFinished = require_on_finished();
     var mime = require_mime_types();
-    var path2 = __require("node:path");
+    var path3 = __require("node:path");
     var pathIsAbsolute = __require("node:path").isAbsolute;
     var statuses = require_statuses();
     var sign = require_cookie_signature().sign;
@@ -23008,8 +23008,8 @@ var require_response = __commonJS({
     var setCharset = require_utils3().setCharset;
     var cookie = require_cookie();
     var send = require_send();
-    var extname = path2.extname;
-    var resolve = path2.resolve;
+    var extname = path3.extname;
+    var resolve = path3.resolve;
     var vary = require_vary();
     var { Buffer: Buffer2 } = __require("node:buffer");
     var res = Object.create(http.ServerResponse.prototype);
@@ -23155,26 +23155,26 @@ var require_response = __commonJS({
       this.type("txt");
       return this.send(body);
     };
-    res.sendFile = function sendFile(path3, options, callback) {
+    res.sendFile = function sendFile(path4, options, callback) {
       var done = callback;
       var req = this.req;
       var res2 = this;
       var next = req.next;
       var opts = options || {};
-      if (!path3) {
+      if (!path4) {
         throw new TypeError("path argument is required to res.sendFile");
       }
-      if (typeof path3 !== "string") {
+      if (typeof path4 !== "string") {
         throw new TypeError("path must be a string to res.sendFile");
       }
       if (typeof options === "function") {
         done = options;
         opts = {};
       }
-      if (!opts.root && !pathIsAbsolute(path3)) {
+      if (!opts.root && !pathIsAbsolute(path4)) {
         throw new TypeError("path must be absolute or specify root to res.sendFile");
       }
-      var pathname = encodeURI(path3);
+      var pathname = encodeURI(path4);
       opts.etag = this.app.enabled("etag");
       var file2 = send(req, pathname, opts);
       sendfile(res2, file2, opts, function(err) {
@@ -23185,7 +23185,7 @@ var require_response = __commonJS({
         }
       });
     };
-    res.download = function download(path3, filename, options, callback) {
+    res.download = function download(path4, filename, options, callback) {
       var done = callback;
       var name = filename;
       var opts = options || null;
@@ -23202,7 +23202,7 @@ var require_response = __commonJS({
         opts = filename;
       }
       var headers = {
-        "Content-Disposition": contentDisposition(name || path3)
+        "Content-Disposition": contentDisposition(name || path4)
       };
       if (opts && opts.headers) {
         var keys = Object.keys(opts.headers);
@@ -23215,7 +23215,7 @@ var require_response = __commonJS({
       }
       opts = Object.create(opts);
       opts.headers = headers;
-      var fullPath = !opts.root ? resolve(path3) : path3;
+      var fullPath = !opts.root ? resolve(path4) : path4;
       return this.sendFile(fullPath, opts, done);
     };
     res.contentType = res.type = function contentType(type) {
@@ -23498,11 +23498,11 @@ var require_serve_static = __commonJS({
         }
         var forwardError = !fallthrough;
         var originalUrl = parseUrl.original(req);
-        var path2 = parseUrl(req).pathname;
-        if (path2 === "/" && originalUrl.pathname.substr(-1) !== "/") {
-          path2 = "";
+        var path3 = parseUrl(req).pathname;
+        if (path3 === "/" && originalUrl.pathname.substr(-1) !== "/") {
+          path3 = "";
         }
-        var stream = send(req, path2, opts);
+        var stream = send(req, path3, opts);
         stream.on("directory", onDirectory);
         if (setHeaders) {
           stream.on("headers", setHeaders);
@@ -24150,8 +24150,8 @@ var require_req = __commonJS({
       if (req.originalUrl) {
         _req.url = req.originalUrl;
       } else {
-        const path2 = req.path;
-        _req.url = typeof path2 === "string" ? path2 : req.url ? req.url.path || req.url : void 0;
+        const path3 = req.path;
+        _req.url = typeof path3 === "string" ? path3 : req.url ? req.url.path || req.url : void 0;
       }
       if (req.query) {
         _req.query = req.query;
@@ -24316,14 +24316,14 @@ var require_redact = __commonJS({
       }
       return obj;
     }
-    function parsePath(path2) {
+    function parsePath(path3) {
       const parts = [];
       let current = "";
       let inBrackets = false;
       let inQuotes = false;
       let quoteChar = "";
-      for (let i = 0; i < path2.length; i++) {
-        const char2 = path2[i];
+      for (let i = 0; i < path3.length; i++) {
+        const char2 = path3[i];
         if (!inBrackets && char2 === ".") {
           if (current) {
             parts.push(current);
@@ -24454,10 +24454,10 @@ var require_redact = __commonJS({
       return current;
     }
     function redactPaths(obj, paths, censor, remove = false) {
-      for (const path2 of paths) {
-        const parts = parsePath(path2);
+      for (const path3 of paths) {
+        const parts = parsePath(path3);
         if (parts.includes("*")) {
-          redactWildcardPath(obj, parts, censor, path2, remove);
+          redactWildcardPath(obj, parts, censor, path3, remove);
         } else {
           if (remove) {
             removeKey(obj, parts);
@@ -24542,8 +24542,8 @@ var require_redact = __commonJS({
           }
         } else {
           if (afterWildcard.includes("*")) {
-            const wrappedCensor = typeof censor === "function" ? (value, path2) => {
-              const fullPath = [...pathArray.slice(0, pathLength), ...path2];
+            const wrappedCensor = typeof censor === "function" ? (value, path3) => {
+              const fullPath = [...pathArray.slice(0, pathLength), ...path3];
               return censor(value, fullPath);
             } : censor;
             redactWildcardPath(current, afterWildcard, wrappedCensor, originalPath, remove);
@@ -24578,8 +24578,8 @@ var require_redact = __commonJS({
         return null;
       }
       const pathStructure = /* @__PURE__ */ new Map();
-      for (const path2 of pathsToClone) {
-        const parts = parsePath(path2);
+      for (const path3 of pathsToClone) {
+        const parts = parsePath(path3);
         let current = pathStructure;
         for (let i = 0; i < parts.length; i++) {
           const part = parts[i];
@@ -24631,24 +24631,24 @@ var require_redact = __commonJS({
       }
       return cloneSelectively(obj, pathStructure);
     }
-    function validatePath(path2) {
-      if (typeof path2 !== "string") {
+    function validatePath(path3) {
+      if (typeof path3 !== "string") {
         throw new Error("Paths must be (non-empty) strings");
       }
-      if (path2 === "") {
+      if (path3 === "") {
         throw new Error("Invalid redaction path ()");
       }
-      if (path2.includes("..")) {
-        throw new Error(`Invalid redaction path (${path2})`);
+      if (path3.includes("..")) {
+        throw new Error(`Invalid redaction path (${path3})`);
       }
-      if (path2.includes(",")) {
-        throw new Error(`Invalid redaction path (${path2})`);
+      if (path3.includes(",")) {
+        throw new Error(`Invalid redaction path (${path3})`);
       }
       let bracketCount = 0;
       let inQuotes = false;
       let quoteChar = "";
-      for (let i = 0; i < path2.length; i++) {
-        const char2 = path2[i];
+      for (let i = 0; i < path3.length; i++) {
+        const char2 = path3[i];
         if ((char2 === '"' || char2 === "'") && bracketCount > 0) {
           if (!inQuotes) {
             inQuotes = true;
@@ -24662,20 +24662,20 @@ var require_redact = __commonJS({
         } else if (char2 === "]" && !inQuotes) {
           bracketCount--;
           if (bracketCount < 0) {
-            throw new Error(`Invalid redaction path (${path2})`);
+            throw new Error(`Invalid redaction path (${path3})`);
           }
         }
       }
       if (bracketCount !== 0) {
-        throw new Error(`Invalid redaction path (${path2})`);
+        throw new Error(`Invalid redaction path (${path3})`);
       }
     }
     function validatePaths(paths) {
       if (!Array.isArray(paths)) {
         throw new TypeError("paths must be an array");
       }
-      for (const path2 of paths) {
-        validatePath(path2);
+      for (const path3 of paths) {
+        validatePath(path3);
       }
     }
     function slowRedact(options = {}) {
@@ -24843,8 +24843,8 @@ var require_redaction = __commonJS({
         if (shape[k] === null) {
           o[k] = (value) => topCensor(value, [k]);
         } else {
-          const wrappedCensor = typeof censor === "function" ? (value, path2) => {
-            return censor(value, [k, ...path2]);
+          const wrappedCensor = typeof censor === "function" ? (value, path3) => {
+            return censor(value, [k, ...path3]);
           } : censor;
           o[k] = Redact({
             paths: shape[k],
@@ -25028,7 +25028,7 @@ var require_atomic_sleep = __commonJS({
   "../../node_modules/.pnpm/atomic-sleep@1.0.0/node_modules/atomic-sleep/index.js"(exports, module) {
     "use strict";
     if (typeof SharedArrayBuffer !== "undefined" && typeof Atomics !== "undefined") {
-      let sleep = function(ms) {
+      let sleep2 = function(ms) {
         const valid = ms > 0 && ms < Infinity;
         if (valid === false) {
           if (typeof ms !== "number" && typeof ms !== "bigint") {
@@ -25039,9 +25039,9 @@ var require_atomic_sleep = __commonJS({
         Atomics.wait(nil, 0, 0, Number(ms));
       };
       const nil = new Int32Array(new SharedArrayBuffer(4));
-      module.exports = sleep;
+      module.exports = sleep2;
     } else {
-      let sleep = function(ms) {
+      let sleep2 = function(ms) {
         const valid = ms > 0 && ms < Infinity;
         if (valid === false) {
           if (typeof ms !== "number" && typeof ms !== "bigint") {
@@ -25053,7 +25053,7 @@ var require_atomic_sleep = __commonJS({
         while (target > Date.now()) {
         }
       };
-      module.exports = sleep;
+      module.exports = sleep2;
     }
   }
 });
@@ -25065,8 +25065,8 @@ var require_sonic_boom = __commonJS({
     var fs = __require("fs");
     var EventEmitter2 = __require("events");
     var inherits = __require("util").inherits;
-    var path2 = __require("path");
-    var sleep = require_atomic_sleep();
+    var path3 = __require("path");
+    var sleep2 = require_atomic_sleep();
     var assert2 = __require("assert");
     var BUSY_WRITE_TIMEOUT = 100;
     var kEmptyBuffer = Buffer.allocUnsafe(0);
@@ -25119,7 +25119,7 @@ var require_sonic_boom = __commonJS({
       const mode = sonic.mode;
       if (sonic.sync) {
         try {
-          if (sonic.mkdir) fs.mkdirSync(path2.dirname(file2), { recursive: true });
+          if (sonic.mkdir) fs.mkdirSync(path3.dirname(file2), { recursive: true });
           const fd = fs.openSync(file2, flags, mode);
           fileOpened(null, fd);
         } catch (err) {
@@ -25127,7 +25127,7 @@ var require_sonic_boom = __commonJS({
           throw err;
         }
       } else if (sonic.mkdir) {
-        fs.mkdir(path2.dirname(file2), { recursive: true }, (err) => {
+        fs.mkdir(path3.dirname(file2), { recursive: true }, (err) => {
           if (err) return fileOpened(err);
           fs.open(file2, flags, mode, fileOpened);
         });
@@ -25212,7 +25212,7 @@ var require_sonic_boom = __commonJS({
           if ((err.code === "EAGAIN" || err.code === "EBUSY") && this.retryEAGAIN(err, this._writingBuf.length, this._len - this._writingBuf.length)) {
             if (this.sync) {
               try {
-                sleep(BUSY_WRITE_TIMEOUT);
+                sleep2(BUSY_WRITE_TIMEOUT);
                 this.release(void 0, 0);
               } catch (err2) {
                 this.release(err2);
@@ -25525,7 +25525,7 @@ var require_sonic_boom = __commonJS({
           if (shouldRetry && !this.retryEAGAIN(err, buf.length, this._len - buf.length)) {
             throw err;
           }
-          sleep(BUSY_WRITE_TIMEOUT);
+          sleep2(BUSY_WRITE_TIMEOUT);
         }
       }
       try {
@@ -25562,7 +25562,7 @@ var require_sonic_boom = __commonJS({
           if (shouldRetry && !this.retryEAGAIN(err, buf.length, this._len - buf.length)) {
             throw err;
           }
-          sleep(BUSY_WRITE_TIMEOUT);
+          sleep2(BUSY_WRITE_TIMEOUT);
         }
       }
     }
@@ -26303,7 +26303,7 @@ var require_transport = __commonJS({
     var { createRequire } = __require("module");
     var getCallers = require_caller();
     var { join, isAbsolute, sep } = __require("node:path");
-    var sleep = require_atomic_sleep();
+    var sleep2 = require_atomic_sleep();
     var onExit = require_on_exit_leak_free();
     var ThreadStream = require_thread_stream();
     function setupOnExit(stream) {
@@ -26337,7 +26337,7 @@ var require_transport = __commonJS({
           return;
         }
         stream.flushSync();
-        sleep(100);
+        sleep2(100);
         stream.end();
       }
       return stream;
@@ -27987,9 +27987,9 @@ var require_pino = __commonJS({
   "../../node_modules/.pnpm/pino@9.14.0/node_modules/pino/pino.js"(exports, module) {
     function pinoBundlerAbsolutePath(p) {
       try {
-        const path2 = __require("path");
-        const outputDir = "/home/runner/workspace/artifacts/api-server/dist";
-        return path2.resolve(outputDir, p.replace(/^\.\//, ""));
+        const path3 = __require("path");
+        const outputDir = "/tmp/vercodigo-repo/artifacts/api-server/dist";
+        return path3.resolve(outputDir, p.replace(/^\.\//, ""));
       } catch (e) {
         const f = new Function("p", "return new URL(p, import.meta.url).pathname");
         return f(p);
@@ -31854,7 +31854,7 @@ var require_split2 = __commonJS({
 var require_helper = __commonJS({
   "../../node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass/lib/helper.js"(exports, module) {
     "use strict";
-    var path2 = __require("path");
+    var path3 = __require("path");
     var Stream = __require("stream").Stream;
     var split = require_split2();
     var util2 = __require("util");
@@ -31893,7 +31893,7 @@ var require_helper = __commonJS({
     };
     module.exports.getFileName = function(rawEnv) {
       var env = rawEnv || process.env;
-      var file2 = env.PGPASSFILE || (isWin ? path2.join(env.APPDATA || "./", "postgresql", "pgpass.conf") : path2.join(env.HOME || "./", ".pgpass"));
+      var file2 = env.PGPASSFILE || (isWin ? path3.join(env.APPDATA || "./", "postgresql", "pgpass.conf") : path3.join(env.HOME || "./", ".pgpass"));
       return file2;
     };
     module.exports.usePgPass = function(stats, fname) {
@@ -32025,7 +32025,7 @@ var require_helper = __commonJS({
 var require_lib4 = __commonJS({
   "../../node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass/lib/index.js"(exports, module) {
     "use strict";
-    var path2 = __require("path");
+    var path3 = __require("path");
     var fs = __require("fs");
     var helper = require_helper();
     module.exports = function(connInfo, cb) {
@@ -37500,8 +37500,8 @@ var require_redaction2 = __commonJS({
         if (shape[k] === null) {
           o[k] = (value) => topCensor(value, [k]);
         } else {
-          const wrappedCensor = typeof censor === "function" ? (value, path2) => {
-            return censor(value, [k, ...path2]);
+          const wrappedCensor = typeof censor === "function" ? (value, path3) => {
+            return censor(value, [k, ...path3]);
           } : censor;
           o[k] = Redact({
             paths: shape[k],
@@ -38219,7 +38219,7 @@ var require_transport2 = __commonJS({
     var getCallers = require_caller2();
     var { join, isAbsolute, sep } = __require("node:path");
     var { fileURLToPath } = __require("node:url");
-    var sleep = require_atomic_sleep();
+    var sleep2 = require_atomic_sleep();
     var onExit = require_on_exit_leak_free();
     var ThreadStream = require_thread_stream2();
     function setupOnExit(stream) {
@@ -38281,15 +38281,15 @@ var require_transport2 = __commonJS({
       if (!unquoted) {
         return false;
       }
-      let path2 = unquoted;
-      if (path2.startsWith("file://")) {
+      let path3 = unquoted;
+      if (path3.startsWith("file://")) {
         try {
-          path2 = fileURLToPath(path2);
+          path3 = fileURLToPath(path3);
         } catch {
           return false;
         }
       }
-      return isAbsolute(path2) && !existsSync(path2);
+      return isAbsolute(path3) && !existsSync(path3);
     }
     function stripQuotes(value) {
       const first = value[0];
@@ -38342,7 +38342,7 @@ var require_transport2 = __commonJS({
           return;
         }
         stream.flushSync();
-        sleep(100);
+        sleep2(100);
         stream.end();
       }
       return stream;
@@ -39593,9 +39593,9 @@ var require_pino2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/logger.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/logger.js
 var require_logger2 = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/logger.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/logger.js"(exports, module) {
     "use strict";
     var logger3 = require_pino2()();
     logger3.level = "trace";
@@ -60987,9 +60987,9 @@ var require_mailsplit = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/limited-passthrough.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/limited-passthrough.js
 var require_limited_passthrough = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/limited-passthrough.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/limited-passthrough.js"(exports, module) {
     "use strict";
     var { Transform } = __require("stream");
     var LimitedPassthrough = class extends Transform {
@@ -61023,9 +61023,9 @@ var require_limited_passthrough = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/imap-stream.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/imap-stream.js
 var require_imap_stream = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/imap-stream.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/imap-stream.js"(exports, module) {
     "use strict";
     var Transform = __require("stream").Transform;
     var logger3 = require_logger2();
@@ -61038,7 +61038,6 @@ var require_imap_stream = __commonJS({
     var CURLY_OPEN = 123;
     var CURLY_CLOSE = 125;
     var MAX_LITERAL_SIZE = 1024 * 1024 * 1024;
-    var MAX_LINE_SIZE = MAX_LITERAL_SIZE;
     var ImapStream = class extends Transform {
       /**
        * Creates a new ImapStream instance.
@@ -61048,10 +61047,6 @@ var require_imap_stream = __commonJS({
        * @param {Object} [options.logger] - A pino-compatible logger instance. If not provided, a default child logger is created.
        * @param {boolean} [options.logRaw] - If true, logs raw socket data at trace level.
        * @param {boolean} [options.secureConnection] - Whether the connection uses TLS.
-       * @param {number} [options.maxLineLength] - Maximum allowed length (in bytes) of a single
-       *   line (a response without a literal). Defaults to MAX_LITERAL_SIZE (1GB). Guards against a
-       *   malicious or broken server that never sends a line terminator, which would otherwise grow
-       *   the internal line buffer without bound.
        */
       constructor(options) {
         super({
@@ -61066,12 +61061,10 @@ var require_imap_stream = __commonJS({
           cid: this.cid
         });
         this.readBytesCounter = 0;
-        this.maxLineLength = this.options.maxLineLength || MAX_LINE_SIZE;
         this.state = LINE;
         this.literalWaiting = 0;
         this.inputBuffer = [];
         this.lineBuffer = [];
-        this.lineBytes = 0;
         this.literalBuffer = [];
         this.literals = [];
         this.compress = false;
@@ -61105,7 +61098,7 @@ var require_imap_stream = __commonJS({
         }
         pos--;
         let numBytes = [];
-        for (; pos >= 0; pos--) {
+        for (; pos > 0; pos--) {
           let c = line2[pos];
           if (c >= NUM_0 && c <= NUM_9) {
             numBytes.unshift(c);
@@ -61154,7 +61147,6 @@ var require_imap_stream = __commonJS({
                 let line2 = Buffer.concat(this.lineBuffer);
                 this.inputBuffer.push(line2);
                 this.lineBuffer = [];
-                this.lineBytes = 0;
                 if (this.checkLiteralMarker(line2)) {
                   return await this.processInputChunk(chunk, lineStart);
                 }
@@ -61179,18 +61171,7 @@ var require_imap_stream = __commonJS({
               }
             }
             if (lineStart < chunk.length) {
-              let tail = chunk.slice(lineStart);
-              let lineLength = this.lineBytes + tail.length;
-              if (lineLength > this.maxLineLength) {
-                const err = new Error(`Line length ${lineLength} exceeds maximum allowed size of ${this.maxLineLength} bytes`);
-                err.code = "LineTooLarge";
-                err.lineLength = lineLength;
-                err.maxSize = this.maxLineLength;
-                this.emit("error", err);
-                return;
-              }
-              this.lineBytes = lineLength;
-              this.lineBuffer.push(tail);
+              this.lineBuffer.push(chunk.slice(lineStart));
             }
             break;
           }
@@ -61282,7 +61263,6 @@ var require_imap_stream = __commonJS({
       _destroy(err, callback) {
         this.inputBuffer = [];
         this.lineBuffer = [];
-        this.lineBytes = 0;
         this.literalBuffer = [];
         this.literals = [];
         while (this.inputQueue.length) {
@@ -61298,9 +61278,9 @@ var require_imap_stream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/imap-formal-syntax.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/imap-formal-syntax.js
 var require_imap_formal_syntax = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/imap-formal-syntax.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/imap-formal-syntax.js"(exports, module) {
     "use strict";
     function expandRange(start, end) {
       let chars = [];
@@ -61444,9 +61424,9 @@ var require_imap_formal_syntax = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/token-parser.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/token-parser.js
 var require_token_parser = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/token-parser.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/token-parser.js"(exports, module) {
     "use strict";
     var imapFormalSyntax = require_imap_formal_syntax();
     var STATE_ATOM = 1;
@@ -61719,9 +61699,6 @@ var require_token_parser = __commonJS({
                       this.currentNode = this.createNode(this.currentNode, this.pos + i + 10);
                       this.currentNode.type = "ATOM";
                       i = this.str.indexOf("]", i + 10);
-                      if (i < 0) {
-                        i = this.str.length;
-                      }
                       this.currentNode.endPos = this.pos + i - 1;
                       this.currentNode.value = this.str.substring(this.currentNode.startPos - this.pos, this.currentNode.endPos - this.pos + 1);
                       this.currentNode = this.currentNode.parentNode;
@@ -61998,9 +61975,9 @@ var require_token_parser = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/parser-instance.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/parser-instance.js
 var require_parser_instance = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/parser-instance.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/parser-instance.js"(exports, module) {
     "use strict";
     var imapFormalSyntax = require_imap_formal_syntax();
     var { TokenParser } = require_token_parser();
@@ -62187,9 +62164,9 @@ var require_parser_instance = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/imap-parser.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/imap-parser.js
 var require_imap_parser = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/imap-parser.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/imap-parser.js"(exports, module) {
     "use strict";
     var imapFormalSyntax = require_imap_formal_syntax();
     var { ParserInstance } = require_parser_instance();
@@ -62244,9 +62221,9 @@ var require_imap_parser = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/imap-compiler.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/imap-compiler.js
 var require_imap_compiler = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/imap-compiler.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/imap-compiler.js"(exports, module) {
     "use strict";
     var imapFormalSyntax = require_imap_formal_syntax();
     var formatRespEntry = (entry, returnEmpty) => {
@@ -62394,9 +62371,9 @@ var require_imap_compiler = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/imap-handler.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/imap-handler.js
 var require_imap_handler = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/handler/imap-handler.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/handler/imap-handler.js"(exports, module) {
     "use strict";
     var parser = require_imap_parser();
     var compiler = require_imap_compiler();
@@ -62407,12 +62384,12 @@ var require_imap_handler = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/package.json
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/package.json
 var require_package4 = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/package.json"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/package.json"(exports, module) {
     module.exports = {
       name: "imapflow",
-      version: "1.3.5",
+      version: "1.3.4",
       description: "IMAP Client for Node",
       main: "lib/imap-flow.js",
       types: "lib/imap-flow.d.ts",
@@ -62442,7 +62419,7 @@ var require_package4 = __commonJS({
         "@eslint/js": "10.0.1",
         "@types/node": "25.9.1",
         c8: "11.0.0",
-        eslint: "10.4.1",
+        eslint: "10.4.0",
         "eslint-config-nodemailer": "1.2.0",
         "eslint-config-prettier": "10.1.8",
         grunt: "1.6.2",
@@ -66751,9 +66728,9 @@ var require_build = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/proxy-connection.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/proxy-connection.js
 var require_proxy_connection = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/proxy-connection.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/proxy-connection.js"(exports, module) {
     "use strict";
     var httpProxyClient = require_http_proxy_client();
     var { SocksClient } = require_build();
@@ -66863,9 +66840,9 @@ var require_proxy_connection = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/charsets.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/charsets.js
 var require_charsets2 = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/charsets.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/charsets.js"(exports, module) {
     "use strict";
     var CHARACTER_SETS = [
       "US-ASCII",
@@ -67142,9 +67119,9 @@ var require_charsets2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/jp-decoder.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/jp-decoder.js
 var require_jp_decoder = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/jp-decoder.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/jp-decoder.js"(exports, module) {
     "use strict";
     var { Transform } = __require("stream");
     var encodingJapanese = require_src2();
@@ -67197,9 +67174,9 @@ var require_jp_decoder = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/tools.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/tools.js
 var require_tools3 = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/tools.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/tools.js"(exports, module) {
     "use strict";
     var libmime = require_libmime();
     var { resolveCharset } = require_charsets2();
@@ -67219,15 +67196,15 @@ var require_tools3 = __commonJS({
        * @param {String} path - Mailbox path to encode
        * @returns {String} Encoded mailbox path
        */
-      encodePath(connection, path2) {
-        path2 = (path2 || "").toString();
-        if (!connection.enabled.has("UTF8=ACCEPT") && /[&\x00-\x08\x0b-\x0c\x0e-\x1f\u0080-\uffff]/.test(path2)) {
+      encodePath(connection, path3) {
+        path3 = (path3 || "").toString();
+        if (!connection.enabled.has("UTF8=ACCEPT") && /[&\x00-\x08\x0b-\x0c\x0e-\x1f\u0080-\uffff]/.test(path3)) {
           try {
-            path2 = iconv.encode(path2, "utf-7-imap").toString();
+            path3 = iconv.encode(path3, "utf-7-imap").toString();
           } catch {
           }
         }
-        return path2;
+        return path3;
       },
       /**
        * Decodes a mailbox path from modified UTF-7 if the server does not support UTF8=ACCEPT.
@@ -67236,15 +67213,15 @@ var require_tools3 = __commonJS({
        * @param {String} path - Mailbox path to decode
        * @returns {String} Decoded mailbox path
        */
-      decodePath(connection, path2) {
-        path2 = (path2 || "").toString();
-        if (!connection.enabled.has("UTF8=ACCEPT") && /[&]/.test(path2)) {
+      decodePath(connection, path3) {
+        path3 = (path3 || "").toString();
+        if (!connection.enabled.has("UTF8=ACCEPT") && /[&]/.test(path3)) {
           try {
-            path2 = iconv.decode(Buffer.from(path2), "utf-7-imap").toString();
+            path3 = iconv.decode(Buffer.from(path3), "utf-7-imap").toString();
           } catch {
           }
         }
-        return path2;
+        return path3;
       },
       /**
        * Normalizes a mailbox path by joining array segments with the namespace delimiter,
@@ -67255,17 +67232,17 @@ var require_tools3 = __commonJS({
        * @param {Boolean} [skipNamespace] - If true, skips prepending the namespace prefix
        * @returns {String} Normalized mailbox path
        */
-      normalizePath(connection, path2, skipNamespace) {
-        if (Array.isArray(path2)) {
-          path2 = path2.join(connection.namespace && connection.namespace.delimiter || "");
+      normalizePath(connection, path3, skipNamespace) {
+        if (Array.isArray(path3)) {
+          path3 = path3.join(connection.namespace && connection.namespace.delimiter || "");
         }
-        if (path2.toUpperCase() === "INBOX") {
+        if (path3.toUpperCase() === "INBOX") {
           return "INBOX";
         }
-        if (!skipNamespace && connection.namespace && connection.namespace.prefix && !path2.startsWith(connection.namespace.prefix)) {
-          path2 = connection.namespace.prefix + path2;
+        if (!skipNamespace && connection.namespace && connection.namespace.prefix && !path3.startsWith(connection.namespace.prefix)) {
+          path3 = connection.namespace.prefix + path3;
         }
-        return path2;
+        return path3;
       },
       /**
        * Compares two mailbox paths for equality after normalization.
@@ -67582,14 +67559,14 @@ var require_tools3 = __commonJS({
           }
         }
         if (map2.emailId || map2.uid) {
-          let path2 = mailbox.path;
-          if (/[\u0080-\uffff]/.test(path2)) {
+          let path3 = mailbox.path;
+          if (/[0x80-0xff]/.test(path3)) {
             try {
-              path2 = iconv.encode(path2, "utf-7-imap").toString();
+              path3 = iconv.encode(path3, "utf-7-imap").toString();
             } catch {
             }
           }
-          map2.id = map2.emailId || createHash("md5").update([path2, mailbox.uidValidity?.toString() || "", map2.uid.toString()].join(":")).digest("hex");
+          map2.id = map2.emailId || createHash("md5").update([path3, mailbox.uidValidity?.toString() || "", map2.uid.toString()].join(":")).digest("hex");
         }
         if (map2.flags) {
           let flagColor = tools.getFlagColor(map2.flags);
@@ -67755,16 +67732,16 @@ var require_tools3 = __commonJS({
        * @returns {Object} Parsed body structure tree with part numbers, types, parameters, and child nodes
        */
       parseBodystructure(entry) {
-        let walk = (node, path2) => {
-          path2 = path2 || [];
+        let walk = (node, path3) => {
+          path3 = path3 || [];
           let curNode = {}, i = 0, part = 0;
-          if (path2.length) {
-            curNode.part = path2.join(".");
+          if (path3.length) {
+            curNode.part = path3.join(".");
           }
           if (Array.isArray(node[0])) {
             curNode.childNodes = [];
             while (Array.isArray(node[i])) {
-              curNode.childNodes.push(walk(node[i], path2.concat(++part)));
+              curNode.childNodes.push(walk(node[i], path3.concat(++part)));
               i++;
             }
             curNode.type = "multipart/" + ((node[i++] || {}).value || "").toString().toLowerCase();
@@ -67807,7 +67784,7 @@ var require_tools3 = __commonJS({
                   // the encapsulated message shares the part number with its wrapper.
                   // Distinction is via suffixes: path.MIME = wrapper headers,
                   // path.HEADER = encapsulated message headers.
-                  walk(node[i], path2)
+                  walk(node[i], path3)
                 ];
               }
               i++;
@@ -68004,7 +67981,7 @@ var require_tools3 = __commonJS({
         if (!list.length) {
           return "";
         }
-        list = Array.from(new Set(list)).sort((a, b) => a - b);
+        list.sort((a, b) => a - b);
         let last = list[list.length - 1];
         let result = [[last]];
         for (let i = list.length - 2; i >= 0; i--) {
@@ -68027,9 +68004,9 @@ var require_tools3 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/id.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/id.js
 var require_id = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/id.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/id.js"(exports, module) {
     "use strict";
     var { formatDateTime } = require_tools3();
     module.exports = async (connection, clientInfo) => {
@@ -68079,9 +68056,9 @@ var require_id = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/capability.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/capability.js
 var require_capability = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/capability.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/capability.js"(exports, module) {
     "use strict";
     module.exports = async (connection) => {
       if (connection.capabilities.size && !connection.expectCapabilityUpdate) {
@@ -68100,9 +68077,9 @@ var require_capability = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/namespace.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/namespace.js
 var require_namespace = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/namespace.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/namespace.js"(exports, module) {
     "use strict";
     module.exports = async (connection) => {
       if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state)) {
@@ -68207,9 +68184,9 @@ var require_namespace = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/login.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/login.js
 var require_login = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/login.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/login.js"(exports, module) {
     "use strict";
     var { getStatusCode, getErrorText } = require_tools3();
     module.exports = async (connection, username, password) => {
@@ -68238,9 +68215,9 @@ var require_login = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/logout.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/logout.js
 var require_logout = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/logout.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/logout.js"(exports, module) {
     "use strict";
     module.exports = async (connection) => {
       if (connection.state === connection.states.LOGOUT) {
@@ -68272,9 +68249,9 @@ var require_logout = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/starttls.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/starttls.js
 var require_starttls = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/starttls.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/starttls.js"(exports, module) {
     "use strict";
     module.exports = async (connection) => {
       if (!connection.capabilities.has("STARTTLS") || connection.secureConnection) {
@@ -68293,9 +68270,9 @@ var require_starttls = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/special-use.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/special-use.js
 var require_special_use = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/special-use.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/special-use.js"(exports, module) {
     "use strict";
     module.exports = {
       flags: ["\\All", "\\Archive", "\\Drafts", "\\Flagged", "\\Junk", "\\Sent", "\\Trash"],
@@ -68593,9 +68570,9 @@ var require_special_use = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/list.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/list.js
 var require_list = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/list.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/list.js"(exports, module) {
     "use strict";
     var { decodePath, encodePath, normalizePath } = require_tools3();
     var { specialUse } = require_special_use();
@@ -68847,9 +68824,9 @@ var require_list = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/enable.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/enable.js
 var require_enable = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/enable.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/enable.js"(exports, module) {
     "use strict";
     module.exports = async (connection, extensionList) => {
       if (!connection.capabilities.has("ENABLE") || connection.state !== connection.states.AUTHENTICATED) {
@@ -68894,19 +68871,19 @@ var require_enable = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/select.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/select.js
 var require_select = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/select.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/select.js"(exports, module) {
     "use strict";
     var { encodePath, normalizePath, enhanceCommandError } = require_tools3();
-    module.exports = async (connection, path2, options) => {
+    module.exports = async (connection, path3, options) => {
       if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state)) {
         return;
       }
       options = options || {};
-      path2 = normalizePath(connection, path2);
-      if (!connection.folders.has(path2)) {
-        let folders = await connection.run("LIST", "", path2);
+      path3 = normalizePath(connection, path3);
+      if (!connection.folders.has(path3)) {
+        let folders = await connection.run("LIST", "", path3);
         if (!folders) {
           throw new Error("Failed to fetch folders");
         }
@@ -68914,10 +68891,10 @@ var require_select = __commonJS({
           connection.folders.set(folder.path, folder);
         });
       }
-      let folderListData = connection.folders.has(path2) ? connection.folders.get(path2) : false;
+      let folderListData = connection.folders.has(path3) ? connection.folders.get(path3) : false;
       let response;
       try {
-        let map2 = { path: path2 };
+        let map2 = { path: path3 };
         if (folderListData) {
           ["delimiter", "specialUse", "subscribed", "listed"].forEach((key) => {
             if (folderListData[key]) {
@@ -68936,7 +68913,7 @@ var require_select = __commonJS({
           ]);
           map2.qresync = true;
         }
-        let encodedPath = encodePath(connection, path2);
+        let encodedPath = encodePath(connection, path3);
         let selectCommand = {
           command: !options.readOnly ? "SELECT" : "EXAMINE",
           arguments: [{ type: encodedPath.indexOf("&") >= 0 ? "STRING" : "ATOM", value: encodedPath }].concat(extraArgs || [])
@@ -69039,12 +69016,12 @@ var require_select = __commonJS({
             // since the client's last known state. Only received when QRESYNC was requested.
             // A dummy mailbox object is passed because the mailbox isn't officially open yet.
             VANISHED: async (untagged) => {
-              await connection.untaggedVanished(untagged, { path: path2, uidNext: false, uidValidity: false });
+              await connection.untaggedVanished(untagged, { path: path3, uidNext: false, uidValidity: false });
             },
             // Untagged FETCH during SELECT/EXAMINE: only occurs with QRESYNC, delivering
             // updated flags for messages that changed since the client's last modseq.
             FETCH: async (untagged) => {
-              await connection.untaggedFetch(untagged, { path: path2, uidNext: false, uidValidity: false });
+              await connection.untaggedFetch(untagged, { path: path3, uidNext: false, uidValidity: false });
             }
           }
         });
@@ -69057,13 +69034,13 @@ var require_select = __commonJS({
         }
         let currentMailbox = connection.mailbox;
         connection.mailbox = false;
-        if (currentMailbox && currentMailbox.path !== path2) {
+        if (currentMailbox && currentMailbox.path !== path3) {
           connection.emit("mailboxClose", currentMailbox);
         }
         connection.mailbox = map2;
         connection.currentSelectCommand = selectCommand;
         connection.state = connection.states.SELECTED;
-        if (!currentMailbox || currentMailbox.path !== path2) {
+        if (!currentMailbox || currentMailbox.path !== path3) {
           connection.emit("mailboxOpen", connection.mailbox);
         }
         response.next();
@@ -69086,9 +69063,9 @@ var require_select = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/fetch.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/fetch.js
 var require_fetch = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/fetch.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/fetch.js"(exports, module) {
     "use strict";
     var { formatMessageResponse } = require_tools3();
     module.exports = async (connection, range, query, options) => {
@@ -69274,22 +69251,22 @@ var require_fetch = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/create.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/create.js
 var require_create = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/create.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/create.js"(exports, module) {
     "use strict";
     var { encodePath, normalizePath, getStatusCode, enhanceCommandError } = require_tools3();
-    module.exports = async (connection, path2) => {
+    module.exports = async (connection, path3) => {
       if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state)) {
         return;
       }
-      path2 = normalizePath(connection, path2);
+      path3 = normalizePath(connection, path3);
       let response;
       try {
         let map2 = {
-          path: path2
+          path: path3
         };
-        response = await connection.exec("CREATE", [{ type: "ATOM", value: encodePath(connection, path2) }]);
+        response = await connection.exec("CREATE", [{ type: "ATOM", value: encodePath(connection, path3) }]);
         let section = response.response.attributes && response.response.attributes[0] && response.response.attributes[0].section && response.response.attributes[0].section.length ? response.response.attributes[0].section : false;
         if (section) {
           let key;
@@ -69315,13 +69292,13 @@ var require_create = __commonJS({
         }
         map2.created = true;
         response.next();
-        await connection.run("SUBSCRIBE", path2);
+        await connection.run("SUBSCRIBE", path3);
         return map2;
       } catch (err) {
         let errorCode = getStatusCode(err.response);
         if (errorCode === "ALREADYEXISTS") {
           return {
-            path: path2,
+            path: path3,
             created: false
           };
         }
@@ -69333,25 +69310,25 @@ var require_create = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/delete.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/delete.js
 var require_delete = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/delete.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/delete.js"(exports, module) {
     "use strict";
     var { encodePath, normalizePath, enhanceCommandError } = require_tools3();
-    module.exports = async (connection, path2) => {
+    module.exports = async (connection, path3) => {
       if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state)) {
         return;
       }
-      path2 = normalizePath(connection, path2);
-      if (connection.state === connection.states.SELECTED && connection.mailbox.path === path2) {
+      path3 = normalizePath(connection, path3);
+      if (connection.state === connection.states.SELECTED && connection.mailbox.path === path3) {
         await connection.run("CLOSE");
       }
       let response;
       try {
         let map2 = {
-          path: path2
+          path: path3
         };
-        response = await connection.exec("DELETE", [{ type: "ATOM", value: encodePath(connection, path2) }]);
+        response = await connection.exec("DELETE", [{ type: "ATOM", value: encodePath(connection, path3) }]);
         response.next();
         return map2;
       } catch (err) {
@@ -69363,28 +69340,28 @@ var require_delete = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/rename.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/rename.js
 var require_rename = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/rename.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/rename.js"(exports, module) {
     "use strict";
     var { encodePath, normalizePath, enhanceCommandError } = require_tools3();
-    module.exports = async (connection, path2, newPath) => {
+    module.exports = async (connection, path3, newPath) => {
       if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state)) {
         return;
       }
-      path2 = normalizePath(connection, path2);
+      path3 = normalizePath(connection, path3);
       newPath = normalizePath(connection, newPath);
-      if (connection.state === connection.states.SELECTED && connection.mailbox.path === path2) {
+      if (connection.state === connection.states.SELECTED && connection.mailbox.path === path3) {
         await connection.run("CLOSE");
       }
       let response;
       try {
         let map2 = {
-          path: path2,
+          path: path3,
           newPath
         };
         response = await connection.exec("RENAME", [
-          { type: "ATOM", value: encodePath(connection, path2) },
+          { type: "ATOM", value: encodePath(connection, path3) },
           { type: "ATOM", value: encodePath(connection, newPath) }
         ]);
         response.next();
@@ -69398,9 +69375,9 @@ var require_rename = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/close.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/close.js
 var require_close = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/close.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/close.js"(exports, module) {
     "use strict";
     module.exports = async (connection) => {
       if (connection.state !== connection.states.SELECTED) {
@@ -69426,19 +69403,19 @@ var require_close = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/subscribe.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/subscribe.js
 var require_subscribe = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/subscribe.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/subscribe.js"(exports, module) {
     "use strict";
     var { encodePath, normalizePath, enhanceCommandError } = require_tools3();
-    module.exports = async (connection, path2) => {
+    module.exports = async (connection, path3) => {
       if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state)) {
         return;
       }
-      path2 = normalizePath(connection, path2);
+      path3 = normalizePath(connection, path3);
       let response;
       try {
-        response = await connection.exec("SUBSCRIBE", [{ type: "ATOM", value: encodePath(connection, path2) }]);
+        response = await connection.exec("SUBSCRIBE", [{ type: "ATOM", value: encodePath(connection, path3) }]);
         response.next();
         return true;
       } catch (err) {
@@ -69450,19 +69427,19 @@ var require_subscribe = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/unsubscribe.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/unsubscribe.js
 var require_unsubscribe = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/unsubscribe.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/unsubscribe.js"(exports, module) {
     "use strict";
     var { encodePath, normalizePath, enhanceCommandError } = require_tools3();
-    module.exports = async (connection, path2) => {
+    module.exports = async (connection, path3) => {
       if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state)) {
         return;
       }
-      path2 = normalizePath(connection, path2);
+      path3 = normalizePath(connection, path3);
       let response;
       try {
-        response = await connection.exec("UNSUBSCRIBE", [{ type: "ATOM", value: encodePath(connection, path2) }]);
+        response = await connection.exec("UNSUBSCRIBE", [{ type: "ATOM", value: encodePath(connection, path3) }]);
         response.next();
         return true;
       } catch (err) {
@@ -69474,9 +69451,9 @@ var require_unsubscribe = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/store.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/store.js
 var require_store = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/store.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/store.js"(exports, module) {
     "use strict";
     var { formatFlag, canUseFlag, enhanceCommandError } = require_tools3();
     module.exports = async (connection, range, flags, options) => {
@@ -69503,7 +69480,7 @@ var require_store = __commonJS({
       }
       flags = (Array.isArray(flags) ? flags : [].concat(flags || [])).map((flag) => {
         flag = formatFlag(flag);
-        if (!canUseFlag(connection.mailbox, flag) && options.operation !== "remove") {
+        if (!canUseFlag(connection.mailbox, flag) && operation !== "remove") {
           return false;
         }
         return flag;
@@ -69538,9 +69515,9 @@ var require_store = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/search-compiler.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/search-compiler.js
 var require_search_compiler = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/search-compiler.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/search-compiler.js"(exports, module) {
     "use strict";
     var { formatDate, formatFlag, canUseFlag, isDate } = require_tools3();
     var setBoolOpt = (attributes, term, value) => {
@@ -69818,9 +69795,9 @@ var require_search_compiler = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/search.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/search.js
 var require_search = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/search.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/search.js"(exports, module) {
     "use strict";
     var { enhanceCommandError } = require_tools3();
     var { searchCompiler } = require_search_compiler();
@@ -69957,9 +69934,9 @@ var require_search = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/noop.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/noop.js
 var require_noop = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/noop.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/noop.js"(exports, module) {
     "use strict";
     module.exports = async (connection) => {
       try {
@@ -69974,9 +69951,9 @@ var require_noop = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/expunge.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/expunge.js
 var require_expunge = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/expunge.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/expunge.js"(exports, module) {
     "use strict";
     var { enhanceCommandError } = require_tools3();
     module.exports = async (connection, range, options) => {
@@ -70010,9 +69987,9 @@ var require_expunge = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/append.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/append.js
 var require_append = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/append.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/append.js"(exports, module) {
     "use strict";
     var { formatFlag, canUseFlag, formatDateTime, normalizePath, encodePath, comparePaths, enhanceCommandError } = require_tools3();
     module.exports = async (connection, destination, content, flags, idate) => {
@@ -70112,17 +70089,17 @@ var require_append = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/status.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/status.js
 var require_status = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/status.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/status.js"(exports, module) {
     "use strict";
     var { encodePath, normalizePath } = require_tools3();
-    module.exports = async (connection, path2, query) => {
-      if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state) || !path2) {
+    module.exports = async (connection, path3, query) => {
+      if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state) || !path3) {
         return false;
       }
-      path2 = normalizePath(connection, path2);
-      let encodedPath = encodePath(connection, path2);
+      path3 = normalizePath(connection, path3);
+      let encodedPath = encodePath(connection, path3);
       let attributes = [{ type: encodedPath.indexOf("&") >= 0 ? "STRING" : "ATOM", value: encodedPath }];
       let queryAttributes = [];
       Object.keys(query || {}).forEach((key) => {
@@ -70150,13 +70127,13 @@ var require_status = __commonJS({
       attributes.push(queryAttributes);
       let response;
       try {
-        let map2 = { path: path2 };
+        let map2 = { path: path3 };
         response = await connection.exec("STATUS", attributes, {
           untagged: {
             // STATUS response: * STATUS <mailbox> (<key> <value> <key> <value> ...)
             // Parsed as alternating key-value pairs (i % 2 pattern).
             STATUS: async (untagged) => {
-              let updateCurrent = connection.state === connection.states.SELECTED && path2 === connection.mailbox.path;
+              let updateCurrent = connection.state === connection.states.SELECTED && path3 === connection.mailbox.path;
               let list = untagged.attributes && Array.isArray(untagged.attributes[1]) ? untagged.attributes[1] : false;
               if (!list) {
                 return;
@@ -70169,7 +70146,7 @@ var require_status = __commonJS({
                     let prevCount = conn.mailbox.exists;
                     if (prevCount !== val) {
                       conn.mailbox.exists = val;
-                      conn.emit("exists", { path: path2, count: val, prevCount });
+                      conn.emit("exists", { path: path3, count: val, prevCount });
                     }
                   }
                 },
@@ -70220,9 +70197,9 @@ var require_status = __commonJS({
         return map2;
       } catch (err) {
         if (err.responseStatus === "NO") {
-          let folders = await connection.run("LIST", "", path2, { listOnly: true });
+          let folders = await connection.run("LIST", "", path3, { listOnly: true });
           if (folders && !folders.length) {
-            let error40 = new Error(`Mailbox doesn't exist: ${path2}`);
+            let error40 = new Error(`Mailbox doesn't exist: ${path3}`);
             error40.code = "NotFound";
             error40.response = err;
             throw error40;
@@ -70235,9 +70212,9 @@ var require_status = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/copyuid-parser.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/copyuid-parser.js
 var require_copyuid_parser = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/copyuid-parser.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/copyuid-parser.js"(exports, module) {
     "use strict";
     var { expandRange } = require_tools3();
     function parseCopyUid(response, map2) {
@@ -70260,9 +70237,9 @@ var require_copyuid_parser = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/copy.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/copy.js
 var require_copy = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/copy.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/copy.js"(exports, module) {
     "use strict";
     var { normalizePath, encodePath, enhanceCommandError } = require_tools3();
     var { parseCopyUid } = require_copyuid_parser();
@@ -70292,9 +70269,9 @@ var require_copy = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/move.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/move.js
 var require_move = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/move.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/move.js"(exports, module) {
     "use strict";
     var { normalizePath, encodePath, enhanceCommandError } = require_tools3();
     var { parseCopyUid } = require_copyuid_parser();
@@ -70335,9 +70312,9 @@ var require_move = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/compress.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/compress.js
 var require_compress = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/compress.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/compress.js"(exports, module) {
     "use strict";
     module.exports = async (connection) => {
       if (!connection.capabilities.has("COMPRESS=DEFLATE") || connection._inflate) {
@@ -70356,20 +70333,20 @@ var require_compress = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/quota.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/quota.js
 var require_quota = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/quota.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/quota.js"(exports, module) {
     "use strict";
     var { encodePath, normalizePath, enhanceCommandError } = require_tools3();
-    module.exports = async (connection, path2) => {
-      if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state) || !path2) {
+    module.exports = async (connection, path3) => {
+      if (![connection.states.AUTHENTICATED, connection.states.SELECTED].includes(connection.state) || !path3) {
         return;
       }
       if (!connection.capabilities.has("QUOTA")) {
         return false;
       }
-      path2 = normalizePath(connection, path2);
-      let map2 = { path: path2 };
+      path3 = normalizePath(connection, path3);
+      let map2 = { path: path3 };
       let processQuotaResponse = (untagged) => {
         let attributes = untagged.attributes && untagged.attributes[1];
         if (!attributes || !attributes.length) {
@@ -70406,7 +70383,7 @@ var require_quota = __commonJS({
       let quotaFound = false;
       let response;
       try {
-        response = await connection.exec("GETQUOTAROOT", [{ type: "ATOM", value: encodePath(connection, path2) }], {
+        response = await connection.exec("GETQUOTAROOT", [{ type: "ATOM", value: encodePath(connection, path3) }], {
           untagged: {
             // QUOTAROOT response tells us which quota root applies to this mailbox.
             // A mailbox may have zero or one quota root.
@@ -70443,9 +70420,9 @@ var require_quota = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/idle.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/idle.js
 var require_idle = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/idle.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/idle.js"(exports, module) {
     "use strict";
     var NOOP_INTERVAL = 2 * 60 * 1e3;
     async function runIdle(connection) {
@@ -70547,7 +70524,7 @@ var require_idle = __commonJS({
       if (connection.capabilities.has("IDLE")) {
         let idleTimer2;
         let stillIdling = false;
-        let runIdleLoop = async () => {
+        let runIdleLoop2 = async () => {
           if (maxIdleTime) {
             idleTimer2 = setTimeout(() => {
               if (connection.idling) {
@@ -70563,11 +70540,11 @@ var require_idle = __commonJS({
           clearTimeout(idleTimer2);
           if (stillIdling) {
             stillIdling = false;
-            return runIdleLoop();
+            return runIdleLoop2();
           }
           return resp;
         };
-        return runIdleLoop();
+        return runIdleLoop2();
       }
       let idleTimer;
       return new Promise((resolve) => {
@@ -70626,9 +70603,9 @@ var require_idle = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/authenticate.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/authenticate.js
 var require_authenticate = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/commands/authenticate.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/commands/authenticate.js"(exports, module) {
     "use strict";
     var { getStatusCode, getErrorText } = require_tools3();
     async function handleAuthError(err, errorResponse) {
@@ -70755,9 +70732,9 @@ var require_authenticate = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/imap-commands.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/imap-commands.js
 var require_imap_commands = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/imap-commands.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/imap-commands.js"(exports, module) {
     "use strict";
     module.exports = /* @__PURE__ */ new Map([
       ["ID", require_id()],
@@ -70792,9 +70769,9 @@ var require_imap_commands = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/imap-flow.js
+// ../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/imap-flow.js
 var require_imap_flow = __commonJS({
-  "../../node_modules/.pnpm/imapflow@1.3.5/node_modules/imapflow/lib/imap-flow.js"(exports, module) {
+  "../../node_modules/.pnpm/imapflow@1.3.4/node_modules/imapflow/lib/imap-flow.js"(exports, module) {
     "use strict";
     var tls = __require("tls");
     var net = __require("net");
@@ -70833,7 +70810,7 @@ var require_imap_flow = __commonJS({
     var UPGRADE_TIMEOUT = 10 * 1e3;
     var SOCKET_TIMEOUT = 5 * 60 * 1e3;
     var HELD_LOCK_WARN_MS = 30 * 60 * 1e3;
-    var states = {
+    var states2 = {
       NOT_AUTHENTICATED: 1,
       AUTHENTICATED: 2,
       SELECTED: 3,
@@ -70988,14 +70965,13 @@ var require_imap_flow = __commonJS({
           logger: this.log,
           cid: this.id,
           logRaw: this.logRaw,
-          secureConnection: this.secureConnection,
-          maxLineLength: this.options.maxLineLength
+          secureConnection: this.secureConnection
         });
         this.reading = false;
         this.socket = false;
         this.writeSocket = false;
         this.isClosed = false;
-        this.states = states;
+        this.states = states2;
         this.state = this.states.NOT_AUTHENTICATED;
         this.lockCounter = 0;
         this.tagCounter = 0;
@@ -71611,18 +71587,6 @@ var require_imap_flow = __commonJS({
             err.code = "UPGRADE_TIMEOUT";
             reject(err);
           }, UPGRADE_TIMEOUT);
-          const tlsSocketErrorHandler = (err) => {
-            clearTimeout(this.connectTimeout);
-            clearTimeout(this.upgradeTimeout);
-            if (!this.upgrading) {
-              return;
-            }
-            this.upgrading = false;
-            err.tlsFailed = true;
-            this.clearSocketHandlers();
-            this.closeAfter();
-            reject(err);
-          };
           this.upgrading = true;
           this.socket = tls.connect(opts, () => {
             try {
@@ -71647,13 +71611,11 @@ var require_imap_flow = __commonJS({
                 });
               }
               socketPlain.removeListener("error", socketPlainErrorHandler);
-              this.socket.removeListener("error", tlsSocketErrorHandler);
               return resolve(true);
             } catch (ex) {
               this.emitError(ex);
             }
           });
-          this.socket.once("error", tlsSocketErrorHandler);
           this.writeSocket = this.socket;
           this.setSocketHandlers();
         });
@@ -71884,12 +71846,12 @@ var require_imap_flow = __commonJS({
           this.emit("flags", updateEvent);
         }
       }
-      async ensureSelectedMailbox(path2) {
-        if (!path2) {
+      async ensureSelectedMailbox(path3) {
+        if (!path3) {
           return false;
         }
-        if (!this.mailbox || !comparePaths(this, this.mailbox.path, path2)) {
-          return await this.mailboxOpen(path2);
+        if (!this.mailbox || !comparePaths(this, this.mailbox.path, path3)) {
+          return await this.mailboxOpen(path3);
         }
         return true;
       }
@@ -72264,9 +72226,9 @@ var require_imap_flow = __commonJS({
        * let quota = await client.getQuota();
        * console.log(quota.storage.used, quota.storage.limit)
        */
-      async getQuota(path2) {
-        path2 = path2 || "INBOX";
-        return await this.run("QUOTA", path2);
+      async getQuota(path3) {
+        path3 = path3 || "INBOX";
+        return await this.run("QUOTA", path3);
       }
       /**
        * @typedef {Object} ListResponse
@@ -72371,8 +72333,8 @@ var require_imap_flow = __commonJS({
        * console.log(info.path);
        * // "INBOX.parent.child" // assumes "INBOX." as namespace prefix and "." as delimiter
        */
-      async mailboxCreate(path2) {
-        return await this.run("CREATE", path2);
+      async mailboxCreate(path3) {
+        return await this.run("CREATE", path3);
       }
       /**
        * @typedef {Object} MailboxRenameResponse
@@ -72393,8 +72355,8 @@ var require_imap_flow = __commonJS({
        * console.log(info.newPath);
        * // "INBOX.Important stuff ❗️" // assumes "INBOX." as namespace prefix
        */
-      async mailboxRename(path2, newPath) {
-        return await this.run("RENAME", path2, newPath);
+      async mailboxRename(path3, newPath) {
+        return await this.run("RENAME", path3, newPath);
       }
       /**
        * @typedef {Object} MailboxDeleteResponse
@@ -72413,8 +72375,8 @@ var require_imap_flow = __commonJS({
        * console.log(info.path);
        * // "INBOX.Important stuff ❗️" // assumes "INBOX." as namespace prefix
        */
-      async mailboxDelete(path2) {
-        return await this.run("DELETE", path2);
+      async mailboxDelete(path3) {
+        return await this.run("DELETE", path3);
       }
       /**
        * Subscribes to a mailbox
@@ -72425,8 +72387,8 @@ var require_imap_flow = __commonJS({
        * @example
        * await client.mailboxSubscribe('Important stuff ❗️');
        */
-      async mailboxSubscribe(path2) {
-        return await this.run("SUBSCRIBE", path2);
+      async mailboxSubscribe(path3) {
+        return await this.run("SUBSCRIBE", path3);
       }
       /**
        * Unsubscribes from a mailbox
@@ -72437,8 +72399,8 @@ var require_imap_flow = __commonJS({
        * @example
        * await client.mailboxUnsubscribe('Important stuff ❗️');
        */
-      async mailboxUnsubscribe(path2) {
-        return await this.run("UNSUBSCRIBE", path2);
+      async mailboxUnsubscribe(path3) {
+        return await this.run("UNSUBSCRIBE", path3);
       }
       /**
        * Opens a mailbox to access messages. You can perform message operations only against an opened mailbox.
@@ -72456,8 +72418,8 @@ var require_imap_flow = __commonJS({
        * console.log(mailbox.exists);
        * // 125
        */
-      async mailboxOpen(path2, options) {
-        return await this.run("SELECT", path2, options);
+      async mailboxOpen(path3, options) {
+        return await this.run("SELECT", path3, options);
       }
       /**
        * Closes a previously opened mailbox
@@ -72500,8 +72462,8 @@ var require_imap_flow = __commonJS({
        * console.log(status.unseen);
        * // 123
        */
-      async status(path2, query) {
-        return await this.run("STATUS", path2, query);
+      async status(path3, query) {
+        return await this.run("STATUS", path3, query);
       }
       /**
        * Starts listening for new or deleted messages from the currently opened mailbox. Only required if {@link ImapFlow#disableAutoIdle} is set to `true`
@@ -72755,8 +72717,8 @@ var require_imap_flow = __commonJS({
        * @example
        * await client.append('INBOX', rawMessageBuffer, ['\\Seen'], new Date(2000, 1, 1));
        */
-      async append(path2, content, flags, idate) {
-        return await this.run("APPEND", path2, content, flags, idate) || false;
+      async append(path3, content, flags, idate) {
+        return await this.run("APPEND", path3, content, flags, idate) || false;
       }
       /**
        * @typedef {Object} CopyResponseObject
@@ -73574,7 +73536,7 @@ var require_imap_flow = __commonJS({
               await new Promise((resolve2) => setImmediate(resolve2));
             }
             const lock = this.locks.shift();
-            const { resolve, reject, path: path2, options, lockId } = lock;
+            const { resolve, reject, path: path3, options, lockId } = lock;
             if (lock.acquireTimer) {
               clearTimeout(lock.acquireTimer);
               lock.acquireTimer = null;
@@ -73590,7 +73552,7 @@ var require_imap_flow = __commonJS({
                 this.log.warn({
                   msg: "Mailbox lock held for a long time",
                   lockId: lock.lockId,
-                  path: path2,
+                  path: path3,
                   heldFor: Date.now() - lock.heldAt,
                   ...options.description && { description: options.description },
                   cid: this.id
@@ -73623,52 +73585,52 @@ var require_imap_flow = __commonJS({
               }
             };
             if (!this.usable || !this.socket || this.socket.destroyed) {
-              this.log.trace({ msg: "Failed to acquire mailbox lock", path: path2, lockId, idling: this.idling });
+              this.log.trace({ msg: "Failed to acquire mailbox lock", path: path3, lockId, idling: this.idling });
               let error40 = new Error("Connection not available");
               error40.code = "NoConnection";
               reject(error40);
               continue;
             }
-            if (this.mailbox && this.mailbox.path === path2 && !!this.mailbox.readOnly === !!options.readOnly) {
+            if (this.mailbox && this.mailbox.path === path3 && !!this.mailbox.readOnly === !!options.readOnly) {
               this.log.trace({
                 msg: "Mailbox lock acquired [existing]",
-                path: path2,
+                path: path3,
                 lockId,
                 idling: this.idling,
                 ...options.description && { description: options.description }
               });
               this.currentLock = lock;
               armHeldTimer();
-              resolve({ path: path2, release });
+              resolve({ path: path3, release });
               break;
             }
             try {
-              await this.mailboxOpen(path2, options);
+              await this.mailboxOpen(path3, options);
               this.log.trace({
                 msg: "Mailbox lock acquired [selected]",
-                path: path2,
+                path: path3,
                 lockId,
                 idling: this.idling,
                 ...options.description && { description: options.description }
               });
               this.currentLock = lock;
               armHeldTimer();
-              resolve({ path: path2, release });
+              resolve({ path: path3, release });
               break;
             } catch (err) {
               if (err.responseStatus === "NO") {
                 try {
-                  let folders = await this.run("LIST", "", path2, { listOnly: true });
+                  let folders = await this.run("LIST", "", path3, { listOnly: true });
                   if (!folders || !folders.length) {
                     err.mailboxMissing = true;
                   }
                 } catch (E) {
-                  this.log.trace({ msg: "Failed to verify failed mailbox", path: path2, err: E });
+                  this.log.trace({ msg: "Failed to verify failed mailbox", path: path3, err: E });
                 }
               }
               this.log.trace({
                 msg: "Failed to acquire mailbox lock",
-                path: path2,
+                path: path3,
                 lockId,
                 idling: this.idling,
                 ...options.description && { description: options.description },
@@ -73707,13 +73669,13 @@ var require_imap_flow = __commonJS({
        *   lock.release();
        * }
        */
-      getMailboxLock(path2, options) {
+      getMailboxLock(path3, options) {
         options = options || {};
-        path2 = normalizePath(this, path2);
+        path3 = normalizePath(this, path3);
         let lockId = ++this.lockCounter;
         this.log.trace({
           msg: "Requesting lock",
-          path: path2,
+          path: path3,
           lockId,
           ...options.description && { description: options.description },
           activeLock: this.currentLock ? {
@@ -73722,7 +73684,7 @@ var require_imap_flow = __commonJS({
           } : null
         });
         let lockPromise = new Promise((resolve, reject) => {
-          let lockEntry = { resolve, reject, path: path2, options, lockId };
+          let lockEntry = { resolve, reject, path: path3, options, lockId };
           this.locks.push(lockEntry);
           if (Number(options.acquireTimeout) > 0) {
             lockEntry.acquireTimer = setTimeout(() => {
@@ -73784,25 +73746,20 @@ var require_imap_flow = __commonJS({
        * @returns {Object} Socket objects
        * @returns {Object} return.readSocket The read socket (inflated socket if compression is enabled, raw socket otherwise)
        * @returns {Object} return.writeSocket The write socket
-       * @returns {Object} return.socket The raw underlying socket (same as readSocket/writeSocket when compression is disabled)
        */
       unbind() {
         this.socket.unpipe(this.streamer);
         if (this._inflate) {
           this._inflate.unpipe(this.streamer);
         }
-        this.clearSocketHandlers();
-        const readSocket = this._inflate || this.socket;
-        const writeSocket = this.writeSocket || this.socket;
-        if (this.socket !== readSocket && this.socket !== writeSocket) {
-          this.socket.on("error", (err) => {
-            this.log.debug({ msg: "Suppressed error on unbound socket", err, cid: this.id });
-          });
-        }
+        this.socket.removeListener("error", this._socketError);
+        this.socket.removeListener("close", this._socketClose);
+        this.socket.removeListener("end", this._socketEnd);
+        this.socket.removeListener("tlsClientError", this._socketError);
+        this.socket.removeListener("timeout", this._socketTimeout);
         return {
-          readSocket,
-          writeSocket,
-          socket: this.socket
+          readSocket: this._inflate || this.socket,
+          writeSocket: this.writeSocket || this.socket
         };
       }
     };
@@ -82521,11 +82478,11 @@ var require_mime_types2 = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path2) {
-      if (!path2 || typeof path2 !== "string") {
+    function lookup(path3) {
+      if (!path3 || typeof path3 !== "string") {
         return false;
       }
-      var extension2 = extname("x." + path2).toLowerCase().substr(1);
+      var extension2 = extname("x." + path3).toLowerCase().substr(1);
       if (!extension2) {
         return false;
       }
@@ -83034,19 +82991,19 @@ var require_utils7 = __commonJS({
       if (decode)
         return decode(data, hint);
     }
-    function basename(path2) {
-      if (typeof path2 !== "string")
+    function basename(path3) {
+      if (typeof path3 !== "string")
         return "";
-      for (let i = path2.length - 1; i >= 0; --i) {
-        switch (path2.charCodeAt(i)) {
+      for (let i = path3.length - 1; i >= 0; --i) {
+        switch (path3.charCodeAt(i)) {
           case 47:
           // '/'
           case 92:
-            path2 = path2.slice(i + 1);
-            return path2 === ".." || path2 === "." ? "" : path2;
+            path3 = path3.slice(i + 1);
+            return path3 === ".." || path3 === "." ? "" : path3;
         }
       }
-      return path2 === ".." || path2 === "." ? "" : path2;
+      return path3 === ".." || path3 === "." ? "" : path3;
     }
     var TOKEN = [
       0,
@@ -86891,7 +86848,7 @@ var require_disk = __commonJS({
   "../../node_modules/.pnpm/multer@2.1.1/node_modules/multer/storage/disk.js"(exports, module) {
     var fs = __require("fs");
     var os = __require("os");
-    var path2 = __require("path");
+    var path3 = __require("path");
     var crypto2 = __require("crypto");
     function getFilename(req, file2, cb) {
       crypto2.randomBytes(16, function(err, raw) {
@@ -86918,7 +86875,7 @@ var require_disk = __commonJS({
         if (err) return cb(err);
         that.getFilename(req, file2, function(err2, filename) {
           if (err2) return cb(err2);
-          var finalPath = path2.join(destination, filename);
+          var finalPath = path3.join(destination, filename);
           var outStream = fs.createWriteStream(finalPath);
           file2.stream.pipe(outStream);
           outStream.on("error", cb);
@@ -86934,11 +86891,11 @@ var require_disk = __commonJS({
       });
     };
     DiskStorage.prototype._removeFile = function _removeFile(req, file2, cb) {
-      var path3 = file2.path;
+      var path4 = file2.path;
       delete file2.destination;
       delete file2.filename;
       delete file2.path;
-      fs.unlink(path3, cb);
+      fs.unlink(path4, cb);
     };
     module.exports = function(opts) {
       return new DiskStorage(opts);
@@ -90401,6 +90358,7 @@ var require_multer = __commonJS({
 var import_express7 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_pino_http = __toESM(require_logger(), 1);
+import path2 from "path";
 
 // src/routes/index.ts
 var import_express6 = __toESM(require_express2(), 1);
@@ -90767,8 +90725,8 @@ function getErrorMap() {
 
 // ../../node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path2, errorMaps, issueData } = params;
-  const fullPath = [...path2, ...issueData.path || []];
+  const { data, path: path3, errorMaps, issueData } = params;
+  const fullPath = [...path3, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -90883,11 +90841,11 @@ var errorUtil;
 
 // ../../node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path2, key) {
+  constructor(parent, value, path3, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path2;
+    this._path = path3;
     this._key = key;
   }
   get path() {
@@ -94322,7 +94280,9 @@ var ListSitesResponseItem = objectType({
   "themeColor": stringType(),
   "imapHost": stringType(),
   "imapEmail": stringType(),
-  "createdAt": stringType()
+  "createdAt": stringType(),
+  "welcomeMessage": stringType().nullish(),
+  "newCodeMessage": stringType().nullish()
 });
 var ListSitesResponse = arrayType(ListSitesResponseItem);
 var CreateSiteBody = objectType({
@@ -94333,7 +94293,9 @@ var CreateSiteBody = objectType({
   "themeColor": stringType().optional(),
   "imapHost": stringType(),
   "imapEmail": stringType(),
-  "imapPassword": stringType()
+  "imapPassword": stringType(),
+  "welcomeMessage": stringType().nullish(),
+  "newCodeMessage": stringType().nullish()
 });
 var UpdateSiteParams = objectType({
   "id": coerce.number()
@@ -94346,7 +94308,9 @@ var UpdateSiteBody = objectType({
   "themeColor": stringType().optional(),
   "imapHost": stringType().optional(),
   "imapEmail": stringType().optional(),
-  "imapPassword": stringType().nullish()
+  "imapPassword": stringType().nullish(),
+  "welcomeMessage": stringType().nullish(),
+  "newCodeMessage": stringType().nullish()
 });
 var UpdateSiteResponse = objectType({
   "id": numberType(),
@@ -94357,7 +94321,9 @@ var UpdateSiteResponse = objectType({
   "themeColor": stringType(),
   "imapHost": stringType(),
   "imapEmail": stringType(),
-  "createdAt": stringType()
+  "createdAt": stringType(),
+  "welcomeMessage": stringType().nullish(),
+  "newCodeMessage": stringType().nullish()
 });
 var DeleteSiteParams = objectType({
   "id": coerce.number()
@@ -94377,7 +94343,9 @@ var GetSiteInfoResponse = objectType({
   "logoUrl": stringType().nullable(),
   "description": stringType().nullable(),
   "themeColor": stringType(),
-  "slug": stringType()
+  "slug": stringType(),
+  "welcomeMessage": stringType().nullish(),
+  "newCodeMessage": stringType().nullish()
 });
 var ListSiteCodesParams = objectType({
   "slug": coerce.string()
@@ -97503,7 +97471,7 @@ var SelectionProxyHandler = class _SelectionProxyHandler {
 function mapResultRow(columns, row, joinsNotNullableMap) {
   const nullifyMap = {};
   const result = columns.reduce(
-    (result2, { path: path2, field }, columnIndex) => {
+    (result2, { path: path3, field }, columnIndex) => {
       let decoder;
       if (is(field, Column)) {
         decoder = field;
@@ -97515,8 +97483,8 @@ function mapResultRow(columns, row, joinsNotNullableMap) {
         decoder = field.sql.decoder;
       }
       let node = result2;
-      for (const [pathChunkIndex, pathChunk] of path2.entries()) {
-        if (pathChunkIndex < path2.length - 1) {
+      for (const [pathChunkIndex, pathChunk] of path3.entries()) {
+        if (pathChunkIndex < path3.length - 1) {
           if (!(pathChunk in node)) {
             node[pathChunk] = {};
           }
@@ -97524,8 +97492,8 @@ function mapResultRow(columns, row, joinsNotNullableMap) {
         } else {
           const rawValue = row[columnIndex];
           const value = node[pathChunk] = rawValue === null ? null : decoder.mapFromDriverValue(rawValue);
-          if (joinsNotNullableMap && is(field, Column) && path2.length === 2) {
-            const objectName = path2[0];
+          if (joinsNotNullableMap && is(field, Column) && path3.length === 2) {
+            const objectName = path3[0];
             if (!(objectName in nullifyMap)) {
               nullifyMap[objectName] = value === null ? getTableName(field.table) : false;
             } else if (typeof nullifyMap[objectName] === "string" && nullifyMap[objectName] !== getTableName(field.table)) {
@@ -103761,10 +103729,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path2) {
-  if (!path2)
+function getElementAtPath(obj, path3) {
+  if (!path3)
     return obj;
-  return path2.reduce((acc, key) => acc?.[key], obj);
+  return path3.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -104084,11 +104052,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path2, issues) {
+function prefixIssues(path3, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path2);
+    iss.path.unshift(path3);
     return iss;
   });
 }
@@ -104225,7 +104193,7 @@ function treeifyError(error40, _mapper) {
     return issue2.message;
   };
   const result = { errors: [] };
-  const processError = (error41, path2 = []) => {
+  const processError = (error41, path3 = []) => {
     var _a, _b;
     for (const issue2 of error41.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
@@ -104235,7 +104203,7 @@ function treeifyError(error40, _mapper) {
       } else if (issue2.code === "invalid_element") {
         processError({ issues: issue2.issues }, issue2.path);
       } else {
-        const fullpath = [...path2, ...issue2.path];
+        const fullpath = [...path3, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -104265,9 +104233,9 @@ function treeifyError(error40, _mapper) {
   processError(error40);
   return result;
 }
-function toDotPath(path2) {
+function toDotPath(path3) {
   const segs = [];
-  for (const seg of path2) {
+  for (const seg of path3) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -114512,6 +114480,8 @@ var sitesTable = pgTable("sites", {
   imapHost: text("imap_host").notNull(),
   imapEmail: text("imap_email").notNull(),
   imapPasswordEncrypted: text("imap_password_encrypted").notNull(),
+  welcomeMessage: text("welcome_message"),
+  newCodeMessage: text("new_code_message"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -114732,11 +114702,8 @@ function extractNetflixLink(source) {
 function extractCodeFromSubject(subject) {
   if (!subject) return null;
   const patterns = [
-    // "código de acceso temporal: 1234" or "código: 1234"
     /c[oó]digo(?:\s+de\s+acceso(?:\s+temporal)?)?\s*[:\-]\s*([0-9]{4})\b/i,
-    // "temporary access code: 1234"
     /(?:temporary\s+)?access\s+code\s*[:\-]\s*([0-9]{4})\b/i,
-    // Standalone 4-digit at end or beginning: "Netflix 1234" or "1234 Netflix"
     /\b([0-9]{4})\b/
   ];
   for (const p of patterns) {
@@ -114847,11 +114814,9 @@ async function fetchCodeFromNetflixLink(url2) {
     return null;
   }
 }
-async function fetchEmailsFromLockedInbox(client, limit = 20) {
+async function fetchEmailsFromLockedInbox(client, limit = 10) {
   const results = [];
-  const foundEs = await client.search({ subject: "acceso temporal" }).catch(() => []);
-  const foundEn = await client.search({ subject: "Netflix temporary access code" }).catch(() => []);
-  const found = [...foundEs, ...foundEn];
+  const found = await client.search({ or: [{ subject: "acceso temporal" }, { subject: "Netflix temporary access code" }] }).catch(() => []);
   const allIds = [...new Set(found.filter((x) => typeof x === "number"))];
   const ids = allIds.sort((a, b) => b - a).slice(0, limit);
   if (ids.length === 0) return results;
@@ -114941,21 +114906,12 @@ function extractAccountEmail(body) {
     /enviamos\s+este\s+correo\s+a\s+\[?([^\]\s<>\r\n,]+@[^\]\s<>\r\n,]+)\]?/i,
     /Netflix\s+sent\s+this\s+(?:email|message)\s+to\s+\[?([^\]\s<>\r\n,]+@[^\]\s<>\r\n,]+)\]?/i,
     /\[([^\]]+@[^\]]+)\]\s+como\s+parte/i,
-    /mensaje\s+a\s+([^\s<>\r\n,]+@[^\s<>\r\n,]+)/i,
-    /\[([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})\]/i,
-    /(?:enviado|envió|sent|envio)\s+(?:a|to)\s+\[?([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})\]?/i,
-    /(?:correo\s+electr[oó]nico|email|cuenta)[^@\n]{0,60}([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/i,
-    /(?:titular|suscriptor)[^@\n]{0,60}([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/i
+    /mensaje\s+a\s+([^\s<>\r\n,]+@[^\s<>\r\n,]+)/i
   ];
   for (const p of patterns) {
     const m = body.match(p);
-    if (m) {
-      const email = m[1].trim();
-      if (!email.includes("netflix.com") && email.includes("@")) return email;
-    }
+    if (m) return m[1].trim();
   }
-  const anyEmail = body.match(/\b([a-zA-Z0-9._%+\-]+@(?!netflix\.|account\.netflix\.|info\.netflix\.)[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})\b/);
-  if (anyEmail) return anyEmail[1].trim();
   return null;
 }
 function extractProfileName(body) {
@@ -114995,12 +114951,15 @@ function flattenHtml(html) {
 function normalizeForDevice(text2) {
   return text2.replace(/(\d+\.)[ \t]*\r?\n[ \t]*(º)/g, "$1$2").replace(/(\d)[ \t]*\r?\n([ \t]*[a-záéíóúàèì\w])/gi, "$1 $2").replace(/(Solicitud de [^\r\n]+?)[ \t]*\r?\n[ \t]*(desde\b)/gi, "$1 $2").replace(/([A-Za-zÀ-ÿ0-9\-])[ \t]*\r?\n[ \t]*([A-Za-zÀ-ÿ])/g, "$1 $2").replace(/\r\n/g, "\n");
 }
+function stripTrailingNoise(s) {
+  return s.replace(/\s+Obtener\b.*/i, "").replace(/\s+Solicitar\b.*/i, "").replace(/\s+Si\s+no\b.*/i, "").replace(/\s+If\s+you\b.*/i, "").replace(/\s+Este\s+enlace\b.*/i, "").replace(/\s+El\s+enlace\b.*/i, "").replace(/\s+Protege\b.*/i, "").replace(/\s+Cuida\b.*/i, "").replace(/[,\s]+$/, "").trim();
+}
 function extractDeviceInfo(body, rawHtml) {
   function cleanText(s) {
     return s.replace(/\*/g, "").trim();
   }
   function cleanTime(s) {
-    return s.replace(/\s+Obtener\b.*/i, "").replace(/\s+Si\s+no\b.*/i, "").replace(/\s+If\s+you\b.*/i, "").replace(/\s+Este\s+enlace\b.*/i, "").replace(/[,\s]+$/, "").trim();
+    return stripTrailingNoise(s);
   }
   function isFalseDevice(s) {
     return /dispositivo que aparece/i.test(s) || /el dispositivo/i.test(s) || /dispositivo que ves/i.test(s) || s.length < 2 || s.length > 200;
@@ -115022,14 +114981,20 @@ function extractDeviceInfo(body, rawHtml) {
     }
     const dev = text2.match(/Solicitud de [\s\S]+?desde[:\s]+([^\n<]{1,150})/i);
     if (dev) {
-      const device = cleanText(dev[1]).replace(/\s+a las\b.*/i, "").replace(/\s+Solicitar\b.*/i, "").replace(/\s+El\s+enlace\b.*/i, "").replace(/\s+Protege\b.*/i, "").trim();
-      if (!isFalseDevice(device)) return device;
+      const device = cleanText(dev[1]).replace(/\s+a las\b.*/i, "").trim();
+      const clean = stripTrailingNoise(device);
+      if (!isFalseDevice(clean)) return clean;
     }
-    const haEnviado = text2.match(/ha\s+enviado\s+una\s+solicitud\s+desde\s+([^—–\n<]{3,80})(?:\s*[—–]\s*([^\n<]{3,60}))?/i);
+    const haEnviado = text2.match(
+      /ha\s+enviado\s+una\s+solicitud\s+desde\s+([^—–\n<]{3,80})(?:\s*[—–]\s*([^\n<]{3,60}))?/i
+    );
     if (haEnviado) {
-      const rawDev = cleanText(haEnviado[1]).replace(/\s+Solicitar\b.*/i, "").replace(/\s+El\s+enlace\b.*/i, "").replace(/\s+Protege\b.*/i, "").trim();
-      const rawTime = haEnviado[2] ? cleanText(haEnviado[2]).replace(/\s+Solicitar\b.*/i, "").replace(/\s+El\s+enlace\b.*/i, "").replace(/\s+Protege\b.*/i, "").trim() : null;
-      if (!isFalseDevice(rawDev)) return rawTime ? rawDev + " — " + rawTime : rawDev;
+      const device = cleanText(haEnviado[1]).trim();
+      const rawTime = haEnviado[2] ? cleanTime(cleanText(haEnviado[2])) : null;
+      const cleanDev = stripTrailingNoise(device);
+      if (!isFalseDevice(cleanDev)) {
+        return rawTime ? `${cleanDev} \u2014 ${rawTime}` : cleanDev;
+      }
     }
     const engFull = text2.match(
       /(?:access\s+)?request\s+from[:\s]+([^\n]+?)[ \t]*\n?[ \t]*at[ \t]+([^\n<]+)/i
@@ -115047,7 +115012,7 @@ function extractDeviceInfo(body, rawHtml) {
       const time4 = cleanTime(cleanText(engFallback[2]));
       if (!isFalseDevice(device)) return `${device} \u2014 ${time4}`;
     }
-    const engDev = text2.match(/(?:access\s+)?request\s+from[:\s]+([^\n<]+)/i);
+    const engDev = text2.match(/(?:access\s+)?request\s+from[:\s]+([^\n<]{1,100})/i);
     if (engDev) {
       const device = cleanText(engDev[1]);
       if (!isFalseDevice(device)) return device;
@@ -115061,9 +115026,19 @@ function extractDeviceInfo(body, rawHtml) {
         const time4 = cleanTime(cleanText(inlineW[2]));
         if (!isFalseDevice(device)) return `${device} \u2014 ${time4}`;
       }
+      const haEnviadoW = window2.match(
+        /ha\s+enviado\s+una\s+solicitud\s+desde\s+([^—–\n<]{3,80})(?:\s*[—–]\s*([^\n<]{3,60}))?/i
+      );
+      if (haEnviadoW) {
+        const device = stripTrailingNoise(cleanText(haEnviadoW[1]).trim());
+        const rawTime = haEnviadoW[2] ? cleanTime(cleanText(haEnviadoW[2])) : null;
+        if (!isFalseDevice(device)) {
+          return rawTime ? `${device} \u2014 ${rawTime}` : device;
+        }
+      }
       const devOnlyW = window2.match(/desde[:\s]+([^<]{3,80})/i);
       if (devOnlyW) {
-        const raw = cleanText(devOnlyW[1]).replace(/\s+a las\b.*/i, "").replace(/\s+Solicitar\b.*/i, "").replace(/\s+El\s+enlace\b.*/i, "").replace(/\s+Protege\b.*/i, "").trim();
+        const raw = stripTrailingNoise(cleanText(devOnlyW[1]).replace(/\s+a las\b.*/i, "").trim());
         if (!isFalseDevice(raw) && raw.length > 2) return raw;
       }
       const fromW = window2.match(/from[:\s]+(.+?)\s+at\s+([^\n<]+)/i);
@@ -115074,6 +115049,44 @@ function extractDeviceInfo(body, rawHtml) {
       }
     }
     return null;
+  }
+  if (rawHtml) {
+    const boldFull = rawHtml.match(
+      /desde[:\s]+<(?:strong|b|span)[^>]*>([^<]{2,80})<\/(?:strong|b|span)>[^<]{0,300}?a las[:\s]*([^<\r\n]{3,60})/i
+    );
+    if (boldFull) {
+      const device = cleanText(boldFull[1]);
+      const time4 = cleanTime(cleanText(boldFull[2]));
+      if (!isFalseDevice(device)) {
+        logger2.debug({ device, time: time4 }, "Device extracted via bold-tag full match");
+        return `${device} \u2014 ${time4}`;
+      }
+    }
+    const desdeHtmlIdx = rawHtml.search(/desde[:\s]/i);
+    if (desdeHtmlIdx !== -1) {
+      const window2 = rawHtml.slice(Math.max(0, desdeHtmlIdx - 30), desdeHtmlIdx + 500);
+      const nearBoldFull = window2.match(
+        /<(?:strong|b|span)[^>]*>([^<]{2,80})<\/(?:strong|b|span)>[^<]{0,300}?a las[:\s]*([^<\r\n]{3,60})/i
+      );
+      if (nearBoldFull) {
+        const device = cleanText(nearBoldFull[1]);
+        const time4 = cleanTime(cleanText(nearBoldFull[2]));
+        if (!isFalseDevice(device)) {
+          logger2.debug({ device, time: time4 }, "Device extracted via nearby bold-tag full match");
+          return `${device} \u2014 ${time4}`;
+        }
+      }
+      const nearBoldDevice = window2.match(
+        /<(?:strong|b|span)[^>]*>([^<]{2,80})<\/(?:strong|b|span)>/i
+      );
+      if (nearBoldDevice) {
+        const device = cleanText(nearBoldDevice[1]);
+        if (!isFalseDevice(device)) {
+          logger2.debug({ device }, "Device extracted via bold-tag device-only fallback");
+          return device;
+        }
+      }
+    }
   }
   if (rawHtml) {
     const flat = flattenHtml(rawHtml);
@@ -115088,7 +115101,9 @@ function extractDeviceInfo(body, rawHtml) {
   if (collapsedResult) return collapsedResult;
   const rawLine = collapsed.match(/Solicitud de .{1,60}?desde[:\s]+([^.]{5,120})/i);
   if (rawLine) {
-    const raw = rawLine[1].replace(/\s+a las\b.*/i, "").replace(/\s+Obtener\b.*/i, "").replace(/\*/g, "").trim();
+    const raw = stripTrailingNoise(
+      rawLine[1].replace(/\s+a las\b.*/i, "").replace(/\*/g, "").trim()
+    );
     if (raw.length > 2 && !isFalseDevice(raw)) return raw;
   }
   return "";
@@ -115097,13 +115112,11 @@ function extractCode(body, rawHtml) {
   const standalone = body.match(/^[ \t]*([0-9]{4})[ \t]*$/m);
   if (standalone) return standalone[1].trim();
   const textPatterns = [
-    // Spanish
     /tu\s+c[oó]digo\s+(?:de\s+acceso\s+(?:temporal\s+)?)?(?:es[:\s]+)?([0-9]{4})\b/i,
     /c[oó]digo\s+(?:de\s+acceso\s+)?(?:temporal\s+)?(?:es[:\s]+)?([0-9]{4})\b/i,
     /c[oó]digo[:\s]+([0-9]{4})\b/i,
     /acceso\s+temporal[^0-9]{0,40}([0-9]{4})\b/i,
     /temporal[^0-9]{0,20}([0-9]{4})\b/i,
-    // English
     /your\s+(?:temporary\s+)?(?:access\s+)?code\s+is[:\s]+([0-9]{4})\b/i,
     /temporary\s+access\s+code[:\s]+([0-9]{4})\b/i,
     /\baccess\s+code[:\s]+([0-9]{4})\b/i,
@@ -115115,21 +115128,13 @@ function extractCode(body, rawHtml) {
   }
   if (rawHtml) {
     const htmlPatterns = [
-      // Standalone 4-digit number as the only content of a block element
       /<(?:td|th|p|div|span|h\d)[^>]*>\s*([0-9]{4})\s*<\/(?:td|th|p|div|span|h\d)>/i,
-      // Large font-size element (Netflix renders the code at ≥24px)
       /font-size\s*:\s*(?:[2-9]\d|[1-9]\d{2,})px[^>]*>\s*([0-9]{4})\s*</i,
-      // Letter-spacing or tracking hint — typically only on the code
       /letter-spacing[^>]*>\s*([0-9]{4})\s*</i,
-      // font tag with large size attribute
       /<font[^>]+size\s*=\s*["']?[5-9]["']?[^>]*>\s*([0-9]{4})\s*<\/font>/i,
-      // Centered table cell — common Netflix layout
       /<td[^>]*align\s*=\s*["']?center["']?[^>]*>\s*<?[^>]*>?\s*([0-9]{4})\s*<?\/[^>]*>?\s*<\/td>/i,
-      // Bold or strong wrapping just the code
       /<(?:b|strong)[^>]*>\s*([0-9]{4})\s*<\/(?:b|strong)>/i,
-      // data-testid with code/pin/acceso
       /data-testid=["'][^"']*(?:code|pin|acceso)[^"']*["'][^>]*>\s*([0-9]{4})\s*</i,
-      // aria-label containing the code
       /aria-label=["'][^"']*([0-9]{4})[^"']*["']/i
     ];
     for (const p of htmlPatterns) {
@@ -115162,7 +115167,9 @@ function serializeSite(site) {
     themeColor: site.themeColor,
     imapHost: site.imapHost,
     imapEmail: site.imapEmail,
-    createdAt: site.createdAt.toISOString()
+    createdAt: site.createdAt.toISOString(),
+    welcomeMessage: site.welcomeMessage ?? null,
+    newCodeMessage: site.newCodeMessage ?? null
   };
 }
 router3.get("/admin/sites", requireAuth, async (req, res) => {
@@ -115188,7 +115195,9 @@ router3.post("/admin/sites", requireAuth, async (req, res) => {
     themeColor: parsed.data.themeColor ?? "#141414",
     imapHost: parsed.data.imapHost,
     imapEmail: parsed.data.imapEmail,
-    imapPasswordEncrypted: encrypt(parsed.data.imapPassword)
+    imapPasswordEncrypted: encrypt(parsed.data.imapPassword),
+    welcomeMessage: parsed.data.welcomeMessage ?? null,
+    newCodeMessage: parsed.data.newCodeMessage ?? null
   }).returning();
   req.log.info({ slug: site.slug }, "Site created");
   res.status(201).json(serializeSite(site));
@@ -115217,6 +115226,8 @@ router3.put("/admin/sites/:id", requireAuth, async (req, res) => {
   if (parsed.data.imapPassword != null) {
     updateData.imapPasswordEncrypted = encrypt(parsed.data.imapPassword);
   }
+  if ("welcomeMessage" in parsed.data) updateData.welcomeMessage = parsed.data.welcomeMessage ?? null;
+  if ("newCodeMessage" in parsed.data) updateData.newCodeMessage = parsed.data.newCodeMessage ?? null;
   const [site] = await db.update(sitesTable).set(updateData).where(eq(sitesTable.id, params.data.id)).returning();
   if (!site) {
     res.status(404).json({ error: "Sitio no encontrado" });
@@ -115256,6 +115267,27 @@ router3.post("/admin/sites/:id/test", requireAuth, async (req, res) => {
   });
   res.json(result);
 });
+router3.get("/admin/debug-email", requireAuth, async (req, res) => {
+  const [site] = await db.select().from(sitesTable).limit(1);
+  if (!site) {
+    res.status(404).json({ error: "No site found" });
+    return;
+  }
+  const password = decrypt(site.imapPasswordEncrypted);
+  const emails = await fetchNetflixEmailsForSite({ host: site.imapHost, email: site.imapEmail, password }, 3);
+  const result = emails.slice(0, 3).map((email3) => {
+    const { html: rawHtml } = extractEmailParts(email3.source);
+    const body = decodeEmailBody(email3.source);
+    return {
+      subject: email3.subject,
+      bodyPreview: body.slice(0, 1200),
+      htmlFlatPreview: rawHtml ? rawHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 1200) : null,
+      deviceInfo: extractDeviceInfo(body, rawHtml || void 0),
+      profileName: extractProfileName(body)
+    };
+  });
+  res.json(result);
+});
 var admin_default = router3;
 
 // src/routes/publicSites.ts
@@ -115276,10 +115308,116 @@ function setCacheEntry(slug, codes) {
 
 // src/lib/imapIdleManager.ts
 var import_imapflow2 = __toESM(require_imap_flow(), 1);
+var states = /* @__PURE__ */ new Map();
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+async function runIdleLoop(site, buildWithClient) {
+  const state = states.get(site.slug);
+  let retryDelay = 5e3;
+  while (state.active) {
+    const client = new import_imapflow2.ImapFlow({
+      host: site.imapHost,
+      port: 993,
+      secure: true,
+      auth: {
+        user: site.imapEmail,
+        pass: decrypt(site.imapPasswordEncrypted)
+      },
+      logger: false
+    });
+    state.client = client;
+    try {
+      await client.connect();
+      const lock = await client.getMailboxLock("INBOX");
+      retryDelay = 5e3;
+      state.connected = true;
+      logger2.info({ slug: site.slug }, "IDLE: connected and INBOX selected");
+      try {
+        const codes = await Promise.race([
+          buildWithClient(client, site),
+          new Promise(
+            (_, reject) => setTimeout(() => reject(new Error("Initial fetch timed out after 15s")), 15e3)
+          )
+        ]);
+        setCacheEntry(site.slug, codes);
+        logger2.info({ slug: site.slug, count: codes.length }, "IDLE: initial fetch done");
+      } catch (err) {
+        logger2.warn({ err, slug: site.slug }, "IDLE: initial fetch failed");
+      }
+      try {
+        while (state.active) {
+          let existsReceived = false;
+          const existsHandler = () => {
+            existsReceived = true;
+            client.idleNotify().catch(() => {
+            });
+          };
+          client.on("exists", existsHandler);
+          try {
+            await client.idle();
+          } finally {
+            client.off("exists", existsHandler);
+          }
+          if (!state.active) break;
+          if (existsReceived) {
+            logger2.info({ slug: site.slug }, "IDLE: EXISTS \u2014 fetching with existing connection");
+            try {
+              const codes = await buildWithClient(client, site);
+              setCacheEntry(site.slug, codes);
+              logger2.info(
+                { slug: site.slug, count: codes.length },
+                "IDLE: cache updated after new email"
+              );
+            } catch (err) {
+              logger2.warn({ err, slug: site.slug }, "IDLE: fetch after EXISTS failed");
+            }
+          }
+        }
+      } finally {
+        state.connected = false;
+        lock.release();
+      }
+      await client.logout().catch(() => {
+      });
+    } catch (err) {
+      state.connected = false;
+      logger2.warn(
+        { err, slug: site.slug, retryDelay },
+        "IDLE: connection error \u2014 will reconnect"
+      );
+      try {
+        await client.logout();
+      } catch {
+      }
+      state.client = null;
+      if (state.active) {
+        await sleep(retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 6e4);
+      }
+    }
+  }
+  state.connected = false;
+  state.client = null;
+  logger2.info({ slug: site.slug }, "IDLE: loop stopped");
+}
+function startIdleForSite(site, buildWithClient) {
+  if (states.has(site.slug)) return;
+  const state = { active: true, connected: false, client: null };
+  states.set(site.slug, state);
+  runIdleLoop(site, buildWithClient).catch(
+    (err) => logger2.error({ err, slug: site.slug }, "IDLE: fatal unhandled error")
+  );
+  logger2.info({ slug: site.slug }, "IDLE: started");
+}
+function isIdleConnected(slug) {
+  return states.get(slug)?.connected ?? false;
+}
 
 // src/lib/backgroundPoller.ts
+var POLL_INTERVAL_MS = 15e3;
 var SAFETY_REFRESH_MS = 10 * 6e4;
-var FETCH_TIMEOUT_MS = 12e3;
+var FETCH_TIMEOUT_MS = 15e3;
 var inProgressFetches = /* @__PURE__ */ new Set();
 async function fetchAndCache(site, reason) {
   if (inProgressFetches.has(site.slug)) {
@@ -115308,6 +115446,45 @@ async function fetchAndCache(site, reason) {
 async function requestFetch(site) {
   await fetchAndCache(site, "on-demand");
 }
+async function buildWithExistingClient(client, site) {
+  return buildCodesWithExistingClient(client, site);
+}
+async function pollAllSites() {
+  let sites;
+  try {
+    sites = await db.select().from(sitesTable);
+  } catch (err) {
+    logger2.error({ err }, "Poller: failed to fetch sites from DB");
+    return;
+  }
+  await Promise.allSettled(
+    sites.map(async (site) => {
+      startIdleForSite(site, buildWithExistingClient);
+      const cacheEntry = getCacheEntry(site.slug);
+      const cacheAgeMs = cacheEntry ? Date.now() - cacheEntry.fetchedAt : Infinity;
+      if (!cacheEntry) {
+        if (!isIdleConnected(site.slug)) {
+          await fetchAndCache(site, "cache-empty-idle-not-connected");
+        }
+      } else if (!isIdleConnected(site.slug)) {
+        await fetchAndCache(site, "idle-reconnecting");
+      } else if (cacheAgeMs > SAFETY_REFRESH_MS) {
+        await fetchAndCache(site, "safety-refresh");
+      }
+    })
+  );
+}
+function startBackgroundPoller() {
+  logger2.info("Poller: starting");
+  pollAllSites().catch(
+    (err) => logger2.error({ err }, "Poller: first run failed")
+  );
+  setInterval(() => {
+    pollAllSites().catch(
+      (err) => logger2.error({ err }, "Poller: interval run failed")
+    );
+  }, POLL_INTERVAL_MS);
+}
 
 // src/routes/publicSites.ts
 var router4 = (0, import_express4.Router)();
@@ -115315,11 +115492,13 @@ var SUBJECT_FILTERS = [
   "c\xF3digo de acceso temporal",
   "netflix temporary access code"
 ];
+var CODE_TTL_MS = 15 * 60 * 1e3;
 async function processRawEmails(site, rawEmails) {
   const filtered = rawEmails.filter((email3) => {
     const subjectLow = email3.subject.toLowerCase();
     return SUBJECT_FILTERS.some((f) => subjectLow.includes(f));
   });
+  const now = Date.now();
   const codes = await Promise.all(
     filtered.map(async (email3) => {
       const { html: rawHtml } = extractEmailParts(email3.source);
@@ -115331,9 +115510,15 @@ async function processRawEmails(site, rawEmails) {
           logger.info({ slug: site.slug, code }, "Code extracted from subject line");
         }
       }
+      const emailAgeMs = now - new Date(email3.receivedAt).getTime();
+      const isAlreadyExpired = emailAgeMs > CODE_TTL_MS;
       const netflixLink = extractNetflixLink(email3.source);
       if (!code && netflixLink) {
-        code = await fetchCodeFromNetflixLink(netflixLink);
+        if (isAlreadyExpired) {
+          code = "EXPIRED";
+        } else {
+          code = await fetchCodeFromNetflixLink(netflixLink);
+        }
       }
       return {
         id: email3.uid,
@@ -115353,8 +115538,12 @@ async function buildCodesForSite(site) {
   const password = decrypt(site.imapPasswordEncrypted);
   const rawEmails = await fetchNetflixEmailsForSite(
     { host: site.imapHost, email: site.imapEmail, password },
-    20
+    10
   );
+  return processRawEmails(site, rawEmails);
+}
+async function buildCodesWithExistingClient(client, site) {
+  const rawEmails = await fetchEmailsFromLockedInbox(client, 10);
   return processRawEmails(site, rawEmails);
 }
 function codesFingerprint(codes) {
@@ -115376,7 +115565,9 @@ router4.get("/sites/:slug", async (req, res) => {
     logoUrl: site.logoUrl ?? null,
     description: site.description ?? null,
     themeColor: site.themeColor,
-    slug: site.slug
+    slug: site.slug,
+    welcomeMessage: site.welcomeMessage ?? null,
+    newCodeMessage: site.newCodeMessage ?? null
   });
   requestFetch(site).catch(() => {
   });
@@ -115431,31 +115622,16 @@ data: ${JSON.stringify(data)}
     req.log.info({ slug, count: cached2.codes.length }, "SSE: served from cache immediately");
     if (cached2.codes.length === 0) {
       requestFetch(site).catch((err) => {
-        req.log.error({ err, slug }, "SSE: empty cache fetch failed");
+        req.log.error({ err, slug }, "SSE: background fetch after empty cache failed");
       });
     }
   } else {
-    req.log.info({ slug }, "SSE: cache cold — requesting on-demand fetch");
-    let _retrying = true;
-    const _doFetch = () => {
-      if (!_retrying) return;
-      requestFetch(site).catch((err) => {
-        req.log.warn({ err, slug }, "SSE: on-demand fetch failed, will retry");
-      });
-    };
-    _doFetch();
-    const _retryInterval = setInterval(() => {
-      if (!_retrying) { clearInterval(_retryInterval); return; }
-      const _cached3 = getCacheEntry(slug);
-      if (_cached3 && _cached3.codes.length > 0) {
-        _retrying = false;
-        clearInterval(_retryInterval);
-        return;
-      }
-      req.log.info({ slug }, "SSE: retrying cold fetch");
-      _doFetch();
-    }, 8e3);
-    req.on("close", () => { _retrying = false; clearInterval(_retryInterval); });
+    req.log.info({ slug }, "SSE: cache cold \u2014 requesting on-demand fetch");
+    requestFetch(site).then(() => {
+    }).catch((err) => {
+      req.log.error({ err, slug }, "SSE: on-demand fetch failed");
+      sendEvent("imap_error", { message: "Error al conectar con el servidor de correo" });
+    });
   }
   const onUpdate = (codes) => {
     const typedCodes = codes;
@@ -115543,6 +115719,7 @@ app.use(
 app.use((0, import_cors.default)());
 app.use(import_express7.default.json());
 app.use(import_express7.default.urlencoded({ extended: true }));
+app.use("/uploads", import_express7.default.static(path2.resolve(process.cwd(), "uploads")));
 app.use("/api", routes_default);
 var app_default = app;
 
@@ -115557,12 +115734,27 @@ var port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
-app_default.listen(port, (err) => {
-  if (err) {
-    logger2.error({ err }, "Error listening on port");
-    process.exit(1);
+async function runMigrations() {
+  try {
+    await db.execute(sql`ALTER TABLE sites ADD COLUMN IF NOT EXISTS welcome_message TEXT`);
+    await db.execute(sql`ALTER TABLE sites ADD COLUMN IF NOT EXISTS new_code_message TEXT`);
+    logger2.info("DB migrations applied");
+  } catch (err) {
+    logger2.error({ err }, "DB migration failed (non-fatal)");
   }
-  logger2.info({ port }, "Server listening");
+}
+runMigrations().then(() => {
+  app_default.listen(port, (err) => {
+    if (err) {
+      logger2.error({ err }, "Error listening on port");
+      process.exit(1);
+    }
+    logger2.info({ port }, "Server listening");
+    startBackgroundPoller();
+  });
+}).catch((err) => {
+  logger2.error({ err }, "Fatal: migration failed");
+  process.exit(1);
 });
 /*! Bundled license information:
 
