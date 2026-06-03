@@ -3,6 +3,8 @@ import type { NetflixCode } from "@workspace/api-client-react";
 
 export type StreamStatus = "connecting" | "live" | "reconnecting" | "error";
 
+const API_BASE_URL = "https://netflix-codes-api.onrender.com";
+
 export function useSiteCodesStream(slug: string | undefined) {
   const [codes, setCodes] = useState<NetflixCode[]>([]);
   const [status, setStatus] = useState<StreamStatus>("connecting");
@@ -16,7 +18,7 @@ export function useSiteCodesStream(slug: string | undefined) {
     setStatus("connecting");
     setImapError(null);
 
-    const es = new EventSource(`/api/sites/${slug}/stream`);
+    const es = new EventSource(`${API_BASE_URL}/api/sites/${slug}/stream`);
 
     es.addEventListener("codes", (e: MessageEvent) => {
       const data: NetflixCode[] = JSON.parse(e.data);
