@@ -115279,7 +115279,7 @@ var import_imapflow2 = __toESM(require_imap_flow(), 1);
 
 // src/lib/backgroundPoller.ts
 var SAFETY_REFRESH_MS = 10 * 6e4;
-var FETCH_TIMEOUT_MS = 3e4;
+var FETCH_TIMEOUT_MS = 12e3;
 var inProgressFetches = /* @__PURE__ */ new Set();
 async function fetchAndCache(site, reason) {
   if (inProgressFetches.has(site.slug)) {
@@ -115436,11 +115436,26 @@ data: ${JSON.stringify(data)}
     }
   } else {
     req.log.info({ slug }, "SSE: cache cold — requesting on-demand fetch");
-    requestFetch(site).then(() => {
-    }).catch((err) => {
-      req.log.error({ err, slug }, "SSE: on-demand fetch failed");
-      sendEvent("imap_error", { message: "Error al conectar con el servidor de correo" });
-    });
+    let _retrying = true;
+    const _doFetch = () => {
+      if (!_retrying) return;
+      requestFetch(site).catch((err) => {
+        req.log.warn({ err, slug }, "SSE: on-demand fetch failed, will retry");
+      });
+    };
+    _doFetch();
+    const _retryInterval = setInterval(() => {
+      if (!_retrying) { clearInterval(_retryInterval); return; }
+      const _cached3 = getCacheEntry(slug);
+      if (_cached3 && _cached3.codes.length > 0) {
+        _retrying = false;
+        clearInterval(_retryInterval);
+        return;
+      }
+      req.log.info({ slug }, "SSE: retrying cold fetch");
+      _doFetch();
+    }, 8e3);
+    req.on("close", () => { _retrying = false; clearInterval(_retryInterval); });
   }
   const onUpdate = (codes) => {
     const typedCodes = codes;
