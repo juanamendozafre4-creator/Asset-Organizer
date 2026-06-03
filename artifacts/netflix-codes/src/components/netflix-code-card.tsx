@@ -107,8 +107,9 @@ export function NetflixCodeCard({
   const remaining = useCountdown(code.receivedAt);
   const timeAgo = useTimeAgo(code.receivedAt);
 
-  const isExpired = code.code === "EXPIRED";
-  const hasCode = code.code && code.code !== "EXPIRED";
+  // Expired si el servidor lo marcó ó si el contador llegó a cero en el cliente
+  const isExpired = code.code === "EXPIRED" || remaining <= 0;
+  const hasCode = !isExpired && code.code && code.code !== "EXPIRED";
 
   const codeBlockBg = dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)";
   const footerBg = dark ? "rgba(0,0,0,0.20)" : "rgba(0,0,0,0.04)";
@@ -167,7 +168,7 @@ export function NetflixCodeCard({
                 Código vencido
               </p>
               <p className="text-xs" style={{ color: mutedColor }}>
-                "El enlace ya no es válido en Netflix"
+                El enlace ya no es válido en Netflix
               </p>
             </div>
           ) : hasCode ? (
