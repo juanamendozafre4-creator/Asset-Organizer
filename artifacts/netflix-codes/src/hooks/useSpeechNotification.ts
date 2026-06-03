@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { NetflixCode } from "@workspace/api-client-react";
 
 const WELCOME_MESSAGE =
@@ -29,6 +29,22 @@ function speak(text: string) {
 export function useSpeechNotification(codes: NetflixCode[]) {
   const prevTopIdRef = useRef<string | null>(null);
   const isFirstLoadRef = useRef(true);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const pendingCodesRef = useRef<NetflixCode[]>([]);
+
+  function unlockAudio() {
+    if (!speechSupported) return;
+    // Play a silent utterance to unlock the audio context on mobile
+    window.speechSynthesis.cancel();
+    const silent = new SpeechSynthesisUtterance(" ");
+    silent.volume = 0;
+    window.speechSynthesis.speak(silent);
+    setAudioUnlocked(true);
+    // If codes were already loaded before unlock, speak welcome now
+    if (pendingCodesRef.current.length > 0) {
+      speak(WELCOME_MESSAGE);
+    }
+  }
 
   useEffect(() => {
     if (codes.length === 0) return;
@@ -38,15 +54,22 @@ export function useSpeechNotification(codes: NetflixCode[]) {
     if (isFirstLoadRef.current) {
       prevTopIdRef.current = topCode.id;
       isFirstLoadRef.current = false;
-      speak(WELCOME_MESSAGE);
+      if (audioUnlocked) {
+        speak(WELCOME_MESSAGE);
+      } else {
+        // Save for when user taps unlock
+        pendingCodesRef.current = codes;
+      }
       return;
     }
 
     if (topCode.id !== prevTopIdRef.current) {
       prevTopIdRef.current = topCode.id;
-      if (!isExpired(topCode.receivedAt)) {
+      if (!isExpired(topCode.receivedAt) && audioUnlocked) {
         speak(MESSAGE);
       }
     }
-  }, [codes]);
+  }, [codes, audioUnlocked]);
+
+  return { audioUnlocked, unlockAudio };
 }
