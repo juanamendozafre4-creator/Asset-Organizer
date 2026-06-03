@@ -3,7 +3,7 @@ import { db, sitesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../lib/jwtAuth";
 import { encrypt, decrypt } from "../lib/crypto";
-import { testImapConnection } from "../lib/imap";
+import { testImapConnection, fetchNetflixEmailsForSite, decodeEmailBody, extractEmailParts, extractDeviceInfo, extractProfileName } from "../lib/imap";
 import {
   CreateSiteBody,
   UpdateSiteBody,
@@ -156,20 +156,21 @@ router.post("/admin/sites/:id/test", requireAuth, async (req, res): Promise<void
 });
 
 
-router.get('/admin/debug-email', requireAuth, async (req, res): Promise<void> => {
+  res.json(result);
+});
+
+router.get("/admin/debug-email", requireAuth, async (req, res): Promise<void> => {
   const [site] = await db.select().from(sitesTable).limit(1);
-  if (!site) { res.status(404).json({ error: 'No site found' }); return; }
-  const { decrypt: dec } = await import('../lib/crypto.js');
-  const { fetchNetflixEmailsForSite, decodeEmailBody, extractEmailParts, extractDeviceInfo, extractProfileName } = await import('../lib/imap.js');
-  const password = dec(site.imapPasswordEncrypted);
+  if (!site) { res.status(404).json({ error: "No site found" }); return; }
+  const password = decrypt(site.imapPasswordEncrypted);
   const emails = await fetchNetflixEmailsForSite({ host: site.imapHost, email: site.imapEmail, password }, 3);
-  const result = emails.slice(0,3).map(email => {
+  const result = emails.slice(0, 3).map(email => {
     const { html: rawHtml } = extractEmailParts(email.source);
     const body = decodeEmailBody(email.source);
     return {
       subject: email.subject,
-      bodyPreview: body.slice(0, 800),
-      htmlPreview: rawHtml ? rawHtml.slice(0, 800) : null,
+      bodyPreview: body.slice(0, 1200),
+      htmlFlatPreview: rawHtml ? rawHtml.replace(/<[^>]+>/g,' ').replace(/s+/g,' ').slice(0, 1200) : null,
       deviceInfo: extractDeviceInfo(body, rawHtml || undefined),
       profileName: extractProfileName(body),
     };
