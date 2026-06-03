@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateSite, useUpdateSite, getListSitesQueryKey, Site } from "@workspace/api-client-react";
 import { getAdminHeaders, getAdminToken } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Upload, X, ImageIcon, Eye, MonitorSmartphone } from "lucide-react";
+import { Loader2, Upload, X, ImageIcon, Eye, MonitorSmartphone, Volume2 } from "lucide-react";
 import { isDark, getTextColor, getMutedTextColor, getCardBg, getCardBorder, getLogoBg } from "@/lib/color-utils";
 
 const PRESET_COLORS = [
@@ -40,6 +40,9 @@ const PRESET_COLORS = [
   { hex: "#fef3c7", label: "Crema" },
 ];
 
+const DEFAULT_WELCOME_MESSAGE = "Elige el código que sea los datos de tu dispositivo y tu perfil y ponlo en tu dispositivo para seguir disfrutando de Netflix";
+const DEFAULT_NEW_CODE_MESSAGE = "Llegó un código nuevo, verifica que sean los datos de tu dispositivo y tu perfil y ponlo en tu dispositivo para seguir disfrutando de Netflix";
+
 const siteSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   slug: z.string().min(1, "El slug es requerido").regex(/^[a-z0-9-]+$/, "Solo letras minúsculas, números y guiones"),
@@ -49,6 +52,8 @@ const siteSchema = z.object({
   imapHost: z.string().min(1, "El host IMAP es requerido"),
   imapEmail: z.string().min(1, "El correo es requerido"),
   imapPassword: z.string().optional(),
+  welcomeMessage: z.string().max(600, "Máximo 600 caracteres").optional().or(z.literal("")),
+  newCodeMessage: z.string().max(600, "Máximo 600 caracteres").optional().or(z.literal("")),
 });
 
 type SiteFormValues = z.infer<typeof siteSchema>;
@@ -154,6 +159,8 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
       imapHost: "",
       imapEmail: "",
       imapPassword: "",
+      welcomeMessage: "",
+      newCodeMessage: "",
     },
   });
 
@@ -172,10 +179,12 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
           imapHost: siteToEdit.imapHost,
           imapEmail: siteToEdit.imapEmail,
           imapPassword: "",
+          welcomeMessage: siteToEdit.welcomeMessage || "",
+          newCodeMessage: siteToEdit.newCodeMessage || "",
         });
         setLogoPreview(siteToEdit.logoUrl || "");
       } else {
-        form.reset({ name: "", slug: "", logoUrl: "", description: "", themeColor: "#141414", imapHost: "", imapEmail: "", imapPassword: "" });
+        form.reset({ name: "", slug: "", logoUrl: "", description: "", themeColor: "#141414", imapHost: "", imapEmail: "", imapPassword: "", welcomeMessage: "", newCodeMessage: "" });
         setLogoPreview("");
       }
       setShowPreview(false);
@@ -237,7 +246,12 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
   };
 
   const onSubmit = (values: SiteFormValues) => {
-    const data = { ...values, logoUrl: values.logoUrl || null };
+    const data = {
+      ...values,
+      logoUrl: values.logoUrl || null,
+      welcomeMessage: values.welcomeMessage || null,
+      newCodeMessage: values.newCodeMessage || null,
+    };
 
     if (isEditing) {
       if (!values.imapPassword) delete (data as any).imapPassword;
@@ -442,7 +456,6 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                   />
                 ))}
 
-                {/* Custom color input */}
                 <div className="relative">
                   <input
                     type="color"
@@ -465,7 +478,6 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                 </div>
               </div>
 
-              {/* Hex input */}
               <div className="flex items-center gap-2">
                 <div
                   className="w-6 h-6 rounded border border-border shrink-0"
@@ -489,7 +501,6 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                 />
               </div>
 
-              {/* Live preview */}
               {showPreview && (
                 <div className="rounded-xl border border-border/60 overflow-hidden">
                   <div className="px-3 py-2 bg-muted/50 border-b border-border/50 flex items-center gap-2">
@@ -509,6 +520,56 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                   />
                 </div>
               )}
+            </div>
+
+            {/* Speech messages */}
+            <div className="border-t border-border pt-4 mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Volume2 className="h-4 w-4 text-muted-foreground" />
+                <h4 className="font-medium text-sm text-muted-foreground">Mensajes de Voz</h4>
+              </div>
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="welcomeMessage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mensaje de bienvenida <span className="text-muted-foreground font-normal">(Opcional)</span></FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder={DEFAULT_WELCOME_MESSAGE}
+                          className="resize-none text-sm min-h-[80px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        {(field.value?.length ?? 0)}/600 · Se habla cuando el cliente abre la página por primera vez
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="newCodeMessage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mensaje de nuevo código <span className="text-muted-foreground font-normal">(Opcional)</span></FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder={DEFAULT_NEW_CODE_MESSAGE}
+                          className="resize-none text-sm min-h-[80px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        {(field.value?.length ?? 0)}/600 · Se habla cuando llega un código nuevo
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <div className="border-t border-border pt-4 mt-4">
