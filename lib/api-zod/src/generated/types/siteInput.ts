@@ -17,4 +17,8 @@ export interface SiteInput {
   imapHost: string;
   imapEmail: string;
   imapPassword: string;
+  /** @nullable */
+  welcomeMessage?: string | null;
+  /** @nullable */
+  newCodeMessage?: string | null;
 }
