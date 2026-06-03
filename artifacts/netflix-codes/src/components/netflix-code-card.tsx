@@ -168,7 +168,7 @@ export function NetflixCodeCard({
                 Código vencido
               </p>
               <p className="text-xs" style={{ color: mutedColor }}>
-                {expiredByServer ? "El enlace ya no es válido en Netflix" : "El enlace expiró (más de 15 minutos)"}
+                "El enlace ya no es válido en Netflix"
               </p>
             </div>
           ) : hasCode ? (
