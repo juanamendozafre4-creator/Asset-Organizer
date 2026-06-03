@@ -38,34 +38,48 @@ const normalized = body.replace(/(\d)\r?\n([a-záéíóú\w])/gi, "$1 $2");
 
 ---
 
-## 3. False device name "el dispositivo que aparece a continuación"
+## 3. False device name: multiple Netflix variants
 
-Newer Netflix email format does NOT include the device name in plain text:
-> "Recibimos una solicitud de código de acceso temporal desde\nel dispositivo que aparece a continuación."
+Netflix uses different placeholder phrases depending on email template version:
+- OLD: "el dispositivo que aparece a continuación"
+- NEW: "el dispositivo que ves más abajo"
 
-The old regex matched "el dispositivo que aparece a continuación" as the device name.
+Both must be rejected by `isFalseDevice`. The check `/el dispositivo/i` covers both variants.
 
-**Fix:** After extracting the device string, check with `isFalseDevice()`:
+**Fix:** `isFalseDevice` must include:
 ```typescript
 function isFalseDevice(s: string): boolean {
-  return /dispositivo que aparece/i.test(s) || s.length < 2;
+  return (
+    /dispositivo que aparece/i.test(s) ||
+    /el dispositivo/i.test(s) ||       // covers "el dispositivo que ves más abajo"
+    /dispositivo que ves/i.test(s) ||
+    s.length < 2 ||
+    s.length > 200                     // reject paragraph-length captures
+  );
 }
 ```
-Return "Información del dispositivo no disponible" when this triggers.
+
+**Why:** The `s.length > 200` guard is critical — certain email formats (e.g. Roku Decodificador) caused the `dev` pattern to capture the entire collapsed body (no newlines → `[^\n<]+` matched everything).
 
 ---
 
-## 4. Time string includes "Obtener código" (same line in some emails)
+## 4. Time string includes "Obtener código" / "Solicitar código" (same line in some emails)
 
-Some forwarded Gmail emails have "Obtener código" on the same line as the time:
-> "2 de junio, 11:19 a. m. GMT+10 Obtener código"
+Some forwarded or specific-device emails (e.g. Roku) have trailing noise on the same line as the time:
+> "30 de mayo, 21:58 GMT-5 Solicitar código El enlace caduca..."
 
-**Fix:** Post-process the captured time string:
+**Fix:** `stripTrailingNoise` (replaces the old `cleanTime`) removes all known noise suffixes:
 ```typescript
-function cleanTime(s: string): string {
+function stripTrailingNoise(s: string): string {
   return s
     .replace(/\s+Obtener\b.*/i, "")
+    .replace(/\s+Solicitar\b.*/i, "")
     .replace(/\s+Si\s+no\b.*/i, "")
+    .replace(/\s+If\s+you\b.*/i, "")
+    .replace(/\s+Este\s+enlace\b.*/i, "")
+    .replace(/\s+El\s+enlace\b.*/i, "")
+    .replace(/\s+Protege\b.*/i, "")
+    .replace(/\s+Cuida\b.*/i, "")
     .replace(/[,\s]+$/, "")
     .trim();
 }
@@ -80,3 +94,26 @@ Do two separate IMAP `search()` calls and combine results:
 - English: `{ subject: "Netflix temporary access code" }`
 
 Then union the results with `new Set([...foundEs, ...foundEn])`.
+
+---
+
+## 6. Roku / Decodificador email format — "ha enviado una solicitud desde"
+
+Netflix emails for set-top boxes (Roku, Decodificador) use a different sentence structure:
+> "4 ha enviado una solicitud desde Roku – Decodificador — 30 de mayo, 21:58 GMT-5 Solicitar código"
+
+The standard patterns look for "Solicitud de [name] desde:" which does NOT match this format.
+
+**Fix:** Add a dedicated pattern in `tryExtract` (before the broad fallbacks):
+```typescript
+const haEnviado = text.match(
+  /ha\s+enviado\s+una\s+solicitud\s+desde\s+([^—–\n<]{3,80})(?:\s*[—–]\s*([^\n<]{3,60}))?/i
+);
+if (haEnviado) {
+  const device = stripTrailingNoise(cleanText(haEnviado[1]).trim());
+  const rawTime = haEnviado[2] ? cleanTime(cleanText(haEnviado[2])) : null;
+  if (!isFalseDevice(device)) return rawTime ? `${device} — ${rawTime}` : device;
+}
+```
+
+**Also:** The `dev` pattern `([^\n<]+)` had no length limit — in collapsed text (no newlines) it captured the entire remaining body. Fixed to `([^\n<]{1,150})`.
