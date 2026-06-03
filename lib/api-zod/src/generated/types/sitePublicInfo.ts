@@ -14,4 +14,8 @@ export interface SitePublicInfo {
   description: string | null;
   themeColor: string;
   slug: string;
+  /** @nullable */
+  welcomeMessage?: string | null;
+  /** @nullable */
+  newCodeMessage?: string | null;
 }
