@@ -155,10 +155,6 @@ router.post("/admin/sites/:id/test", requireAuth, async (req, res): Promise<void
   res.json(result);
 });
 
-
-  res.json(result);
-});
-
 router.get("/admin/debug-email", requireAuth, async (req, res): Promise<void> => {
   const [site] = await db.select().from(sitesTable).limit(1);
   if (!site) { res.status(404).json({ error: "No site found" }); return; }
@@ -170,7 +166,7 @@ router.get("/admin/debug-email", requireAuth, async (req, res): Promise<void> =>
     return {
       subject: email.subject,
       bodyPreview: body.slice(0, 1200),
-      htmlFlatPreview: rawHtml ? rawHtml.replace(/<[^>]+>/g,' ').replace(/s+/g,' ').slice(0, 1200) : null,
+      htmlFlatPreview: rawHtml ? rawHtml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0, 1200) : null,
       deviceInfo: extractDeviceInfo(body, rawHtml || undefined),
       profileName: extractProfileName(body),
     };
