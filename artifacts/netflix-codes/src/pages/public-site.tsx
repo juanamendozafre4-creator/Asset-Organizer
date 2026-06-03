@@ -69,7 +69,7 @@ export default function PublicSite() {
     site ? slug : undefined
   );
 
-  const { audioUnlocked, unlockAudio } = useSpeechNotification(codes);
+  const { needsUnlock, unlockAudio } = useSpeechNotification(codes);
 
   if (isLoadingSite) {
     return (
@@ -202,7 +202,7 @@ export default function PublicSite() {
       </main>
 
       {/* Floating audio unlock button — shown until user taps it */}
-      {!audioUnlocked && (
+      {needsUnlock && (
         <button
           onClick={unlockAudio}
           className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-full shadow-2xl font-medium text-sm transition-all active:scale-95 z-50"
