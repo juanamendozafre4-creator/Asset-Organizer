@@ -19,6 +19,8 @@ export const sitesTable = pgTable("sites", {
   imapHost: text("imap_host").notNull(),
   imapEmail: text("imap_email").notNull(),
   imapPasswordEncrypted: text("imap_password_encrypted").notNull(),
+  welcomeMessage: text("welcome_message"),
+  newCodeMessage: text("new_code_message"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
