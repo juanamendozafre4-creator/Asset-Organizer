@@ -174,10 +174,10 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
 
     logger.debug({ finalUrl, htmlLength: html.length, snippet: html.slice(0, 600) }, "Netflix page fetched");
 
-    if (finalUrl && !finalUrl.includes("travel/verify") && !finalUrl.includes("temporaryAccess")) {
-      logger.info({ url, finalUrl }, "Netflix redirected away from verify page — token expired/invalid");
-      return "EXPIRED";
-    }
+    // Note: We intentionally skip URL-redirect-based expiration detection here.
+    // Netflix may route valid code pages through URLs that don't contain "travel/verify"
+    // or "temporaryAccess" (especially when fetched from server IPs). Expiration is
+    // detected reliably via HTML content patterns below.
 
     const expiredPatterns = [
       /este\s+c[oó]digo\s+ha\s+caducado/i,
