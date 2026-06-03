@@ -35,6 +35,10 @@ export interface Site {
   imapHost: string;
   imapEmail: string;
   createdAt: string;
+  /** @nullable */
+  welcomeMessage?: string | null;
+  /** @nullable */
+  newCodeMessage?: string | null;
 }
 
 export interface SiteInput {
@@ -48,6 +52,10 @@ export interface SiteInput {
   imapHost: string;
   imapEmail: string;
   imapPassword: string;
+  /** @nullable */
+  welcomeMessage?: string | null;
+  /** @nullable */
+  newCodeMessage?: string | null;
 }
 
 export interface SiteUpdate {
@@ -62,6 +70,10 @@ export interface SiteUpdate {
   imapEmail?: string;
   /** @nullable */
   imapPassword?: string | null;
+  /** @nullable */
+  welcomeMessage?: string | null;
+  /** @nullable */
+  newCodeMessage?: string | null;
 }
 
 export interface SitePublicInfo {
@@ -72,6 +84,10 @@ export interface SitePublicInfo {
   description: string | null;
   themeColor: string;
   slug: string;
+  /** @nullable */
+  welcomeMessage?: string | null;
+  /** @nullable */
+  newCodeMessage?: string | null;
 }
 
 export interface NetflixCode {
@@ -97,4 +113,3 @@ export interface ConnectionTestResult {
 export interface ApiError {
   error: string;
 }
-
