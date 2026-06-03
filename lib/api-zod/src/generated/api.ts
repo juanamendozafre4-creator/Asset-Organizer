@@ -59,7 +59,9 @@ export const ListSitesResponseItem = zod.object({
   "themeColor": zod.string(),
   "imapHost": zod.string(),
   "imapEmail": zod.string(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "welcomeMessage": zod.string().nullish(),
+  "newCodeMessage": zod.string().nullish()
 })
 export const ListSitesResponse = zod.array(ListSitesResponseItem)
 
@@ -75,7 +77,9 @@ export const CreateSiteBody = zod.object({
   "themeColor": zod.string().optional(),
   "imapHost": zod.string(),
   "imapEmail": zod.string(),
-  "imapPassword": zod.string()
+  "imapPassword": zod.string(),
+  "welcomeMessage": zod.string().nullish(),
+  "newCodeMessage": zod.string().nullish()
 })
 
 
@@ -94,7 +98,9 @@ export const UpdateSiteBody = zod.object({
   "themeColor": zod.string().optional(),
   "imapHost": zod.string().optional(),
   "imapEmail": zod.string().optional(),
-  "imapPassword": zod.string().nullish()
+  "imapPassword": zod.string().nullish(),
+  "welcomeMessage": zod.string().nullish(),
+  "newCodeMessage": zod.string().nullish()
 })
 
 export const UpdateSiteResponse = zod.object({
@@ -106,7 +112,9 @@ export const UpdateSiteResponse = zod.object({
   "themeColor": zod.string(),
   "imapHost": zod.string(),
   "imapEmail": zod.string(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "welcomeMessage": zod.string().nullish(),
+  "newCodeMessage": zod.string().nullish()
 })
 
 
@@ -143,7 +151,9 @@ export const GetSiteInfoResponse = zod.object({
   "logoUrl": zod.string().nullable(),
   "description": zod.string().nullable(),
   "themeColor": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "welcomeMessage": zod.string().nullish(),
+  "newCodeMessage": zod.string().nullish()
 })
 
 
@@ -165,5 +175,3 @@ export const ListSiteCodesResponseItem = zod.object({
   "expiresIn": zod.string().nullable()
 })
 export const ListSiteCodesResponse = zod.array(ListSiteCodesResponseItem)
-
-
