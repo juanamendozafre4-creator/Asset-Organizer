@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateSite, useUpdateSite, getListSitesQueryKey, Site } from "@workspace/api-client-react";
 import { getAdminHeaders, getAdminToken } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Upload, X, ImageIcon, Eye, MonitorSmartphone, Volume2 } from "lucide-react";
+import { Loader2, Upload, X, ImageIcon, Eye, MonitorSmartphone, Volume2, RefreshCw } from "lucide-react";
 import { isDark, getTextColor, getMutedTextColor, getCardBg, getCardBorder, getLogoBg } from "@/lib/color-utils";
 
 const PRESET_COLORS = [
@@ -54,6 +54,7 @@ const siteSchema = z.object({
   imapPassword: z.string().optional(),
   welcomeMessage: z.string().max(600, "Máximo 600 caracteres").optional().or(z.literal("")),
   newCodeMessage: z.string().max(600, "Máximo 600 caracteres").optional().or(z.literal("")),
+  repeatInterval: z.coerce.number().int().min(0).max(120).optional().nullable(),
 });
 
 type SiteFormValues = z.infer<typeof siteSchema>;
@@ -161,6 +162,7 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
       imapPassword: "",
       welcomeMessage: "",
       newCodeMessage: "",
+      repeatInterval: null,
     },
   });
 
@@ -179,12 +181,13 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
           imapHost: siteToEdit.imapHost,
           imapEmail: siteToEdit.imapEmail,
           imapPassword: "",
-          welcomeMessage: siteToEdit.welcomeMessage || "",
-          newCodeMessage: siteToEdit.newCodeMessage || "",
+          welcomeMessage: (siteToEdit as any).welcomeMessage || "",
+          newCodeMessage: (siteToEdit as any).newCodeMessage || "",
+          repeatInterval: (siteToEdit as any).repeatInterval ?? null,
         });
         setLogoPreview(siteToEdit.logoUrl || "");
       } else {
-        form.reset({ name: "", slug: "", logoUrl: "", description: "", themeColor: "#141414", imapHost: "", imapEmail: "", imapPassword: "", welcomeMessage: "", newCodeMessage: "" });
+        form.reset({ name: "", slug: "", logoUrl: "", description: "", themeColor: "#141414", imapHost: "", imapEmail: "", imapPassword: "", welcomeMessage: "", newCodeMessage: "", repeatInterval: null });
         setLogoPreview("");
       }
       setShowPreview(false);
@@ -251,12 +254,13 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
       logoUrl: values.logoUrl || null,
       welcomeMessage: values.welcomeMessage || null,
       newCodeMessage: values.newCodeMessage || null,
+      repeatInterval: values.repeatInterval && values.repeatInterval > 0 ? values.repeatInterval : null,
     };
 
     if (isEditing) {
       if (!values.imapPassword) delete (data as any).imapPassword;
       updateSite.mutate(
-        { id: siteToEdit.id, data },
+        { id: siteToEdit.id, data: data as any },
         {
           onSuccess: () => {
             toast({ title: "Sitio actualizado correctamente" });
@@ -564,6 +568,42 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                       </FormControl>
                       <p className="text-xs text-muted-foreground">
                         {(field.value?.length ?? 0)}/600 · Se habla cuando llega un código nuevo
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Repeat interval */}
+                <FormField
+                  control={form.control}
+                  name="repeatInterval"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        Repetir mensaje cada <span className="text-muted-foreground font-normal">(Opcional)</span>
+                      </FormLabel>
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={120}
+                            placeholder="0"
+                            className="w-24 text-sm"
+                            {...field}
+                            value={field.value ?? ""}
+                            onChange={(e) => {
+                              const val = e.target.value === "" ? null : parseInt(e.target.value, 10);
+                              field.onChange(val);
+                            }}
+                          />
+                        </FormControl>
+                        <span className="text-sm text-muted-foreground">minutos</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Deja en 0 o vacío para no repetir. Ej: 5 = repite el mensaje de bienvenida cada 5 minutos.
                       </p>
                       <FormMessage />
                     </FormItem>

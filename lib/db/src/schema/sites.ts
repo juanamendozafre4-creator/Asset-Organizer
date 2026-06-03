@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -21,6 +21,7 @@ export const sitesTable = pgTable("sites", {
   imapPasswordEncrypted: text("imap_password_encrypted").notNull(),
   welcomeMessage: text("welcome_message"),
   newCodeMessage: text("new_code_message"),
+  repeatInterval: integer("repeat_interval"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

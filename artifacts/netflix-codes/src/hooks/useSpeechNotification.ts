@@ -19,6 +19,7 @@ function isExpired(receivedAt: string): boolean {
 interface SpeechConfig {
   welcomeMessage?: string | null;
   newCodeMessage?: string | null;
+  repeatInterval?: number | null; // minutes, null/0 = no repeat
 }
 
 export function useSpeechNotification(codes: NetflixCode[], config?: SpeechConfig) {
@@ -30,6 +31,9 @@ export function useSpeechNotification(codes: NetflixCode[], config?: SpeechConfi
 
   const welcomeText = config?.welcomeMessage?.trim() || DEFAULT_WELCOME_MESSAGE;
   const newCodeText = config?.newCodeMessage?.trim() || DEFAULT_NEW_CODE_MESSAGE;
+  const repeatMs = config?.repeatInterval && config.repeatInterval > 0
+    ? config.repeatInterval * 60 * 1000
+    : null;
 
   function doSpeak(text: string) {
     if (!speechSupported) return;
@@ -90,7 +94,7 @@ export function useSpeechNotification(codes: NetflixCode[], config?: SpeechConfi
     window.speechSynthesis.speak(utterance);
   }
 
-  // Auto-unlock on ANY touch or click anywhere on the page
+  // Auto-unlock on ANY touch, click, mousemove or pointerdown on the page
   useEffect(() => {
     if (!needsUnlock || !speechSupported) return;
 
@@ -98,13 +102,18 @@ export function useSpeechNotification(codes: NetflixCode[], config?: SpeechConfi
 
     document.addEventListener("touchstart", handler, { once: true, passive: true });
     document.addEventListener("click", handler, { once: true });
+    document.addEventListener("mousemove", handler, { once: true, passive: true });
+    document.addEventListener("pointerdown", handler, { once: true, passive: true });
 
     return () => {
       document.removeEventListener("touchstart", handler);
       document.removeEventListener("click", handler);
+      document.removeEventListener("mousemove", handler);
+      document.removeEventListener("pointerdown", handler);
     };
   }, [needsUnlock]);
 
+  // Speak on first load and on new codes
   useEffect(() => {
     if (codes.length === 0) return;
 
@@ -124,6 +133,17 @@ export function useSpeechNotification(codes: NetflixCode[], config?: SpeechConfi
       }
     }
   }, [codes, welcomeText, newCodeText]);
+
+  // Repeat welcome message at the configured interval
+  useEffect(() => {
+    if (!repeatMs) return;
+
+    const interval = setInterval(() => {
+      doSpeak(welcomeText);
+    }, repeatMs);
+
+    return () => clearInterval(interval);
+  }, [repeatMs, welcomeText]);
 
   return { needsUnlock, unlockAudio };
 }

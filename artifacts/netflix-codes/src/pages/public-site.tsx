@@ -70,8 +70,9 @@ export default function PublicSite() {
   );
 
   const { needsUnlock, unlockAudio } = useSpeechNotification(codes, {
-    welcomeMessage: site?.welcomeMessage,
-    newCodeMessage: site?.newCodeMessage,
+    welcomeMessage: (site as any)?.welcomeMessage,
+    newCodeMessage: (site as any)?.newCodeMessage,
+    repeatInterval: (site as any)?.repeatInterval,
   });
 
   if (isLoadingSite) {
