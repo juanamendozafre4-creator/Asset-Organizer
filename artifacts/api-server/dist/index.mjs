@@ -114738,10 +114738,8 @@ async function fetchCodeFromNetflixLink(url2) {
     const finalUrl = res.url;
     const html = await res.text();
     logger2.debug({ finalUrl, htmlLength: html.length, snippet: html.slice(0, 600) }, "Netflix page fetched");
-    if (finalUrl && !finalUrl.includes("travel/verify") && !finalUrl.includes("temporaryAccess")) {
-      logger2.info({ url: url2, finalUrl }, "Netflix redirected away from verify page \u2014 token expired/invalid");
-      return "EXPIRED";
-    }
+    // URL redirect check removed — Netflix may route valid code pages through different URLs.
+    // Expiration is detected via HTML content analysis below.
     const expiredPatterns = [
       /este\s+c[oó]digo\s+ha\s+caducado/i,
       /c[oó]digo\s+ha\s+caducado/i,
@@ -115519,15 +115517,9 @@ async function processRawEmails(site, rawEmails) {
           logger.info({ slug: site.slug, code }, "Code extracted from subject line");
         }
       }
-      const emailAgeMs = now - new Date(email3.receivedAt).getTime();
-      const isAlreadyExpired = emailAgeMs > CODE_TTL_MS;
       const netflixLink = extractNetflixLink(email3.source);
       if (!code && netflixLink) {
-        if (isAlreadyExpired) {
-          code = "EXPIRED";
-        } else {
-          code = await fetchCodeFromNetflixLink(netflixLink);
-        }
+        code = await fetchCodeFromNetflixLink(netflixLink);
       }
       return {
         id: email3.uid,
