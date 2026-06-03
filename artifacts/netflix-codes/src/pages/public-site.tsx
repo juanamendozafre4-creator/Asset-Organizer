@@ -205,9 +205,8 @@ export default function PublicSite() {
       </main>
 
       {needsUnlock && (
-        <button
-          onClick={unlockAudio}
-          className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-full shadow-2xl font-medium text-sm transition-all active:scale-95 z-50"
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-3 rounded-full shadow-2xl text-sm z-50 pointer-events-none animate-pulse"
           style={{
             background: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.75)",
             color: dark ? textColor : "#ffffff",
@@ -216,8 +215,8 @@ export default function PublicSite() {
           }}
         >
           <Volume2 className="w-4 h-4" />
-          Activar voz
-        </button>
+          Toca la pantalla para activar la voz
+        </div>
       )}
     </div>
   );

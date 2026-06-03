@@ -90,6 +90,21 @@ export function useSpeechNotification(codes: NetflixCode[], config?: SpeechConfi
     window.speechSynthesis.speak(utterance);
   }
 
+  // Auto-unlock on ANY touch or click anywhere on the page
+  useEffect(() => {
+    if (!needsUnlock || !speechSupported) return;
+
+    const handler = () => unlockAudio();
+
+    document.addEventListener("touchstart", handler, { once: true, passive: true });
+    document.addEventListener("click", handler, { once: true });
+
+    return () => {
+      document.removeEventListener("touchstart", handler);
+      document.removeEventListener("click", handler);
+    };
+  }, [needsUnlock]);
+
   useEffect(() => {
     if (codes.length === 0) return;
 
