@@ -114,7 +114,6 @@ export function NetflixCodeCard({
   const footerBg = dark ? "rgba(0,0,0,0.20)" : "rgba(0,0,0,0.04)";
   const expiredBg = dark ? "rgba(220,38,38,0.12)" : "rgba(220,38,38,0.06)";
   const expiredBorder = dark ? "rgba(220,38,38,0.30)" : "rgba(220,38,38,0.25)";
-  const unavailableBg = dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)";
 
   // Countdown color: green > 5min, yellow 2-5min, red < 2min
   const countdownColor =
@@ -124,6 +123,8 @@ export function NetflixCodeCard({
       ? "#facc15"
       : "#f87171";
 
+  const deviceLabel = code.deviceInfo ? cleanText(code.deviceInfo) : "Dispositivo no identificado";
+
   return (
     <div
       className="relative overflow-hidden rounded-2xl shadow-sm"
@@ -131,7 +132,7 @@ export function NetflixCodeCard({
       data-testid={`card-netflix-${code.id}`}
     >
       <div className="p-6 sm:p-8 space-y-5">
-        {/* Perfil y dispositivo */}
+        {/* Perfil y dispositivo — siempre visible */}
         <div className="space-y-2">
           <h2
             className="text-2xl sm:text-3xl font-bold tracking-tight"
@@ -141,12 +142,10 @@ export function NetflixCodeCard({
             Hola, {cleanText(code.profileName)}
           </h2>
 
-          {code.deviceInfo && cleanText(code.deviceInfo) && (
-            <div className="flex items-start sm:items-center gap-2 text-base" style={{ color: mutedColor }}>
-              <MonitorSmartphone className="h-5 w-5 shrink-0 mt-0.5 sm:mt-0" />
-              <p className="leading-snug font-medium">{cleanText(code.deviceInfo)}</p>
-            </div>
-          )}
+          <div className="flex items-start sm:items-center gap-2 text-base" style={{ color: mutedColor }}>
+            <MonitorSmartphone className="h-5 w-5 shrink-0 mt-0.5 sm:mt-0" />
+            <p className="leading-snug font-medium">{deviceLabel}</p>
+          </div>
 
           {code.accountEmail && (
             <div className="flex items-center gap-2 text-base" style={{ color: mutedColor }}>
