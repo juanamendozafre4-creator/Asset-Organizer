@@ -61,7 +61,10 @@ export const ListSitesResponseItem = zod.object({
   "imapEmail": zod.string(),
   "createdAt": zod.string(),
   "welcomeMessage": zod.string().nullish(),
-  "newCodeMessage": zod.string().nullish()
+  "newCodeMessage": zod.string().nullish(),
+  "repeatInterval": zod.number().int().nullish(),
+  "voiceWelcomeEnabled": zod.boolean().nullish(),
+  "voiceNewCodeEnabled": zod.boolean().nullish()
 })
 export const ListSitesResponse = zod.array(ListSitesResponseItem)
 
@@ -79,7 +82,10 @@ export const CreateSiteBody = zod.object({
   "imapEmail": zod.string(),
   "imapPassword": zod.string(),
   "welcomeMessage": zod.string().nullish(),
-  "newCodeMessage": zod.string().nullish()
+  "newCodeMessage": zod.string().nullish(),
+  "repeatInterval": zod.number().int().nullish(),
+  "voiceWelcomeEnabled": zod.boolean().nullish(),
+  "voiceNewCodeEnabled": zod.boolean().nullish()
 })
 
 
@@ -100,7 +106,10 @@ export const UpdateSiteBody = zod.object({
   "imapEmail": zod.string().optional(),
   "imapPassword": zod.string().nullish(),
   "welcomeMessage": zod.string().nullish(),
-  "newCodeMessage": zod.string().nullish()
+  "newCodeMessage": zod.string().nullish(),
+  "repeatInterval": zod.number().int().nullish(),
+  "voiceWelcomeEnabled": zod.boolean().nullish(),
+  "voiceNewCodeEnabled": zod.boolean().nullish()
 })
 
 export const UpdateSiteResponse = zod.object({
@@ -114,7 +123,10 @@ export const UpdateSiteResponse = zod.object({
   "imapEmail": zod.string(),
   "createdAt": zod.string(),
   "welcomeMessage": zod.string().nullish(),
-  "newCodeMessage": zod.string().nullish()
+  "newCodeMessage": zod.string().nullish(),
+  "repeatInterval": zod.number().int().nullish(),
+  "voiceWelcomeEnabled": zod.boolean().nullish(),
+  "voiceNewCodeEnabled": zod.boolean().nullish()
 })
 
 
@@ -153,7 +165,10 @@ export const GetSiteInfoResponse = zod.object({
   "themeColor": zod.string(),
   "slug": zod.string(),
   "welcomeMessage": zod.string().nullish(),
-  "newCodeMessage": zod.string().nullish()
+  "newCodeMessage": zod.string().nullish(),
+  "repeatInterval": zod.number().int().nullish(),
+  "voiceWelcomeEnabled": zod.boolean().nullish(),
+  "voiceNewCodeEnabled": zod.boolean().nullish()
 })
 
 

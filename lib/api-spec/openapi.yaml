@@ -323,6 +323,16 @@ components:
           type: string
         createdAt:
           type: string
+        welcomeMessage:
+          type: ["string", "null"]
+        newCodeMessage:
+          type: ["string", "null"]
+        repeatInterval:
+          type: ["integer", "null"]
+        voiceWelcomeEnabled:
+          type: ["boolean", "null"]
+        voiceNewCodeEnabled:
+          type: ["boolean", "null"]
       required: [id, slug, name, logoUrl, themeColor, imapHost, imapEmail, createdAt]
 
     SiteInput:
@@ -344,6 +354,16 @@ components:
           type: string
         imapPassword:
           type: string
+        welcomeMessage:
+          type: ["string", "null"]
+        newCodeMessage:
+          type: ["string", "null"]
+        repeatInterval:
+          type: ["integer", "null"]
+        voiceWelcomeEnabled:
+          type: ["boolean", "null"]
+        voiceNewCodeEnabled:
+          type: ["boolean", "null"]
       required: [slug, name, imapHost, imapEmail, imapPassword]
 
     SiteUpdate:
@@ -365,6 +385,16 @@ components:
           type: string
         imapPassword:
           type: ["string", "null"]
+        welcomeMessage:
+          type: ["string", "null"]
+        newCodeMessage:
+          type: ["string", "null"]
+        repeatInterval:
+          type: ["integer", "null"]
+        voiceWelcomeEnabled:
+          type: ["boolean", "null"]
+        voiceNewCodeEnabled:
+          type: ["boolean", "null"]
 
     SitePublicInfo:
       type: object
@@ -379,6 +409,16 @@ components:
           type: string
         slug:
           type: string
+        welcomeMessage:
+          type: ["string", "null"]
+        newCodeMessage:
+          type: ["string", "null"]
+        repeatInterval:
+          type: ["integer", "null"]
+        voiceWelcomeEnabled:
+          type: ["boolean", "null"]
+        voiceNewCodeEnabled:
+          type: ["boolean", "null"]
       required: [name, logoUrl, description, themeColor, slug]
 
     NetflixCode:

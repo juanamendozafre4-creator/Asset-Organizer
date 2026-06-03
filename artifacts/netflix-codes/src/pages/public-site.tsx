@@ -73,6 +73,8 @@ export default function PublicSite() {
     welcomeMessage: (site as any)?.welcomeMessage,
     newCodeMessage: (site as any)?.newCodeMessage,
     repeatInterval: (site as any)?.repeatInterval,
+    voiceWelcomeEnabled: (site as any)?.voiceWelcomeEnabled !== false,
+    voiceNewCodeEnabled: (site as any)?.voiceNewCodeEnabled !== false,
   });
 
   if (isLoadingSite) {
@@ -206,18 +208,21 @@ export default function PublicSite() {
       </main>
 
       {needsUnlock && (
-        <div
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-3 rounded-full shadow-2xl text-sm z-50 pointer-events-none animate-pulse"
+        <button
+          onClick={unlockAudio}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-3 rounded-full shadow-2xl text-sm z-50 cursor-pointer animate-pulse border-0 outline-none select-none"
           style={{
-            background: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.75)",
+            background: dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.85)",
             color: dark ? textColor : "#ffffff",
-            backdropFilter: "blur(10px)",
-            border: `1px solid ${cardBorder}`,
+            backdropFilter: "blur(12px)",
+            border: `1.5px solid ${cardBorder}`,
+            WebkitTapHighlightColor: "transparent",
           }}
+          aria-label="Activar voz"
         >
           <Volume2 className="w-4 h-4" />
-          Toca la pantalla para activar la voz
-        </div>
+          Toca aquí para activar la voz
+        </button>
       )}
     </div>
   );

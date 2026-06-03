@@ -32,6 +32,7 @@ import { useCreateSite, useUpdateSite, getListSitesQueryKey, Site } from "@works
 import { getAdminHeaders, getAdminToken } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Upload, X, ImageIcon, Eye, MonitorSmartphone, Volume2, RefreshCw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { isDark, getTextColor, getMutedTextColor, getCardBg, getCardBorder, getLogoBg } from "@/lib/color-utils";
 
 const PRESET_COLORS = [
@@ -76,6 +77,8 @@ const siteSchema = z.object({
   newCodeMessage: z.string().max(600, "Máximo 600 caracteres").optional().or(z.literal("")),
   repeatIntervalValue: z.coerce.number().int().min(0).max(86400).optional().nullable(),
   repeatIntervalUnit: z.enum(["seconds", "minutes"]).default("minutes"),
+  voiceWelcomeEnabled: z.boolean().default(true),
+  voiceNewCodeEnabled: z.boolean().default(true),
 });
 
 type SiteFormValues = z.infer<typeof siteSchema>;
@@ -146,6 +149,7 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
       imapHost: "", imapEmail: "", imapPassword: "",
       welcomeMessage: "", newCodeMessage: "",
       repeatIntervalValue: null, repeatIntervalUnit: "minutes",
+      voiceWelcomeEnabled: true, voiceNewCodeEnabled: true,
     },
   });
 
@@ -171,6 +175,8 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
         newCodeMessage: (siteToEdit as any).newCodeMessage || "",
         repeatIntervalValue: riVal,
         repeatIntervalUnit: riUnit,
+        voiceWelcomeEnabled: (siteToEdit as any).voiceWelcomeEnabled !== false,
+        voiceNewCodeEnabled: (siteToEdit as any).voiceNewCodeEnabled !== false,
       });
       setLogoPreview(siteToEdit.logoUrl || "");
     } else {
@@ -179,6 +185,7 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
         imapHost: "", imapEmail: "", imapPassword: "",
         welcomeMessage: "", newCodeMessage: "",
         repeatIntervalValue: null, repeatIntervalUnit: "minutes",
+        voiceWelcomeEnabled: true, voiceNewCodeEnabled: true,
       });
       setLogoPreview("");
     }
@@ -224,6 +231,8 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
       welcomeMessage: values.welcomeMessage || null,
       newCodeMessage: values.newCodeMessage || null,
       repeatInterval,
+      voiceWelcomeEnabled: values.voiceWelcomeEnabled,
+      voiceNewCodeEnabled: values.voiceNewCodeEnabled,
     };
     if (values.imapPassword) data.imapPassword = values.imapPassword;
 
@@ -418,6 +427,36 @@ export default function SiteFormDialog({ isOpen, onOpenChange, siteToEdit }: Sit
                     Solo repite si no está sonando el mensaje de nuevo código.
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Voice Enable/Disable Toggles */}
+            <div className="border-t border-border pt-4 mt-4">
+              <h4 className="font-medium text-sm mb-3 text-muted-foreground flex items-center gap-1.5"><Volume2 className="h-3.5 w-3.5" />Activar / desactivar voz</h4>
+              <div className="space-y-0 rounded-lg border border-border overflow-hidden bg-muted/20">
+                <FormField control={form.control} name="voiceWelcomeEnabled" render={({ field }) => (
+                  <FormItem className="flex items-center justify-between gap-4 px-4 py-3">
+                    <div className="flex-1">
+                      <FormLabel className="text-sm font-medium cursor-pointer">Voz de bienvenida</FormLabel>
+                      <p className="text-xs text-muted-foreground mt-0.5">Habla cuando el cliente abre la página</p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )} />
+                <div className="border-t border-border/50" />
+                <FormField control={form.control} name="voiceNewCodeEnabled" render={({ field }) => (
+                  <FormItem className="flex items-center justify-between gap-4 px-4 py-3">
+                    <div className="flex-1">
+                      <FormLabel className="text-sm font-medium cursor-pointer">Voz de nuevo código</FormLabel>
+                      <p className="text-xs text-muted-foreground mt-0.5">Avisa cuando llega un código nuevo</p>
+                    </div>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )} />
               </div>
             </div>
 

@@ -39,6 +39,12 @@ export interface Site {
   welcomeMessage?: string | null;
   /** @nullable */
   newCodeMessage?: string | null;
+  /** @nullable */
+  repeatInterval?: number | null;
+  /** @nullable */
+  voiceWelcomeEnabled?: boolean | null;
+  /** @nullable */
+  voiceNewCodeEnabled?: boolean | null;
 }
 
 export interface SiteInput {
@@ -56,6 +62,12 @@ export interface SiteInput {
   welcomeMessage?: string | null;
   /** @nullable */
   newCodeMessage?: string | null;
+  /** @nullable */
+  repeatInterval?: number | null;
+  /** @nullable */
+  voiceWelcomeEnabled?: boolean | null;
+  /** @nullable */
+  voiceNewCodeEnabled?: boolean | null;
 }
 
 export interface SiteUpdate {
@@ -74,6 +86,12 @@ export interface SiteUpdate {
   welcomeMessage?: string | null;
   /** @nullable */
   newCodeMessage?: string | null;
+  /** @nullable */
+  repeatInterval?: number | null;
+  /** @nullable */
+  voiceWelcomeEnabled?: boolean | null;
+  /** @nullable */
+  voiceNewCodeEnabled?: boolean | null;
 }
 
 export interface SitePublicInfo {
@@ -88,6 +106,12 @@ export interface SitePublicInfo {
   welcomeMessage?: string | null;
   /** @nullable */
   newCodeMessage?: string | null;
+  /** @nullable */
+  repeatInterval?: number | null;
+  /** @nullable */
+  voiceWelcomeEnabled?: boolean | null;
+  /** @nullable */
+  voiceNewCodeEnabled?: boolean | null;
 }
 
 export interface NetflixCode {

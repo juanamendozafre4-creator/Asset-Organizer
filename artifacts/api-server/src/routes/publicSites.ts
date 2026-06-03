@@ -145,6 +145,8 @@ router.get("/sites/:slug", async (req, res): Promise<void> => {
     welcomeMessage: site.welcomeMessage ?? null,
     newCodeMessage: site.newCodeMessage ?? null,
     repeatInterval: site.repeatInterval ?? null,
+    voiceWelcomeEnabled: site.voiceWelcomeEnabled ?? true,
+    voiceNewCodeEnabled: site.voiceNewCodeEnabled ?? true,
   });
 
   // Pre-warm cache when site info is requested (no-op if already fresh or in-progress)

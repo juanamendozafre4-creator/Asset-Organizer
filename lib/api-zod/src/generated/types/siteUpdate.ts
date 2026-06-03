@@ -22,4 +22,10 @@ export interface SiteUpdate {
   welcomeMessage?: string | null;
   /** @nullable */
   newCodeMessage?: string | null;
+  /** @nullable */
+  repeatInterval?: number | null;
+  /** @nullable */
+  voiceWelcomeEnabled?: boolean | null;
+  /** @nullable */
+  voiceNewCodeEnabled?: boolean | null;
 }

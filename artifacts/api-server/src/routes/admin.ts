@@ -28,6 +28,8 @@ function serializeSite(site: typeof sitesTable.$inferSelect) {
     welcomeMessage: site.welcomeMessage ?? null,
     newCodeMessage: site.newCodeMessage ?? null,
     repeatInterval: site.repeatInterval ?? null,
+    voiceWelcomeEnabled: site.voiceWelcomeEnabled ?? true,
+    voiceNewCodeEnabled: site.voiceNewCodeEnabled ?? true,
   };
 }
 
@@ -66,6 +68,8 @@ router.post("/admin/sites", requireAuth, async (req, res): Promise<void> => {
       welcomeMessage: parsed.data.welcomeMessage ?? null,
       newCodeMessage: parsed.data.newCodeMessage ?? null,
       repeatInterval: parsed.data.repeatInterval ?? null,
+      voiceWelcomeEnabled: parsed.data.voiceWelcomeEnabled ?? true,
+      voiceNewCodeEnabled: parsed.data.voiceNewCodeEnabled ?? true,
     })
     .returning();
 
@@ -102,6 +106,8 @@ router.put("/admin/sites/:id", requireAuth, async (req, res): Promise<void> => {
   if ("welcomeMessage" in parsed.data) updateData.welcomeMessage = parsed.data.welcomeMessage ?? null;
   if ("newCodeMessage" in parsed.data) updateData.newCodeMessage = parsed.data.newCodeMessage ?? null;
   if ("repeatInterval" in parsed.data) updateData.repeatInterval = parsed.data.repeatInterval ?? null;
+  if ("voiceWelcomeEnabled" in parsed.data && parsed.data.voiceWelcomeEnabled != null) updateData.voiceWelcomeEnabled = parsed.data.voiceWelcomeEnabled;
+  if ("voiceNewCodeEnabled" in parsed.data && parsed.data.voiceNewCodeEnabled != null) updateData.voiceNewCodeEnabled = parsed.data.voiceNewCodeEnabled;
 
   const [site] = await db
     .update(sitesTable)
