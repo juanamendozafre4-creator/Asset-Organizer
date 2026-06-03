@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useGetSiteInfo, getGetSiteInfoQueryKey } from "@workspace/api-client-react";
-import { Loader2, AlertCircle, Radio } from "lucide-react";
+import { Loader2, AlertCircle, Radio, Volume2 } from "lucide-react";
 import { NetflixCodeCard } from "@/components/netflix-code-card";
 import { useSiteCodesStream } from "@/hooks/useSiteCodesStream";
 import { useSpeechNotification } from "@/hooks/useSpeechNotification";
@@ -69,7 +69,7 @@ export default function PublicSite() {
     site ? slug : undefined
   );
 
-  useSpeechNotification(codes);
+  const { audioUnlocked, unlockAudio } = useSpeechNotification(codes);
 
   if (isLoadingSite) {
     return (
@@ -201,6 +201,22 @@ export default function PublicSite() {
         )}
       </main>
 
+      {/* Floating audio unlock button — shown until user taps it */}
+      {!audioUnlocked && (
+        <button
+          onClick={unlockAudio}
+          className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-3 rounded-full shadow-2xl font-medium text-sm transition-all active:scale-95 z-50"
+          style={{
+            background: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.75)",
+            color: dark ? textColor : "#ffffff",
+            backdropFilter: "blur(10px)",
+            border: `1px solid ${cardBorder}`,
+          }}
+        >
+          <Volume2 className="w-4 h-4" />
+          Activar voz
+        </button>
+      )}
     </div>
   );
 }
