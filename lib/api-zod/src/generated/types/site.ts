@@ -18,4 +18,8 @@ export interface Site {
   imapHost: string;
   imapEmail: string;
   createdAt: string;
+  /** @nullable */
+  welcomeMessage?: string | null;
+  /** @nullable */
+  newCodeMessage?: string | null;
 }
