@@ -25,27 +25,49 @@ export function useSpeechNotification(codes: NetflixCode[]) {
 
   function doSpeak(text: string) {
     if (!speechSupported) return;
+
+    // Si ya sabemos que el audio está desbloqueado, hablar directamente
+    if (unlockedRef.current) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "es-ES";
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+      return;
+    }
+
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "es-ES";
     utterance.rate = 0.95;
     utterance.pitch = 1;
 
+    let started = false;
+
     utterance.onstart = () => {
+      started = true;
       unlockedRef.current = true;
       setNeedsUnlock(false);
       pendingTextRef.current = null;
     };
 
-    window.speechSynthesis.speak(utterance);
-
-    // After 350ms, if speech never started, browser blocked autoplay — show button
-    setTimeout(() => {
-      if (!unlockedRef.current) {
+    utterance.onerror = () => {
+      if (!started) {
         pendingTextRef.current = text;
         setNeedsUnlock(true);
       }
-    }, 350);
+    };
+
+    window.speechSynthesis.speak(utterance);
+
+    // Fallback: si tras 400ms el navegador no inició la voz, mostrar botón
+    setTimeout(() => {
+      if (!started && !unlockedRef.current) {
+        pendingTextRef.current = text;
+        setNeedsUnlock(true);
+      }
+    }, 400);
   }
 
   function unlockAudio() {
@@ -84,4 +106,3 @@ export function useSpeechNotification(codes: NetflixCode[]) {
 
   return { needsUnlock, unlockAudio };
 }
-
