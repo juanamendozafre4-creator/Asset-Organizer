@@ -114994,7 +114994,7 @@ function extractDeviceInfo(body, rawHtml) {
     return s.replace(/\s+Obtener\b.*/i, "").replace(/\s+Si\s+no\b.*/i, "").replace(/\s+If\s+you\b.*/i, "").replace(/\s+Este\s+enlace\b.*/i, "").replace(/[,\s]+$/, "").trim();
   }
   function isFalseDevice(s) {
-    return /dispositivo que aparece/i.test(s) || s.length < 2;
+    return /dispositivo que aparece/i.test(s) || /el dispositivo/i.test(s) || /dispositivo que ves/i.test(s) || s.length < 2 || s.length > 200;
   }
   function tryExtract(text2) {
     const full = text2.match(
@@ -115011,10 +115011,16 @@ function extractDeviceInfo(body, rawHtml) {
       const time4 = cleanTime(cleanText(fullInline[2]));
       if (!isFalseDevice(device)) return `${device} \u2014 ${time4}`;
     }
-    const dev = text2.match(/Solicitud de [\s\S]+?desde[:\s]+([^\n<]+)/i);
+    const dev = text2.match(/Solicitud de [\s\S]+?desde[:\s]+([^\n<]{1,150})/i);
     if (dev) {
-      const device = cleanText(dev[1]).replace(/\s+a las\b.*/i, "").trim();
+      const device = cleanText(dev[1]).replace(/\s+a las\b.*/i, "").replace(/\s+Solicitar\b.*/i, "").replace(/\s+El\s+enlace\b.*/i, "").replace(/\s+Protege\b.*/i, "").trim();
       if (!isFalseDevice(device)) return device;
+    }
+    const haEnviado = text2.match(/ha\s+enviado\s+una\s+solicitud\s+desde\s+([^—–\n<]{3,80})(?:\s*[—–]\s*([^\n<]{3,60}))?/i);
+    if (haEnviado) {
+      const rawDev = cleanText(haEnviado[1]).replace(/\s+Solicitar\b.*/i, "").replace(/\s+El\s+enlace\b.*/i, "").replace(/\s+Protege\b.*/i, "").trim();
+      const rawTime = haEnviado[2] ? cleanText(haEnviado[2]).replace(/\s+Solicitar\b.*/i, "").replace(/\s+El\s+enlace\b.*/i, "").replace(/\s+Protege\b.*/i, "").trim() : null;
+      if (!isFalseDevice(rawDev)) return rawTime ? rawDev + " — " + rawTime : rawDev;
     }
     const engFull = text2.match(
       /(?:access\s+)?request\s+from[:\s]+([^\n]+?)[ \t]*\n?[ \t]*at[ \t]+([^\n<]+)/i
@@ -115048,7 +115054,7 @@ function extractDeviceInfo(body, rawHtml) {
       }
       const devOnlyW = window2.match(/desde[:\s]+([^<]{3,80})/i);
       if (devOnlyW) {
-        const raw = cleanText(devOnlyW[1]).replace(/\s+a las\b.*/i, "").trim();
+        const raw = cleanText(devOnlyW[1]).replace(/\s+a las\b.*/i, "").replace(/\s+Solicitar\b.*/i, "").replace(/\s+El\s+enlace\b.*/i, "").replace(/\s+Protege\b.*/i, "").trim();
         if (!isFalseDevice(raw) && raw.length > 2) return raw;
       }
       const fromW = window2.match(/from[:\s]+(.+?)\s+at\s+([^\n<]+)/i);
