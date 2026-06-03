@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { parseISO } from "date-fns";
 import type { NetflixCode } from "@workspace/api-client-react";
-import { MonitorSmartphone, XCircle, Mail, Clock } from "lucide-react";
+import { MonitorSmartphone, XCircle, Mail, Clock, ExternalLink } from "lucide-react";
 
 const CODE_TTL_MS = 15 * 60 * 1000;
 const COLOMBIA_TZ = "America/Bogota";
@@ -76,7 +76,6 @@ function useTimeAgo(receivedAt: string) {
   useEffect(() => {
     setLabel(formatTimeAgo(receivedAt));
     const elapsed = Date.now() - parseISO(receivedAt).getTime();
-    // Actualizar cada segundo mientras sea < 2 minutos, luego cada 30s
     const interval = elapsed < 2 * 60 * 1000 ? 1000 : 30_000;
     const id = setInterval(() => setLabel(formatTimeAgo(receivedAt)), interval);
     return () => clearInterval(id);
@@ -107,16 +106,17 @@ export function NetflixCodeCard({
   const remaining = useCountdown(code.receivedAt);
   const timeAgo = useTimeAgo(code.receivedAt);
 
-  // Expired si el servidor lo marcó ó si el contador llegó a cero en el cliente
   const isExpired = code.code === "EXPIRED" || remaining <= 0;
   const hasCode = !isExpired && code.code && code.code !== "EXPIRED";
+  const hasLink = !isExpired && !hasCode && !!code.netflixLink;
 
   const codeBlockBg = dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)";
   const footerBg = dark ? "rgba(0,0,0,0.20)" : "rgba(0,0,0,0.04)";
   const expiredBg = dark ? "rgba(220,38,38,0.12)" : "rgba(220,38,38,0.06)";
   const expiredBorder = dark ? "rgba(220,38,38,0.30)" : "rgba(220,38,38,0.25)";
+  const linkBg = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
+  const linkBorder = dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.15)";
 
-  // Countdown color: green > 5min, yellow 2-5min, red < 2min
   const countdownColor =
     remaining > 5 * 60 * 1000
       ? "#4ade80"
@@ -156,7 +156,7 @@ export function NetflixCodeCard({
           )}
         </div>
 
-        {/* Código / Vencido */}
+        {/* Código / Vencido / Botón Netflix */}
         <div className="pt-1">
           {isExpired ? (
             <div
@@ -189,13 +189,52 @@ export function NetflixCodeCard({
               >
                 {code.code}
               </div>
-              {/* Contador regresivo */}
               <div
                 className="mt-4 flex items-center gap-1.5 text-sm font-semibold tabular-nums"
                 style={{ color: countdownColor }}
               >
                 <Clock className="h-4 w-4" />
                 <span>Vence en {formatCountdown(remaining)}</span>
+              </div>
+            </div>
+          ) : hasLink ? (
+            /* El servidor no pudo obtener el código automáticamente.
+               Netflix bloquea peticiones de servidores. El usuario puede
+               abrirlo directamente con el botón. */
+            <div
+              className="w-full rounded-xl py-5 px-4 flex flex-col items-center gap-4"
+              style={{ background: linkBg, border: `1px solid ${linkBorder}` }}
+            >
+              <div className="text-center space-y-1">
+                <p className="text-sm font-semibold" style={{ color: textColor }}>
+                  Código disponible en Netflix
+                </p>
+                <p className="text-xs" style={{ color: mutedColor }}>
+                  Toca el botón para ver el código de 4 dígitos
+                </p>
+              </div>
+
+              <a
+                href={code.netflixLink!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-opacity active:opacity-70"
+                style={{
+                  background: themeColor ?? "#e50914",
+                  color: "#ffffff",
+                  textDecoration: "none",
+                }}
+              >
+                <ExternalLink className="h-4 w-4" />
+                Ver código en Netflix
+              </a>
+
+              <div
+                className="flex items-center gap-1.5 text-xs font-semibold tabular-nums"
+                style={{ color: countdownColor }}
+              >
+                <Clock className="h-3.5 w-3.5" />
+                <span>Enlace vence en {formatCountdown(remaining)}</span>
               </div>
             </div>
           ) : null}
