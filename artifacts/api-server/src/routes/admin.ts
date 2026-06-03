@@ -25,6 +25,8 @@ function serializeSite(site: typeof sitesTable.$inferSelect) {
     imapHost: site.imapHost,
     imapEmail: site.imapEmail,
     createdAt: site.createdAt.toISOString(),
+    welcomeMessage: site.welcomeMessage ?? null,
+    newCodeMessage: site.newCodeMessage ?? null,
   };
 }
 
@@ -60,6 +62,8 @@ router.post("/admin/sites", requireAuth, async (req, res): Promise<void> => {
       imapHost: parsed.data.imapHost,
       imapEmail: parsed.data.imapEmail,
       imapPasswordEncrypted: encrypt(parsed.data.imapPassword),
+      welcomeMessage: parsed.data.welcomeMessage ?? null,
+      newCodeMessage: parsed.data.newCodeMessage ?? null,
     })
     .returning();
 
@@ -93,6 +97,8 @@ router.put("/admin/sites/:id", requireAuth, async (req, res): Promise<void> => {
   if (parsed.data.imapPassword != null) {
     updateData.imapPasswordEncrypted = encrypt(parsed.data.imapPassword);
   }
+  if ("welcomeMessage" in parsed.data) updateData.welcomeMessage = parsed.data.welcomeMessage ?? null;
+  if ("newCodeMessage" in parsed.data) updateData.newCodeMessage = parsed.data.newCodeMessage ?? null;
 
   const [site] = await db
     .update(sitesTable)
