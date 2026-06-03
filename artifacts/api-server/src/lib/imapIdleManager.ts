@@ -60,7 +60,7 @@ async function runIdleLoop(site: SiteRow, buildWithClient: BuildWithClientFn) {
         const codes = await Promise.race([
           buildWithClient(client, site),
           new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("Initial fetch timed out after 45s")), 45_000)
+            setTimeout(() => reject(new Error("Initial fetch timed out after 15s")), 15_000)
           ),
         ]);
         setCacheEntry(site.slug, codes);
