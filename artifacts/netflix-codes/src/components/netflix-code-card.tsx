@@ -107,9 +107,7 @@ export function NetflixCodeCard({
   const remaining = useCountdown(code.receivedAt);
   const timeAgo = useTimeAgo(code.receivedAt);
 
-  const expiredByTime = remaining <= 0;
-  const expiredByServer = code.code === "EXPIRED";
-  const isExpired = expiredByTime || expiredByServer;
+  const isExpired = code.code === "EXPIRED";
   const hasCode = code.code && code.code !== "EXPIRED";
 
   const codeBlockBg = dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)";
