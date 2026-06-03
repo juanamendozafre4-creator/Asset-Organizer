@@ -16,34 +16,50 @@ function isExpired(receivedAt: string): boolean {
   return Date.now() - new Date(receivedAt).getTime() > CODE_TTL_MS;
 }
 
-function speak(text: string) {
-  if (!speechSupported) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "es-ES";
-  utterance.rate = 0.95;
-  utterance.pitch = 1;
-  window.speechSynthesis.speak(utterance);
-}
-
 export function useSpeechNotification(codes: NetflixCode[]) {
   const prevTopIdRef = useRef<string | null>(null);
   const isFirstLoadRef = useRef(true);
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
-  const pendingCodesRef = useRef<NetflixCode[]>([]);
+  const unlockedRef = useRef(false);
+  const pendingTextRef = useRef<string | null>(null);
+  const [needsUnlock, setNeedsUnlock] = useState(false);
+
+  function doSpeak(text: string) {
+    if (!speechSupported) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "es-ES";
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+
+    utterance.onstart = () => {
+      unlockedRef.current = true;
+      setNeedsUnlock(false);
+      pendingTextRef.current = null;
+    };
+
+    window.speechSynthesis.speak(utterance);
+
+    // After 350ms, if speech never started, browser blocked autoplay — show button
+    setTimeout(() => {
+      if (!unlockedRef.current) {
+        pendingTextRef.current = text;
+        setNeedsUnlock(true);
+      }
+    }, 350);
+  }
 
   function unlockAudio() {
     if (!speechSupported) return;
-    // Play a silent utterance to unlock the audio context on mobile
+    unlockedRef.current = true;
+    setNeedsUnlock(false);
+    const text = pendingTextRef.current ?? WELCOME_MESSAGE;
+    pendingTextRef.current = null;
     window.speechSynthesis.cancel();
-    const silent = new SpeechSynthesisUtterance(" ");
-    silent.volume = 0;
-    window.speechSynthesis.speak(silent);
-    setAudioUnlocked(true);
-    // If codes were already loaded before unlock, speak welcome now
-    if (pendingCodesRef.current.length > 0) {
-      speak(WELCOME_MESSAGE);
-    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "es-ES";
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
   }
 
   useEffect(() => {
@@ -54,22 +70,18 @@ export function useSpeechNotification(codes: NetflixCode[]) {
     if (isFirstLoadRef.current) {
       prevTopIdRef.current = topCode.id;
       isFirstLoadRef.current = false;
-      if (audioUnlocked) {
-        speak(WELCOME_MESSAGE);
-      } else {
-        // Save for when user taps unlock
-        pendingCodesRef.current = codes;
-      }
+      doSpeak(WELCOME_MESSAGE);
       return;
     }
 
     if (topCode.id !== prevTopIdRef.current) {
       prevTopIdRef.current = topCode.id;
-      if (!isExpired(topCode.receivedAt) && audioUnlocked) {
-        speak(MESSAGE);
+      if (!isExpired(topCode.receivedAt)) {
+        doSpeak(MESSAGE);
       }
     }
-  }, [codes, audioUnlocked]);
+  }, [codes]);
 
-  return { audioUnlocked, unlockAudio };
+  return { needsUnlock, unlockAudio };
 }
+
