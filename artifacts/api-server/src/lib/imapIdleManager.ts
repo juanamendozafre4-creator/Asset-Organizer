@@ -1,7 +1,7 @@
 import { ImapFlow } from "imapflow";
 import { logger } from "./logger";
 import { decrypt } from "./crypto";
-import { setCacheEntry } from "./codesCache";
+import { setCacheEntry, getCacheEntry } from "./codesCache";
 
 type SiteRow = {
   slug: string;
@@ -14,7 +14,7 @@ type SiteRow = {
  * Fetches and processes emails using an existing connected IMAP client.
  * Passed in from backgroundPoller to avoid a circular import.
  */
-type BuildWithClientFn = (client: ImapFlow, site: SiteRow) => Promise<unknown[]>;
+type BuildWithClientFn = (client: ImapFlow, site: SiteRow, opts?: { limit?: number }) => Promise<unknown[]>;
 
 interface IdleState {
   active: boolean;
@@ -89,12 +89,16 @@ async function runIdleLoop(site: SiteRow, buildWithClient: BuildWithClientFn) {
           if (!state.active) break;
 
           if (existsReceived) {
-            logger.info({ slug: site.slug }, "IDLE: EXISTS — fetching with existing connection");
+            logger.info({ slug: site.slug }, "IDLE: EXISTS — fast fetch (3 newest)");
             try {
-              const codes = await buildWithClient(client, site);
-              setCacheEntry(site.slug, codes);
+              const freshCodes = await buildWithClient(client, site, { limit: 3 });
+              const fresh = freshCodes as Array<{ id: string | number; receivedAt: string }>;
+              const existing = ((getCacheEntry(site.slug) as { codes?: unknown[] } | null)?.codes ?? []) as Array<{ id: string | number; receivedAt: string }>;
+              const freshIds = new Set(fresh.map((c) => String(c.id)));
+              const merged = [...fresh, ...existing.filter((c) => !freshIds.has(String(c.id)))].slice(0, 10);
+              setCacheEntry(site.slug, merged);
               logger.info(
-                { slug: site.slug, count: (codes as unknown[]).length },
+                { slug: site.slug, count: merged.length },
                 "IDLE: cache updated after new email"
               );
             } catch (err) {

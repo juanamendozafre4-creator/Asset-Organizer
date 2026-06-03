@@ -27988,7 +27988,7 @@ var require_pino = __commonJS({
     function pinoBundlerAbsolutePath(p) {
       try {
         const path3 = __require("path");
-        const outputDir = "/tmp/vercodigo-repo/artifacts/api-server/dist";
+        const outputDir = "/home/runner/vercodigo-build/artifacts/api-server/dist";
         return path3.resolve(outputDir, p.replace(/^\.\//, ""));
       } catch (e) {
         const f = new Function("p", "return new URL(p, import.meta.url).pathname");
@@ -114816,7 +114816,8 @@ async function fetchCodeFromNetflixLink(url2) {
 }
 async function fetchEmailsFromLockedInbox(client, limit = 10) {
   const results = [];
-  const found = await client.search({ or: [{ subject: "acceso temporal" }, { subject: "Netflix temporary access code" }] }).catch(() => []);
+  const since = new Date(Date.now() - 2 * 24 * 60 * 60 * 1e3);
+  const found = await client.search({ or: [{ subject: "acceso temporal" }, { subject: "Netflix temporary access code" }], since }).catch(() => []);
   const allIds = [...new Set(found.filter((x) => typeof x === "number"))];
   const ids = allIds.sort((a, b) => b - a).slice(0, limit);
   if (ids.length === 0) return results;
@@ -115361,12 +115362,16 @@ async function runIdleLoop(site, buildWithClient) {
           }
           if (!state.active) break;
           if (existsReceived) {
-            logger2.info({ slug: site.slug }, "IDLE: EXISTS \u2014 fetching with existing connection");
+            logger2.info({ slug: site.slug }, "IDLE: EXISTS \u2014 fast fetch (3 newest)");
             try {
-              const codes = await buildWithClient(client, site);
-              setCacheEntry(site.slug, codes);
+              const freshCodes = await buildWithClient(client, site, { limit: 3 });
+              const fresh = freshCodes;
+              const existing = getCacheEntry(site.slug)?.codes ?? [];
+              const freshIds = new Set(fresh.map((c) => String(c.id)));
+              const merged = [...fresh, ...existing.filter((c) => !freshIds.has(String(c.id)))].slice(0, 10);
+              setCacheEntry(site.slug, merged);
               logger2.info(
-                { slug: site.slug, count: codes.length },
+                { slug: site.slug, count: merged.length },
                 "IDLE: cache updated after new email"
               );
             } catch (err) {
@@ -115542,8 +115547,8 @@ async function buildCodesForSite(site) {
   );
   return processRawEmails(site, rawEmails);
 }
-async function buildCodesWithExistingClient(client, site) {
-  const rawEmails = await fetchEmailsFromLockedInbox(client, 10);
+async function buildCodesWithExistingClient(client, site, { limit = 10 } = {}) {
+  const rawEmails = await fetchEmailsFromLockedInbox(client, limit);
   return processRawEmails(site, rawEmails);
 }
 function codesFingerprint(codes) {

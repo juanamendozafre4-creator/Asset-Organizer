@@ -106,8 +106,12 @@ export async function buildCodesForSite(site: SiteRow) {
  * Fetch + process using an already-connected ImapFlow client (INBOX already locked).
  * Zero new IMAP connections — used by the IDLE loop to avoid rate-limiting.
  */
-export async function buildCodesWithExistingClient(client: ImapFlow, site: SiteRow) {
-  const rawEmails = await fetchEmailsFromLockedInbox(client, 10);
+export async function buildCodesWithExistingClient(
+  client: ImapFlow,
+  site: SiteRow,
+  { limit = 10 }: { limit?: number } = {}
+) {
+  const rawEmails = await fetchEmailsFromLockedInbox(client, limit);
   return processRawEmails(site, rawEmails);
 }
 

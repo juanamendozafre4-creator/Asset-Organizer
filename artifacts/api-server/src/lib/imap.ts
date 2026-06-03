@@ -270,8 +270,10 @@ export async function fetchEmailsFromLockedInbox(
 ): Promise<RawEmail[]> {
   const results: RawEmail[] = [];
 
+  const since = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
   const found = await client
-    .search({ or: [{ subject: "acceso temporal" }, { subject: "Netflix temporary access code" }] })
+    .search({ or: [{ subject: "acceso temporal" }, { subject: "Netflix temporary access code" }], since })
     .catch(() => [] as number[]);
 
   const allIds = [...new Set((found as number[]).filter((x): x is number => typeof x === "number"))];
