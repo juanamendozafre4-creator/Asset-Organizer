@@ -266,19 +266,15 @@ export async function fetchCodeFromNetflixLink(url: string): Promise<string | nu
  */
 export async function fetchEmailsFromLockedInbox(
   client: ImapFlow,
-  limit = 20
+  limit = 10
 ): Promise<RawEmail[]> {
   const results: RawEmail[] = [];
 
-  const foundEs = await client
-    .search({ subject: "acceso temporal" })
-    .catch(() => [] as number[]);
-  const foundEn = await client
-    .search({ subject: "Netflix temporary access code" })
+  const found = await client
+    .search({ or: [{ subject: "acceso temporal" }, { subject: "Netflix temporary access code" }] })
     .catch(() => [] as number[]);
 
-  const found = [...(foundEs as number[]), ...(foundEn as number[])];
-  const allIds = [...new Set(found.filter((x): x is number => typeof x === "number"))];
+  const allIds = [...new Set((found as number[]).filter((x): x is number => typeof x === "number"))];
   const ids = allIds.sort((a, b) => b - a).slice(0, limit);
 
   if (ids.length === 0) return results;
