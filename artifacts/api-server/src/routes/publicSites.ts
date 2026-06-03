@@ -127,6 +127,8 @@ router.get("/sites/:slug", async (req, res): Promise<void> => {
     description: site.description ?? null,
     themeColor: site.themeColor,
     slug: site.slug,
+    welcomeMessage: site.welcomeMessage ?? null,
+    newCodeMessage: site.newCodeMessage ?? null,
   });
 
   // Pre-warm cache when site info is requested (no-op if already fresh or in-progress)
@@ -189,36 +191,27 @@ router.get("/sites/:slug/stream", async (req: Request, res: Response): Promise<v
 
   let lastFingerprint = "__unset__";
 
-  // Serve cached data immediately — background poller + IMAP IDLE keep the cache warm.
   const cached = getCacheEntry(slug);
   if (cached) {
     const typedCodes = cached.codes as { id: string | number; receivedAt: string }[];
     lastFingerprint = codesFingerprint(typedCodes);
     sendEvent("codes", cached.codes);
     req.log.info({ slug, count: cached.codes.length }, "SSE: served from cache immediately");
-    // If cache is empty, trigger a fresh fetch in background so codes appear when ready
     if (cached.codes.length === 0) {
       requestFetch(site).catch((err) => {
         req.log.error({ err, slug }, "SSE: background fetch after empty cache failed");
       });
     }
   } else {
-    // Cache is completely cold (e.g. server just restarted).
-    // Request a fetch — deduplicated so only one IMAP connection opens even if
-    // multiple clients connect simultaneously.
     req.log.info({ slug }, "SSE: cache cold — requesting on-demand fetch");
     requestFetch(site)
-      .then(() => {
-        // setCacheEntry already emits the codeEvents update, so the listener below
-        // will push the codes to this client automatically.
-      })
+      .then(() => {})
       .catch((err) => {
         req.log.error({ err, slug }, "SSE: on-demand fetch failed");
         sendEvent("imap_error", { message: "Error al conectar con el servidor de correo" });
       });
   }
 
-  // Listen for cache updates from the background poller / IMAP IDLE
   const onUpdate = (codes: unknown[]) => {
     const typedCodes = codes as { id: string | number; receivedAt: string }[];
     const fp = codesFingerprint(typedCodes);
