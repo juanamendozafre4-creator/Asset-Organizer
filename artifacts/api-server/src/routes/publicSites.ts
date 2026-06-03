@@ -39,11 +39,15 @@ const SUBJECT_FILTERS = [
   "netflix temporary access code",
 ];
 
+const CODE_TTL_MS = 15 * 60 * 1000;
+
 async function processRawEmails(site: SiteRow, rawEmails: RawEmail[]) {
   const filtered = rawEmails.filter((email) => {
     const subjectLow = email.subject.toLowerCase();
     return SUBJECT_FILTERS.some((f) => subjectLow.includes(f));
   });
+
+  const now = Date.now();
 
   const codes = await Promise.all(
     filtered.map(async (email) => {
@@ -58,9 +62,16 @@ async function processRawEmails(site: SiteRow, rawEmails: RawEmail[]) {
         }
       }
 
+      const emailAgeMs = now - new Date(email.receivedAt).getTime();
+      const isAlreadyExpired = emailAgeMs > CODE_TTL_MS;
+
       const netflixLink = extractNetflixLink(email.source);
       if (!code && netflixLink) {
-        code = await fetchCodeFromNetflixLink(netflixLink);
+        if (isAlreadyExpired) {
+          code = "EXPIRED";
+        } else {
+          code = await fetchCodeFromNetflixLink(netflixLink);
+        }
       }
 
       return {
@@ -86,7 +97,7 @@ export async function buildCodesForSite(site: SiteRow) {
   const password = decrypt(site.imapPasswordEncrypted);
   const rawEmails = await fetchNetflixEmailsForSite(
     { host: site.imapHost, email: site.imapEmail, password },
-    20
+    10
   );
   return processRawEmails(site, rawEmails);
 }
@@ -96,7 +107,7 @@ export async function buildCodesForSite(site: SiteRow) {
  * Zero new IMAP connections — used by the IDLE loop to avoid rate-limiting.
  */
 export async function buildCodesWithExistingClient(client: ImapFlow, site: SiteRow) {
-  const rawEmails = await fetchEmailsFromLockedInbox(client, 20);
+  const rawEmails = await fetchEmailsFromLockedInbox(client, 10);
   return processRawEmails(site, rawEmails);
 }
 
