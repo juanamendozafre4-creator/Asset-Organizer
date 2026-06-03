@@ -12,7 +12,7 @@ const POLL_INTERVAL_MS = 15_000;
 const SAFETY_REFRESH_MS = 10 * 60_000;
 
 /** Max time allowed for a `buildCodesForSite` call (new-connection path) */
-const FETCH_TIMEOUT_MS = 30_000;
+const FETCH_TIMEOUT_MS = 15_000;
 
 /**
  * Dedup: only one fetch per site at a time.
