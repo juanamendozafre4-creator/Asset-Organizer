@@ -114941,12 +114941,21 @@ function extractAccountEmail(body) {
     /enviamos\s+este\s+correo\s+a\s+\[?([^\]\s<>\r\n,]+@[^\]\s<>\r\n,]+)\]?/i,
     /Netflix\s+sent\s+this\s+(?:email|message)\s+to\s+\[?([^\]\s<>\r\n,]+@[^\]\s<>\r\n,]+)\]?/i,
     /\[([^\]]+@[^\]]+)\]\s+como\s+parte/i,
-    /mensaje\s+a\s+([^\s<>\r\n,]+@[^\s<>\r\n,]+)/i
+    /mensaje\s+a\s+([^\s<>\r\n,]+@[^\s<>\r\n,]+)/i,
+    /\[([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})\]/i,
+    /(?:enviado|envió|sent|envio)\s+(?:a|to)\s+\[?([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})\]?/i,
+    /(?:correo\s+electr[oó]nico|email|cuenta)[^@\n]{0,60}([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/i,
+    /(?:titular|suscriptor)[^@\n]{0,60}([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/i
   ];
   for (const p of patterns) {
     const m = body.match(p);
-    if (m) return m[1].trim();
+    if (m) {
+      const email = m[1].trim();
+      if (!email.includes("netflix.com") && email.includes("@")) return email;
+    }
   }
+  const anyEmail = body.match(/\b([a-zA-Z0-9._%+\-]+@(?!netflix\.|account\.netflix\.|info\.netflix\.)[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})\b/);
+  if (anyEmail) return anyEmail[1].trim();
   return null;
 }
 function extractProfileName(body) {
