@@ -47,8 +47,6 @@ async function processRawEmails(site: SiteRow, rawEmails: RawEmail[]) {
     return SUBJECT_FILTERS.some((f) => subjectLow.includes(f));
   });
 
-  const now = Date.now();
-
   const codes = await Promise.all(
     filtered.map(async (email) => {
       const { html: rawHtml } = extractEmailParts(email.source);
@@ -62,16 +60,12 @@ async function processRawEmails(site: SiteRow, rawEmails: RawEmail[]) {
         }
       }
 
-      const emailAgeMs = now - new Date(email.receivedAt).getTime();
-      const isAlreadyExpired = emailAgeMs > CODE_TTL_MS;
-
+      // Always try to fetch the code from the Netflix link, regardless of email age.
+      // The link itself will return "EXPIRED" if the token is no longer valid.
+      // This avoids premature expiration caused by IMAP polling delays.
       const netflixLink = extractNetflixLink(email.source);
       if (!code && netflixLink) {
-        if (isAlreadyExpired) {
-          code = "EXPIRED";
-        } else {
-          code = await fetchCodeFromNetflixLink(netflixLink);
-        }
+        code = await fetchCodeFromNetflixLink(netflixLink);
       }
 
       return {
