@@ -65,7 +65,11 @@ async function processRawEmails(site: SiteRow, rawEmails: RawEmail[]) {
       // This avoids premature expiration caused by IMAP polling delays.
       const netflixLink = extractNetflixLink(email.source);
       if (!code && netflixLink) {
-        code = await fetchCodeFromNetflixLink(netflixLink);
+        const fetched = await fetchCodeFromNetflixLink(netflixLink);
+        // 'EXPIRED' from the server often means Netflix blocked the server IP, not that
+        // the code itself is expired. Return null so the frontend shows the 'Ver código'
+        // link button while the 15-minute timer is still running.
+        code = fetched === 'EXPIRED' ? null : fetched;
       }
 
       return {
